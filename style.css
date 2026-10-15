@@ -469,7 +469,7 @@
       display: flex;
       flex-direction: row;
       align-items: center;
-      gap: 30px;
+      gap: 60px;
     }
     
     .menu-item span:first-child {
@@ -483,11 +483,11 @@
     .info-item {
       display: flex;
       flex-direction: row;
-      gap: 30px;
+      gap: 50px;
     }
     
     .info-item span:first-child {
-      width: 75px;
+      width: 85px;
       flex-shrink: 0;
       padding-left: 20px;
     }
