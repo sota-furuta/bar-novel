@@ -477,12 +477,12 @@
     /* INFORMATION */
 
     .info-item {
-      flex-direction: column;
-      gap: 6px;
+      display: flex;
+      flex-direction: row;
     }
-
+    
     .info-item span:first-child {
-      width: auto;
+      width: 90px;
     }
 
     .info-item span:last-child {
