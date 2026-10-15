@@ -62,28 +62,38 @@
     </div>
   </section>
 
-  <section id="gallery" class="gallery">
-    <h2>GALLERY</h2>
+<section id="gallery" class="gallery">
+  <h2>GALLERY</h2>
 
-    <div class="gallery-grid">
-      <img src="images/interior.jpg" alt="BAR NOVEL 店内">
-      <img src="images/exterior.jpg" alt="BAR NOVEL 外観">
-      <img src="images/food.jpg" alt="BAR NOVEL フード">
-    </div>
-  </section>
+  <div class="slider">
+
+    <button class="slider-btn prev">❮</button>
+
+ <div class="slides">
+  <img src="images/exterior.jpg" alt="BAR NOVEL 外観" class="slide active">
+  <img src="images/interior.jpg" alt="BAR NOVEL 店内" class="slide">
+  <img src="images/pasta.jpg" alt="BAR NOVEL パスタ" class="slide food-slide">
+  <img src="images/food.jpg" alt="BAR NOVEL フード" class="slide food-slide">
+  
+</div>
+
+    <button class="slider-btn next">❯</button>
+
+  </div>
+</section>
 
   <section id="access" class="access">
     <h2>ACCESS</h2>
 
     <p>小田急線 伊勢原駅南口より徒歩約1分</p>
 
-    <a
-      class="button"
-      href="https://share.google/Jtsttpgbb63Eii8hj"
-      target="_blank"
-      rel="noopener noreferrer">
-      Google Maps
-    </a>
+<a
+  class="button"
+  href="https://share.google/Jtsttpgbb63Eii8hj"
+  target="_blank"
+  rel="noopener noreferrer">
+  Google Maps
+</a>
   </section>
 
   <section id="instagram" class="instagram">
@@ -91,18 +101,51 @@
 
     <p>最新情報はこちらから</p>
 
-    <a
-      class="button"
-      href="https://instagram.com/isehara.bar.cocktail.novel"
-      target="_blank"
-      rel="noopener noreferrer">
-      Instagramを見る
-    </a>
+<a
+  class="button"
+  href="https://instagram.com/isehara.bar.cocktail.novel"
+  target="_blank"
+  rel="noopener noreferrer">
+  Instagramを見る
+</a>
   </section>
 
   <footer>
     <p>© BAR NOVEL</p>
   </footer>
+
+<script>
+  const slides = document.querySelectorAll(".slide");
+  const nextBtn = document.querySelector(".next");
+  const prevBtn = document.querySelector(".prev");
+
+  let current = 0;
+
+  function showSlide(index) {
+    slides.forEach(slide => {
+      slide.classList.remove("active");
+    });
+
+    slides[index].classList.add("active");
+  }
+
+  nextBtn.addEventListener("click", () => {
+    current = (current + 1) % slides.length;
+    showSlide(current);
+  });
+
+  prevBtn.addEventListener("click", () => {
+    current = (current - 1 + slides.length) % slides.length;
+    showSlide(current);
+  });
+
+  setInterval(() => {
+    current = (current + 1) % slides.length;
+    showSlide(current);
+  }, 10000);
+
+  showSlide(current);
+</script>
 
 </body>
 
