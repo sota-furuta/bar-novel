@@ -479,13 +479,16 @@
     .info-item {
       display: flex;
       flex-direction: row;
+      align-items: flex-start;
     }
     
     .info-item span:first-child {
-      width: 90px;
+      width: 70px;
+      flex-shrink: 0;
     }
-
+    
     .info-item span:last-child {
+      flex: 1;
       text-align: left;
     }
 
