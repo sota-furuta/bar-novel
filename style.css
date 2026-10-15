@@ -218,11 +218,8 @@ section h2 {
 @media (max-width: 768px) {
 
   .slide {
-    width: 70%;
-    height: 180px;
+    height: 250px;
   }
-
-}
 
   .slider-btn {
     width: 40px;
