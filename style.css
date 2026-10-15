@@ -465,3 +465,15 @@ summary::after {
 details[open] summary::after {
   content: "−";
 }
+
+@media (max-width: 768px) {
+
+  section {
+    padding: 16px 16px;
+  }
+
+  details {
+    padding: 16px;
+  }
+
+}
