@@ -469,11 +469,13 @@
       display: flex;
       flex-direction: row;
       align-items: center;
+      gap: 30px;
     }
     
     .menu-item span:first-child {
       width: 120px;
       flex-shrink: 0;
+      padding-left: 20px;
     }
 
     /* INFORMATION */
@@ -481,11 +483,13 @@
     .info-item {
       display: flex;
       flex-direction: row;
+      gap: 30px;
     }
     
     .info-item span:first-child {
-      width: 60px;
+      width: 75px;
       flex-shrink: 0;
+      padding-left: 20px;
     }
     
     .info-item span:last-child {
