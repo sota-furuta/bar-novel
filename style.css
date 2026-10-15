@@ -466,12 +466,11 @@
     /* MENU */
 
     .menu-item {
-      flex-direction: column;
-      gap: 6px;
+      flex-direction: row;
     }
-
+    
     .menu-item span:first-child {
-      width: auto;
+      width: 120px;
     }
 
     /* INFORMATION */
@@ -479,7 +478,6 @@
     .info-item {
       display: flex;
       flex-direction: row;
-      align-items: flex-start;
     }
     
     .info-item span:first-child {
