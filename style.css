@@ -231,9 +231,10 @@
     display: block;
     margin-top: 4px;
 
-    color: #ddd3c4;
-    font-size: 0.8rem;
-    line-height: 1.5;
+    color: #f0e3cf !important;
+
+    font-size: 0.75rem;
+    line-height: 1.4;
   }
 
   /* Information */
@@ -544,6 +545,11 @@
       width: 70px;
       text-align: left;
       margin-left: 15px;
+    }
+
+    .menu-item small {
+      color: #f0e3cf !important;
+      font-size: 0.7rem;
     }
 
     /* INFORMATION */
