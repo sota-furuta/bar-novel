@@ -472,8 +472,8 @@
     }
 
     .hero {
-  height: 65vh;
-}
+      height: 65vh;
+    }
 
     .hero-copy {
       font-size: 1rem;
@@ -481,8 +481,8 @@
     }
 
     .hero-title {
-  font-size: 5rem;
-}
+      font-size: 5rem;
+    }
 
     .hero-overlay {
       left: 6%;
@@ -517,8 +517,14 @@
 
     /* MENU */
 
+
+    .menu-item {
+      display: flex;
+      justify-content: space-between;
+    }
+
     .menu-item span:first-child {
-      width: 45%;
+      padding-left: 30px;
     }
 
     /* INFORMATION */
