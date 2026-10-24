@@ -530,7 +530,7 @@
 
     .menu-item {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
     }
 
     .menu-item span:first-child {
@@ -540,13 +540,20 @@
 
     .menu-item span:last-child {
       width: 70px;
+      flex-shrink: 0;
+
       text-align: left;
+
       margin-left: 15px;
     }
 
     .menu-item small {
-      color: #f0e3cf !important;
-      font-size: 0.7rem;
+      display: block;
+      margin-top: 2px;
+
+      color: #ddd3c4 !important;
+      font-size: 0.75rem;
+      line-height: 1.4;
     }
 
     .menu-item span:first-child small {
