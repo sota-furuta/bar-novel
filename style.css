@@ -574,6 +574,11 @@
       min-width: 120px;
     }
 
+    #access details,
+    #instagram details {
+      padding-bottom: 0;
+    }
+
     #access .button,
     #instagram .button {
       margin-bottom: 20px;
