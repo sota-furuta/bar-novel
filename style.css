@@ -524,7 +524,9 @@
     }
 
     .menu-item span:first-child {
-      padding-left: 30px;
+      width: 120px;
+      flex-shrink: 0;
+      padding-left: 50px;
     }
 
     /* INFORMATION */
