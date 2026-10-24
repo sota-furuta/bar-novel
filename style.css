@@ -576,4 +576,9 @@
       min-width: 120px;
     }
 
+    .access p,
+    .instagram p {
+      margin-bottom: 0;
+    }
+
   }
