@@ -396,13 +396,13 @@
   details {
     background: rgba(18, 12, 8, 0.65);
 
-    padding: 16px;
-
     margin-bottom: 12px;
 
     border: 1px solid var(--border);
 
     backdrop-filter: blur(3px);
+
+    padding: 18px;
 
     margin: 0 auto;
 
@@ -472,8 +472,8 @@
     }
 
     .hero {
-      height: 65vh;
-    }
+  height: 65vh;
+}
 
     .hero-copy {
       font-size: 1rem;
@@ -481,8 +481,8 @@
     }
 
     .hero-title {
-      font-size: 5rem;
-    }
+  font-size: 5rem;
+}
 
     .hero-overlay {
       left: 6%;
