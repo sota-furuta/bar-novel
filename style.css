@@ -574,8 +574,8 @@
       min-width: 120px;
     }
 
-    #access details[open],
-    #instagram details[open] {
-      padding-bottom: 40px;
+    #access .button,
+    #instagram .button {
+      margin-bottom: 20px;
     }
   }
