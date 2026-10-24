@@ -22,13 +22,7 @@
       </a>
 
       <nav>
-        <ul class="nav-menu">
-          <li><a href="#info">Information</a></li>
-          <li><a href="#menu">Menu</a></li>
-          <li><a href="#gallery">Gallery</a></li>
-          <li><a href="#access">Access</a></li>
-          <li><a href="#instagram">Instagram</a></li>
-        </ul>
+
       </nav>
 
     </div>
@@ -38,9 +32,9 @@
     <div class="hero-overlay">
 
       <p class="hero-copy">
-        落ち着いた空間で<br>
-        お酒と会話を楽しむ<br>
-        大人の隠れ家バー
+        女性一人でも気軽に。<br>
+        会話とお酒を楽しむ<br>
+        居心地の良い空間。
       </p>
 
       <h1 class="hero-title">
@@ -55,17 +49,55 @@
   <section id="menu" class="menu">
     <details>
       <summary>MENU</summary>
-      <div class="accordion-content">
-        <div class="menu-item">
-          <span>ALCOHOL</span>
-          <span>¥600〜</span>
-        </div>
 
-        <div class="menu-item">
-          <span>FOOD</span>
-          <span>¥550〜</span>
-        </div>
+      <div class="menu-category">
+        DRINK
       </div>
+
+      <div class="menu-item">
+        <span>カクテル</span>
+        <span>¥750〜</span>
+      </div>
+
+      <div class="menu-item">
+        <span>お任せカクテル</span>
+        <span>¥750〜</span>
+      </div>
+
+      <div class="menu-item">
+        <span>ウイスキー</span>
+        <span>¥750〜</span>
+      </div>
+
+      <div class="menu-item">
+        <span>ハイネケン瓶</span>
+        <span>¥800</span>
+      </div>
+
+      <div class="menu-item">
+        <span>焼酎（お茶割・レモンサワー）</span>
+        <span>¥600〜</span>
+      </div>
+
+      <div class="menu-item">
+        <span>テキーラ</span>
+        <span>¥500</span>
+      </div>
+
+      <div class="menu-category">
+        FOOD
+      </div>
+
+      <div class="menu-item">
+        <span>ソーセージ盛り合わせ</span>
+        <span>¥800</span>
+      </div>
+
+      <div class="menu-item">
+        <span>本日のパスタ</span>
+        <span>¥1,000〜</span>
+      </div>
+
     </details>
   </section>
 
@@ -73,17 +105,17 @@
   <section id="info" class="info">
     <details>
       <summary>INFORMATION</summary>
-      
+
       <div class="info-item">
         <span>営業時間</span>
-        <span>火曜日〜日曜日<br>   （20:00〜翌04:00）</span>
+        <span>火曜日〜日曜日<br> （20:00〜翌04:00）</span>
       </div>
-    
+
       <div class="info-item">
         <span>定休日</span>
         <span>月曜日</span>
       </div>
-    
+
       <div class="info-item">
         <span>住所</span>
         <span>
@@ -91,12 +123,12 @@
           アーバンヒルズ2F
         </span>
       </div>
-    
+
       <div class="info-item">
         <span>TEL</span>
         <span>070-3861-1472</span>
       </div>
-    
+
     </details>
   </section>
 
@@ -104,37 +136,37 @@
   <section id="gallery" class="gallery">
     <details>
       <summary>GALLERY</summary>
-  
+
       <div class="slider">
-  
+
         <button class="slider-btn prev">❮</button>
-  
+
         <div class="slides">
-  
+
           <div class="slide-item active">
             <img src="images/exterior.jpg" alt="BAR NOVEL 外観" class="slide">
             <p class="slide-caption">店舗外観</p>
           </div>
-  
+
           <div class="slide-item">
             <img src="images/interior.jpg" alt="BAR NOVEL 店内" class="slide">
             <p class="slide-caption">店内カウンター</p>
           </div>
-  
+
           <div class="slide-item">
             <img src="images/pasta.jpg" alt="BAR NOVEL パスタ" class="slide food-slide">
             <p class="slide-caption">本日のパスタ</p>
           </div>
-  
+
           <div class="slide-item">
             <img src="images/food.jpg" alt="BAR NOVEL フード" class="slide food-slide">
             <p class="slide-caption">ソーセージ盛り合わせ</p>
           </div>
-  
+
         </div>
-  
+
         <button class="slider-btn next">❯</button>
-  
+
       </div>
     </details>
   </section>
@@ -145,7 +177,7 @@
 
       <p>小田急線 伊勢原駅南口より徒歩約1分</p>
 
-      <a class="button" href="https://share.google/Jtsttpgbb63Eii8hj" target="_blank" rel="noopener noreferrer">
+      <a class="button" href="https://maps.app.goo.gl/pQygL5VJowjCGWbm6" target="_blank" rel="noopener noreferrer">
         Google Maps
       </a>
     </details>
@@ -155,11 +187,14 @@
     <details>
       <summary>INSTAGRAM</summary>
 
-      <p>最新情報はこちらから</p>
+      <p>
+        ご予約・お問い合わせは<br>
+        Instagramより承っております
+      </p>
 
       <a class="button" href="https://instagram.com/isehara.bar.cocktail.novel" target="_blank"
         rel="noopener noreferrer">
-        Instagramを見る
+        Instagramで連絡する
       </a>
 
     </details>
@@ -200,6 +235,23 @@
     }, 10000);
 
     showSlide(current);
+    const detailsList = document.querySelectorAll("details");
+
+    detailsList.forEach(detail => {
+      detail.addEventListener("toggle", () => {
+
+        if (detail.open) {
+
+          detailsList.forEach(other => {
+            if (other !== detail) {
+              other.open = false;
+            }
+          });
+
+        }
+
+      });
+    });
   </script>
 
 </body>
