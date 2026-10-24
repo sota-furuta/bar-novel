@@ -460,6 +460,10 @@
       gap: 10px;
     }
 
+    .button {
+      margin-top: 0;
+    }
+
     .nav-menu {
       gap: 10px;
       flex-wrap: wrap;
