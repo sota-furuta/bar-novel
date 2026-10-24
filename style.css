@@ -205,12 +205,7 @@
 
   .menu-item {
     display: flex;
-
-    padding: 14px 0;
-
-    border-bottom: 1px solid var(--border);
-
-    align-items: start;
+    align-items: flex-start;
   }
 
   .menu-item span:first-child {
@@ -224,8 +219,10 @@
   .menu-item span:last-child {
     color: #f5ede2;
     font-weight: 500;
-    text-align: left;
+    align-self: flex-start;
+    padding-top: 0;
   }
+
 
   .menu-item small {
     display: block;
@@ -550,6 +547,10 @@
     .menu-item small {
       color: #f0e3cf !important;
       font-size: 0.7rem;
+    }
+
+    .menu-item span:first-child small {
+      color: #ddd3c4 !important;
     }
 
     /* INFORMATION */
