@@ -23,7 +23,7 @@
       linear-gradient(180deg,
         #c7a678 60%,
         #e0c18f 60%,
-       #c7a678 60%,
+        #c7a678 60%,
         #c88b4e 100%);
 
     color: #3b2a18;
@@ -396,11 +396,13 @@
   details {
     background: rgba(18, 12, 8, 0.65);
 
+    padding: 16px;
+
+    margin-bottom: 12px;
+
     border: 1px solid var(--border);
 
     backdrop-filter: blur(3px);
-
-    padding: 18px;
 
     margin: 0 auto;
 
@@ -470,7 +472,7 @@
     }
 
     .hero {
-      height: 50vh;
+      height: 65vh;
     }
 
     .hero-copy {
@@ -479,7 +481,7 @@
     }
 
     .hero-title {
-      font-size: 3.8rem;
+      font-size: 5rem;
     }
 
     .hero-overlay {
@@ -515,31 +517,14 @@
 
     /* MENU */
 
-    .menu-item {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      gap: 60px;
-    }
-
     .menu-item span:first-child {
-      width: 120px;
-      flex-shrink: 0;
-      padding-left: 20px;
+      width: 45%;
     }
 
     /* INFORMATION */
 
-    .info-item {
-      display: flex;
-      flex-direction: row;
-      gap: 50px;
-    }
-
     .info-item span:first-child {
-      width: 85px;
-      flex-shrink: 0;
-      padding-left: 20px;
+      width: 35%;
     }
 
     .info-item span:last-child {
