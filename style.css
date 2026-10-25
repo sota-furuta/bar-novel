@@ -304,9 +304,12 @@
   .slide-caption {
     margin-top: 12px;
 
-    color: #d9c9b3;
+    color: #e6d7c2;
     font-size: 0.95rem;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
+    background: rgba(25, 25, 25, 0.25);
+    margin: 12px auto;
+    width: 50%;
   }
 
   .slider-btn {
