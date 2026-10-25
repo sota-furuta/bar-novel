@@ -112,7 +112,7 @@
     left: 5%;
     bottom: 8%;
 
-    color: rgba(255, 255, 255, .92);
+    color: #f2e3c6;
     ;
   }
 
@@ -123,7 +123,7 @@
     opacity: 0;
     transform: translateY(20px);
     animation: fadeUp 1.5s ease forwards;
-    color: #f5ecdf;
+    color: #f2e3c6;
 
     text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.8);
   }
@@ -142,7 +142,7 @@
 
     line-height: 0.9;
 
-    color: #fff8ef;
+    color: #f2e3c6;
 
     text-shadow: 2px 2px 15px rgba(0, 0, 0, 0.8);
   }
@@ -205,6 +205,8 @@
 
   .menu-item {
     display: flex;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(224, 176, 106, 0.25);
     align-items: flex-start;
   }
 
@@ -217,7 +219,7 @@
   }
 
   .menu-item span:last-child {
-    color: #f5ede2;
+    color: #f2e3c6;
     font-weight: 500;
     align-self: flex-start;
     padding-top: 0;
@@ -228,7 +230,7 @@
     display: block;
     margin-top: 4px;
 
-    color: #f0e3cf !important;
+    color: #f2e3c6 !important;
 
     font-size: 0.75rem;
     line-height: 1.4;
@@ -246,7 +248,7 @@
 
     padding: 14px 0;
 
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid rgba(224, 176, 106, 0.25);
 
     align-items: start;
   }
@@ -260,7 +262,7 @@
   }
 
   .info-item span:last-child {
-    color: #f5ede2;
+    color: #f2e3c6;
     font-weight: 500;
     text-align: left;
   }
@@ -296,7 +298,7 @@
     margin: 0 auto;
     display: block;
 
-    border: 1px solid var(--border);
+    border-bottom: 1px solid rgba(224, 176, 106, 0.25);
   }
 
   .slide-caption {
@@ -350,7 +352,7 @@
 
   .access p,
   .instagram p {
-    color: #f5ede2;
+    color: #f2e3c6;
     font-weight: 500;
     max-width: 320px;
     margin: 0 auto 16px;
@@ -438,7 +440,7 @@
 
     font-size: 1.6rem;
 
-    color: var(--text);
+    color: #f2e3c6;
 
     text-align: center;
   }
@@ -551,13 +553,13 @@
       display: block;
       margin-top: 2px;
 
-      color: #ddd3c4 !important;
+      color: #f2e3c6 !important;
       font-size: 0.75rem;
       line-height: 1.4;
     }
 
     .menu-item span:first-child small {
-      color: #ddd3c4 !important;
+      color: #f2e3c6 !important;
     }
 
     /* INFORMATION */
