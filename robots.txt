@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bar-novel.pages.dev/sitemap.xml
