@@ -1,167 +1,198 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>BAR NOVEL | 伊勢原のバー</title>
-
-  <meta name="description"
-    content="伊勢原駅近くのBAR NOVEL。カクテルやウイスキーを楽しめる落ち着いた空間で、特別な夜のひとときを。">
-
-  <link rel="stylesheet" href="style.css">
+  <title>BAR NOVEL | 伊勢原駅南口徒歩1分のバー</title>
+  <meta name="description" content="伊勢原駅南口徒歩1分。女性一人でも気軽に立ち寄れる、会話とお酒を楽しむ居心地の良い空間。20:00〜翌4:00、月曜定休。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Noto+Sans+JP:wght@300;400;500&family=Noto+Serif+JP:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=20261101insta">
 </head>
-
 <body>
 
-  <header class="header">
-    <div class="header-inner">
-
-      <a href="#" class="logo">
-        BAR NOVEL
-      </a>
-
-      <nav>
-        <ul class="nav-menu">
-          <li><a href="#info">Information</a></li>
-          <li><a href="#menu">Menu</a></li>
-          <li><a href="#gallery">Gallery</a></li>
-          <li><a href="#access">Access</a></li>
-          <li><a href="#instagram">Instagram</a></li>
-        </ul>
-      </nav>
-
-    </div>
+  <header class="site-header" id="siteHeader">
+    <a class="logo" href="#top">BAR <span>NOVEL</span></a>
+    <nav class="header-nav" aria-label="メインナビゲーション">
+      <a href="#menu">Menu</a>
+      <a href="#gallery">Gallery</a>
+      <a href="#info">Info</a>
+      <a href="#access">Access</a>
+    </nav>
+    <button class="hamburger" id="hamburger" type="button" aria-expanded="false" aria-controls="hamburgerMenu" aria-label="メニューを開く">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="hamburger-menu" id="hamburgerMenu" aria-label="ハンバーガーメニュー" hidden>
+      <a href="#menu">Menu</a>
+      <a href="#gallery">Gallery</a>
+      <a href="#info">Info</a>
+      <a href="#access">Access</a>
+      <a class="hamburger-insta" href="https://www.instagram.com/isehara.bar.cocktail.novel" target="_blank" rel="noopener">Instagram（ご予約）</a>
+    </nav>
   </header>
 
-  <section class="hero">
-  <div class="hero-overlay">
+  <!-- HERO -->
+  <section class="hero" id="top">
+    <div class="hero-photo" role="img" aria-label="バーカウンターでお酒を注ぐ様子"></div>
+    <div class="hero-shade"></div>
+    <div class="hero-inner">
+      <p class="hero-eyebrow">ISEHARA — EST. EVENING BAR</p>
+      <h1 class="hero-title">BAR<br>NOVEL</h1>
+      <p class="hero-copy">お一人様でも、ふらっとどうぞ。<br>気分のままに、今日の一杯を。</p>
+      <ul class="hero-badges">
+        <li>20:00 – 04:00</li>
+        <li>月曜定休</li>
+        <li>駅徒歩1分</li>
+      </ul>
+      <div class="hero-actions">
+        <a class="btn btn-solid" href="#menu">メニューを見る</a>
+        <a class="btn btn-ghost" href="https://maps.app.goo.gl/pQygL5VJowjCGWbm6" target="_blank" rel="noopener">Googleマップ</a>
+      </div>
+    </div>
+    <a class="hero-scroll" href="#concept" aria-label="下へスクロール">SCROLL</a>
+  </section>
 
-    <p class="hero-copy">
-      落ち着いた空間で<br>
-      お酒と会話を楽しむ<br>
-      大人の隠れ家バー
+  <!-- CONCEPT -->
+  <section class="section concept reveal" id="concept">
+    <p class="section-label">Concept</p>
+    <h2 class="section-title">一日の終わりに、<br>物語の続きを。</h2>
+    <p class="section-text">
+      伊勢原駅南口から徒歩1分。扉を開ければ、琥珀色の灯りと静かなカウンター。
+      定番のカクテルから、気分に合わせた「お任せ」の一杯まで。
+      初めての方も、お一人様も、どうぞ気軽にお立ち寄りください。
     </p>
-
-    <h1 class="hero-title">
-      BAR<br>
-      NOVEL
-    </h1>
-
-  </div>
-</section>
-
-  <section id="info" class="info">
-    <h2>INFORMATION</h2>
-
-    <ul>
-      <li>営業時間：火曜日〜日曜日（20:00〜翌04:00）</li>
-      <li>定休日：月曜日</li>
-      <li>住所：神奈川県伊勢原市桜台1-1-25 アーバンヒルズ2F</li>
-      <li>TEL：070-3861-1472</li>
-    </ul>
   </section>
 
-  <section id="menu" class="menu">
-    <h2>MENU</h2>
+  <!-- MENU -->
+  <section class="section reveal" id="menu">
+    <p class="section-label">Menu</p>
+    <h2 class="section-title">メニュー</h2>
 
-    <div class="menu-item">
-      <span>ALCOHOL</span>
-      <span>¥600〜</span>
+    <div class="menu-tabs" role="tablist" aria-label="メニュー切り替え">
+      <button class="menu-tab is-active" role="tab" aria-selected="true" data-tab="drink">DRINK</button>
+      <button class="menu-tab" role="tab" aria-selected="false" data-tab="food">FOOD</button>
     </div>
 
-    <div class="menu-item">
-      <span>FOOD</span>
-      <span>¥550〜</span>
+    <div class="menu-panel is-active" data-panel="drink">
+      <ul class="menu-list">
+        <li>
+          <div class="menu-head"><span class="menu-name">カクテル</span><span class="menu-dots"></span><span class="menu-price">¥750〜</span></div>
+          <p class="menu-desc">ジントニック／モヒート／モスコミュール 他</p>
+        </li>
+        <li>
+          <div class="menu-head"><span class="menu-name">お任せカクテル</span><span class="menu-dots"></span><span class="menu-price">¥750〜</span></div>
+          <p class="menu-desc">「甘め」「さっぱり」など、気分を伝えるだけでOK</p>
+        </li>
+        <li>
+          <div class="menu-head"><span class="menu-name">ウイスキー</span><span class="menu-dots"></span><span class="menu-price">¥750〜</span></div>
+        </li>
+        <li>
+          <div class="menu-head"><span class="menu-name">ハイネケン（瓶）</span><span class="menu-dots"></span><span class="menu-price">¥800</span></div>
+        </li>
+        <li>
+          <div class="menu-head"><span class="menu-name">焼酎</span><span class="menu-dots"></span><span class="menu-price">¥600〜</span></div>
+        </li>
+        <li>
+          <div class="menu-head"><span class="menu-name">テキーラ</span><span class="menu-dots"></span><span class="menu-price">¥500</span></div>
+        </li>
+      </ul>
     </div>
+
+    <div class="menu-panel" data-panel="food" hidden>
+      <ul class="menu-list">
+        <li>
+          <div class="menu-head"><span class="menu-name">ソーセージ盛り合わせ</span><span class="menu-dots"></span><span class="menu-price">¥1,000</span></div>
+        </li>
+        <li>
+          <div class="menu-head"><span class="menu-name">本日のパスタ</span><span class="menu-dots"></span><span class="menu-price">¥1,000〜</span></div>
+        </li>
+      </ul>
+      <img class="menu-photo" src="https://raw.githubusercontent.com/sota-furuta/bar-novel-bootstrap/main/IMG_8580.jpeg" alt="ソーセージ盛り合わせ" loading="lazy">
+    </div>
+
+    <p class="menu-note">※ 価格は税込です。その他のメニューは店頭でご確認ください。</p>
   </section>
 
-<section id="gallery" class="gallery">
-  <h2>GALLERY</h2>
-
-  <div class="slider">
-
-    <button class="slider-btn prev">❮</button>
-
- <div class="slides">
-  <img src="images/exterior.jpg" alt="BAR NOVEL 外観" class="slide active">
-  <img src="images/interior.jpg" alt="BAR NOVEL 店内" class="slide">
-  <img src="images/pasta.jpg" alt="BAR NOVEL パスタ" class="slide food-slide">
-  <img src="images/food.jpg" alt="BAR NOVEL フード" class="slide food-slide">
-  
-</div>
-
-    <button class="slider-btn next">❯</button>
-
-  </div>
-</section>
-
-  <section id="access" class="access">
-    <h2>ACCESS</h2>
-
-    <p>小田急線 伊勢原駅南口より徒歩約1分</p>
-
-<a
-  class="button"
-  href="https://maps.app.goo.gl/84LB9yJPqFdLJkiR6?g_st=im"
-  target="_blank"
-  rel="noopener noreferrer">
-  Google Maps
-</a>
+  <!-- GALLERY -->
+  <section class="section reveal" id="gallery">
+    <p class="section-label">Gallery</p>
+    <h2 class="section-title">店内の様子</h2>
+    <div class="gallery-track" id="galleryTrack">
+      <figure class="gallery-item">
+        <img src="https://raw.githubusercontent.com/sota-furuta/bar-novel-bootstrap/main/IMG_8581.jpeg" alt="店内カウンター" loading="lazy">
+        <figcaption>店内カウンター</figcaption>
+      </figure>
+      <figure class="gallery-item">
+        <img src="https://raw.githubusercontent.com/sota-furuta/bar-novel-bootstrap/main/IMG_8583.jpeg" alt="カクテル" loading="lazy">
+        <figcaption>カクテル</figcaption>
+      </figure>
+      <figure class="gallery-item">
+        <img src="https://raw.githubusercontent.com/sota-furuta/bar-novel-bootstrap/main/IMG_8580.jpeg" alt="ソーセージ盛り合わせ" loading="lazy">
+        <figcaption>ソーセージ盛り合わせ</figcaption>
+      </figure>
+      <figure class="gallery-item">
+        <img src="https://raw.githubusercontent.com/sota-furuta/bar-novel-bootstrap/main/IMG_8584.jpeg" alt="おつまみ" loading="lazy">
+        <figcaption>おつまみ</figcaption>
+      </figure>
+      <figure class="gallery-item">
+        <img src="https://raw.githubusercontent.com/sota-furuta/bar-novel-bootstrap/main/IMG_8582.jpeg" alt="小鉢" loading="lazy">
+        <figcaption>小鉢</figcaption>
+      </figure>
+    </div>
+    <p class="gallery-hint">← 横にスワイプできます →</p>
   </section>
 
-  <section id="instagram" class="instagram">
-    <h2>INSTAGRAM</h2>
-
-    <p>最新情報はこちらから</p>
-
-<a
-  class="button"
-  href="https://instagram.com/isehara.bar.cocktail.novel"
-  target="_blank"
-  rel="noopener noreferrer">
-  Instagramを見る
-</a>
+  <!-- INFORMATION -->
+  <section class="section reveal" id="info">
+    <p class="section-label">Information</p>
+    <h2 class="section-title">店舗情報</h2>
+    <dl class="info-list">
+      <div><dt>営業時間</dt><dd>20:00 〜 翌04:00</dd></div>
+      <div><dt>定休日</dt><dd>月曜日</dd></div>
+      <div><dt>電話</dt><dd><a href="tel:07038611472">070-3861-1472</a></dd></div>
+      <div><dt>ご予約</dt><dd>ご予約・お問い合わせはInstagramより</dd></div>
+    </dl>
   </section>
 
-  <footer>
-    <p>© BAR NOVEL</p>
+  <!-- ACCESS -->
+  <section class="section reveal" id="access">
+    <p class="section-label">Access</p>
+    <h2 class="section-title">アクセス</h2>
+    <p class="section-text">
+      〒259-1132<br>
+      神奈川県伊勢原市桜台1-1-25 アーバンヒルズ2F<br>
+      小田急線「伊勢原駅」南口より徒歩約1分
+    </p>
+    <a class="btn btn-solid" href="https://maps.app.goo.gl/pQygL5VJowjCGWbm6" target="_blank" rel="noopener">Googleマップで開く</a>
+  </section>
+
+  <!-- INSTAGRAM -->
+  <section class="section insta-band reveal">
+    <p class="section-label">Instagram</p>
+    <h2 class="section-title">@isehara.bar.cocktail.novel</h2>
+    <p class="section-text">日々の営業情報や新しい一杯を発信中。<br>ご予約・お問い合わせはInstagramのDMからどうぞ。</p>
+    <a class="btn btn-ghost" href="https://www.instagram.com/isehara.bar.cocktail.novel" target="_blank" rel="noopener">Instagramで予約・連絡する</a>
+  </section>
+
+  <footer class="site-footer">
+    <p class="footer-logo">BAR NOVEL</p>
+    <nav class="footer-nav" aria-label="フッターナビゲーション">
+      <a href="#menu">Menu</a>
+      <a href="#gallery">Gallery</a>
+      <a href="#info">Info</a>
+      <a href="#access">Access</a>
+    </nav>
+    <p class="footer-note">© BAR NOVEL — Isehara, Kanagawa</p>
   </footer>
 
-<script>
-  const slides = document.querySelectorAll(".slide");
-  const nextBtn = document.querySelector(".next");
-  const prevBtn = document.querySelector(".prev");
+  <!-- スマホ用 下部固定バー -->
+  <nav class="bottom-bar" aria-label="クイックアクション">
+    <a href="tel:07038611472">電話する</a>
+    <a href="https://maps.app.goo.gl/pQygL5VJowjCGWbm6" target="_blank" rel="noopener">地図</a>
+    <a href="https://www.instagram.com/isehara.bar.cocktail.novel" target="_blank" rel="noopener">予約・Instagram</a>
+  </nav>
 
-  let current = 0;
-
-  function showSlide(index) {
-    slides.forEach(slide => {
-      slide.classList.remove("active");
-    });
-
-    slides[index].classList.add("active");
-  }
-
-  nextBtn.addEventListener("click", () => {
-    current = (current + 1) % slides.length;
-    showSlide(current);
-  });
-
-  prevBtn.addEventListener("click", () => {
-    current = (current - 1 + slides.length) % slides.length;
-    showSlide(current);
-  });
-
-  setInterval(() => {
-    current = (current + 1) % slides.length;
-    showSlide(current);
-  }, 10000);
-
-  showSlide(current);
-</script>
-
+  <script src="script.js?v=20261101burger2"></script>
 </body>
-
 </html>
