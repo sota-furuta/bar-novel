@@ -1110,3 +1110,19 @@ main > .section:first-child {
 .info-list dd a {
   color: #f0dcb2;
 }
+
+/* 店舗情報: 文字色は全部白系に */
+.info-list dt {
+  color: #f5efe4;
+}
+
+.info-list dd,
+.info-hours dd {
+  color: #faf6ec;
+}
+
+.info-list a,
+.info-list dd a {
+  color: #faf6ec;
+  border-bottom-color: rgba(250, 246, 236, 0.55);
+}
