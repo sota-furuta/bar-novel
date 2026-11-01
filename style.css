@@ -1152,3 +1152,88 @@ body.has-banner .site-header {
 body.has-banner .hero {
   padding-top: var(--banner-h, 40px);
 }
+
+/* 下部固定バー: 外部サービスを開く前の確認ポップアップ */
+.external-open-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(8, 5, 2, 0.68);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.external-open-modal.is-visible {
+  opacity: 1;
+}
+
+.external-open-dialog {
+  width: min(100%, 340px);
+  padding: 24px 20px 18px;
+  border: 1px solid rgba(216, 154, 85, 0.45);
+  border-radius: 16px;
+  background: #211407;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  transform: translateY(8px);
+  transition: transform 0.18s ease;
+}
+
+.external-open-modal.is-visible .external-open-dialog {
+  transform: translateY(0);
+}
+
+.external-open-message {
+  margin: 0;
+  color: #faf6ec;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+.external-open-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.external-open-actions button {
+  min-height: 46px;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.external-open-cancel {
+  border: 1px solid rgba(250, 246, 236, 0.35);
+  background: transparent;
+  color: #faf6ec;
+}
+
+.external-open-confirm {
+  border: 1px solid #d89a55;
+  background: #d89a55;
+  color: #221503;
+  box-shadow: 0 4px 0 #6e4520;
+}
+
+.external-open-confirm:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #6e4520;
+}
+
+body.external-open-locked {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .external-open-modal,
+  .external-open-dialog {
+    transition: none;
+  }
+}
