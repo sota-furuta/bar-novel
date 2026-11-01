@@ -1101,3 +1101,12 @@ main > .section:first-child {
   border-radius: 10px;
   padding: 6px 14px;
 }
+
+/* 店舗情報: 丸枠の中の文字色を柔らかい金クリームに統一 */
+.info-list dd {
+  color: #f0dcb2;
+}
+
+.info-list dd a {
+  color: #f0dcb2;
+}
