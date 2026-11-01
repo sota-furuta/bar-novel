@@ -1287,8 +1287,8 @@ body.external-open-locked {
   filter: saturate(1.06) contrast(1.04) brightness(1.02);
 }
 
-/* ==== ウイスキー一覧（ギャラリーのカードとメニューで共用） ==== */
-.whiskey-card {
+/* ==== ドリンク一覧（ギャラリーのカードとメニューで共用） ==== */
+.drink-card {
   height: 240px;
   overflow-y: auto;
   background: linear-gradient(160deg, rgba(43, 29, 15, 0.97), rgba(24, 16, 9, 0.98));
@@ -1300,12 +1300,12 @@ body.external-open-locked {
 }
 
 @media (min-width: 820px) {
-  .whiskey-card {
+  .drink-card {
     height: 260px;
   }
 }
 
-.whiskey-title {
+.drink-title {
   margin: 0 0 2px;
   text-align: center;
   font-family: "Cormorant Garamond", serif;
@@ -1315,7 +1315,7 @@ body.external-open-locked {
   color: #e8ab6d;
 }
 
-.whiskey-cat {
+.drink-cat {
   margin: 12px 0 3px;
   font-size: 0.7rem;
   font-weight: 700;
@@ -1323,11 +1323,11 @@ body.external-open-locked {
   color: #e8ab6d;
 }
 
-.whiskey-list > .whiskey-cat:first-child {
+.drink-list > .drink-cat:first-child {
   margin-top: 4px;
 }
 
-.whiskey-row {
+.drink-row {
   display: flex;
   align-items: baseline;
   gap: 8px;
@@ -1336,28 +1336,28 @@ body.external-open-locked {
   color: #f7ecd7;
 }
 
-.whiskey-price {
+.drink-price {
   color: #ffb35c;
   font-weight: 700;
   white-space: nowrap;
 }
 
-.whiskey-detail {
+.drink-detail {
   margin-top: 7px;
 }
 
-.whiskey-detail summary {
+.drink-detail summary {
   cursor: pointer;
   font-size: 0.8rem;
   font-weight: 600;
   color: #e8ab6d;
 }
 
-.whiskey-detail summary::marker {
+.drink-detail summary::marker {
   color: #e8ab6d;
 }
 
-.whiskey-detail .whiskey-row {
+.drink-detail .drink-row {
   font-size: 0.8rem;
   color: #e9dcc0;
 }
