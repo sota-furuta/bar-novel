@@ -1237,3 +1237,12 @@ body.external-open-locked {
     transition: none;
   }
 }
+
+/* 再発防止: hidden状態のポップアップは透明でも画面を覆わない */
+.external-open-modal[hidden] {
+  display: none !important;
+}
+
+.external-open-modal:not(.is-visible) {
+  pointer-events: none;
+}
