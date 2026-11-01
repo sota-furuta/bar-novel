@@ -759,3 +759,8 @@ main > .section:first-child {
 #access .section-text {
   text-align: left;
 }
+
+/* コンセプトは段落ごとに間を取る */
+#concept .section-text + .section-text {
+  margin-top: 16px;
+}
