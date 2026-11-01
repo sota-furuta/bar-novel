@@ -741,3 +741,8 @@ main > .section:first-child {
     line-height: 1.5;
   }
 }
+
+/* アクセスは中央寄せ（Instagramセクションと統一） */
+#access {
+  text-align: center;
+}
