@@ -1261,45 +1261,7 @@ body.external-open-locked {
   text-align: left;
 }
 
-/* ==== プロ仕様の磨き上げ（検証中） ==== */
-/* お客様の声 */
-.voice {
-  margin: 26px 0 4px;
-  padding: 4px 0 4px 18px;
-  border-left: 2px solid #b06a28;
-}
-
-.voice p {
-  margin: 0;
-  font-family: "Noto Serif JP", serif;
-  font-size: 1.02rem;
-  line-height: 1.9;
-  color: #f7ecd7;
-}
-
-.voice cite {
-  display: block;
-  margin-top: 8px;
-  font-style: normal;
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-  color: #c9b586;
-}
-
-/* メニューのおすすめタグ */
-.menu-tag {
-  display: inline-block;
-  margin-left: 8px;
-  padding: 1px 9px;
-  border: 1px solid rgba(255, 179, 92, 0.55);
-  border-radius: 999px;
-  color: #ffb35c;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  vertical-align: 2px;
-}
-
+/* ==== プロ仕様の磨き上げ ==== */
 /* FAQ */
 .faq-item {
   border-top: 1px solid rgba(216, 154, 85, 0.22);
