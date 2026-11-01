@@ -1079,3 +1079,9 @@ main > .section:first-child {
     animation: none;
   }
 }
+
+/* ==== 店舗情報: 文字色の見直し（階層づけ） ==== */
+/* 項目名は少し深い銅色にして、値とアクセントに差をつける */
+.info-list dt {
+  color: #e0aa6a;
+}
