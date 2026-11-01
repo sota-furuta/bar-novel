@@ -841,3 +841,8 @@ main > .section:first-child {
     animation: none;
   }
 }
+
+/* 営業時間の文字色を価格の色に合わせる */
+.info-hours dd {
+  color: #ffb35c;
+}
