@@ -856,3 +856,73 @@ main > .section:first-child {
   color: #ffb35c;
   border-bottom-color: #ffb35c;
 }
+
+/* ==== コンセプト: 落ち着いた、おしゃれな動き ==== */
+/* 柔らかい光がゆっくり呼吸する */
+#concept {
+  position: relative;
+}
+
+#concept::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(420px 240px at 18% 0%, rgba(240, 168, 72, 0.13), transparent 70%);
+  opacity: 0.55;
+  animation: conceptGlow 9s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes conceptGlow {
+  from {
+    opacity: 0.35;
+  }
+
+  to {
+    opacity: 0.85;
+  }
+}
+
+/* 見出しの下に細い線がゆっくり伸びる */
+#concept .section-title::after {
+  content: "";
+  display: block;
+  width: 0;
+  height: 1px;
+  margin-top: 16px;
+  background: linear-gradient(90deg, var(--copper), transparent);
+  transition: width 1.4s cubic-bezier(0.22, 0.8, 0.3, 1) 0.25s;
+}
+
+#concept .section-title.is-shown::after {
+  width: 72px;
+}
+
+/* 段落が順に、ゆっくり浮かび上がる */
+#concept p.section-text {
+  transition-duration: 1.1s;
+}
+
+#concept p.section-text:nth-of-type(2) {
+  transition-delay: 0.15s;
+}
+
+#concept p.section-text:nth-of-type(3) {
+  transition-delay: 0.32s;
+}
+
+#concept p.section-text:nth-of-type(4) {
+  transition-delay: 0.49s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #concept::before {
+    animation: none;
+  }
+
+  #concept .section-title::after {
+    transition: none;
+    width: 72px;
+  }
+}
