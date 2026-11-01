@@ -754,3 +754,8 @@ main > .section:first-child {
 .insta-band .section-title {
   text-align: left;
 }
+
+/* 住所ブロック（郵便番号〜）は左寄せ */
+#access .section-text {
+  text-align: left;
+}
