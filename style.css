@@ -846,3 +846,13 @@ main > .section:first-child {
 .info-hours dd {
   color: #ffb35c;
 }
+
+/* 店舗情報の金っぽい文字（項目名・リンク）をすべて価格の色に統一 */
+.info-list dt {
+  color: #ffb35c;
+}
+
+.info-list a {
+  color: #ffb35c;
+  border-bottom-color: #ffb35c;
+}
