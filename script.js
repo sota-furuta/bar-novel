@@ -96,9 +96,11 @@ function makeExclusive(selector, scrollOnOpen) {
       if (scrollOnOpen) {
         const target = item.closest("li") || item;
         setTimeout(() => {
-          const y = target.getBoundingClientRect().top + window.scrollY - 12;
+          const header = document.querySelector(".site-header");
+          const offset = header ? header.offsetHeight + 10 : 12;
+          const y = target.getBoundingClientRect().top + window.scrollY - offset;
           window.scrollTo({ top: y, behavior: "smooth" });
-        }, 60);
+        }, 400);
       }
     });
   });
