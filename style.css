@@ -1007,3 +1007,25 @@ main > .section:first-child {
     animation: none;
   }
 }
+
+/* ==== メニュー: 色の見直し ==== */
+/* 説明文を少し明るくして読みやすく */
+.menu-desc {
+  color: #d9c9a6;
+}
+
+/* 注記も薄すぎないように */
+.menu-note {
+  color: #c9b586;
+}
+
+/* 名前と価格の間の点線を、価格の色に寄せて存在感を出す */
+.menu-dots {
+  border-bottom-color: rgba(255, 179, 92, 0.45);
+}
+
+/* 非選択タブの枠と文字を少し強く */
+.menu-tab {
+  border-color: rgba(255, 179, 92, 0.55);
+  color: #f0c491;
+}
