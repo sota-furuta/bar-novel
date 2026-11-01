@@ -86,9 +86,9 @@ if (hamburger && hamburgerMenu) {
     .catch(() => {});
 })();
 
-// 下部固定バー: 電話以外は外部サービスを開く前に確認する
+// 外部リンク: 電話以外は外部サービスを開く前に確認する
 (function () {
-  const links = document.querySelectorAll('.bottom-bar a[href^="http"]');
+  const links = document.querySelectorAll('a[href^="http"]');
   if (!links.length) return;
 
   const modal = document.createElement("div");
