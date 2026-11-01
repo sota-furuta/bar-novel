@@ -25,6 +25,35 @@ tabs.forEach((tab) => {
   });
 });
 
+// ウイスキー一覧: データはここだけを編集すれば、ギャラリーとメニューの両方に反映される
+const WHISKEY_MENU = [
+  { cat: "Scotch", items: [["グレンリベット12年", 850], ["グレンフィディック12年", 850], ["ジョニーウォーカー ダブルブラック", 850]] },
+  { cat: "American", items: [["ジャックダニエル", 750], ["ワイルドターキー", 800], ["メーカーズマーク", 800], ["ウッドフォードリザーブ", 950]] },
+  { cat: "Canadian and Irish", items: [["カナディアンクラブ", 750], ["ジェムソン", 800], ["ブラックブッシュ", 850]] },
+  { cat: "Japanese", items: [["オールド", 750]] },
+];
+document.querySelectorAll("[data-whiskey-list]").forEach((box) => {
+  WHISKEY_MENU.forEach((group) => {
+    const cat = document.createElement("p");
+    cat.className = "whiskey-cat";
+    cat.textContent = group.cat;
+    box.appendChild(cat);
+    group.items.forEach(([name, price]) => {
+      const row = document.createElement("div");
+      row.className = "whiskey-row";
+      const n = document.createElement("span");
+      n.textContent = name;
+      const d = document.createElement("span");
+      d.className = "menu-dots";
+      const p = document.createElement("span");
+      p.className = "whiskey-price";
+      p.textContent = "¥" + price;
+      row.append(n, d, p);
+      box.appendChild(row);
+    });
+  });
+});
+
 // FAQ: 1つ開いたら他は閉じる
 const faqItems = document.querySelectorAll(".faq-item");
 faqItems.forEach((item) => {
