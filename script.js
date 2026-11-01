@@ -83,16 +83,20 @@ document.querySelectorAll("[data-menu-min]").forEach((el) => {
   if (prices.length) el.textContent = "¥" + Math.min(...prices) + "〜";
 });
 
-// FAQ: 1つ開いたら他は閉じる
-const faqItems = document.querySelectorAll(".faq-item");
-faqItems.forEach((item) => {
-  item.addEventListener("toggle", () => {
-    if (!item.open) return;
-    faqItems.forEach((other) => {
-      if (other !== item && other.open) other.open = false;
+// 開閉パネル: 同じグループ内で1つ開いたら他は閉じる（FAQとドリンク一覧）
+function makeExclusive(selector) {
+  const items = document.querySelectorAll(selector);
+  items.forEach((item) => {
+    item.addEventListener("toggle", () => {
+      if (!item.open) return;
+      items.forEach((other) => {
+        if (other !== item && other.open) other.open = false;
+      });
     });
   });
-});
+}
+makeExclusive(".faq-item");
+makeExclusive(".drink-detail");
 
 // セクション: スクロールでふわっと表示
 const revealTargets = document.querySelectorAll(".reveal");
