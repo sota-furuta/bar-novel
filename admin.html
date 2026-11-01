@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>BAR NOVEL お知らせ管理</title>
+  <style>
+    body { font-family: sans-serif; background: #171008; color: #f5efe4; margin: 0; padding: 24px 16px 64px; }
+    main { max-width: 520px; margin: 0 auto; }
+    h1 { font-size: 1.2rem; letter-spacing: 0.1em; }
+    p.note { color: #c9b586; font-size: 0.85rem; line-height: 1.7; }
+    label { display: block; margin: 18px 0 6px; font-size: 0.85rem; color: #e0aa6a; }
+    input[type="password"], input[type="date"], input[type="text"] {
+      width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px;
+      border: 1px solid rgba(216,154,85,.4); background: #241708; color: #f5efe4; font-size: 1rem;
+    }
+    .row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .row input[type="date"] { flex: 0 0 150px; }
+    .row input[type="text"] { flex: 1; }
+    .row button { flex: 0 0 auto; }
+    button {
+      padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(216,154,85,.5);
+      background: #38270f; color: #f0c491; font-size: 0.95rem; cursor: pointer;
+    }
+    button.primary { background: #d89a55; color: #221503; font-weight: 700; width: 100%; margin-top: 20px;
+      box-shadow: 0 4px 0 #6e4520; }
+    #status { margin-top: 16px; font-size: 0.9rem; min-height: 1.4em; }
+    .ok { color: #a9dfae; } .err { color: #ff9d8a; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>BAR NOVEL お知らせ管理</h1>
+    <p class="note">臨時休業の日を登録すると、ホームページのトップにお知らせの帯が出ます。日付が過ぎたものは自動で消えます。定休日（月曜）は登録不要です。</p>
+
+    <label for="pw">パスワード</label>
+    <input type="password" id="pw" autocomplete="current-password" placeholder="管理用パスワード">
+
+    <label>臨時休業の日</label>
+    <div id="rows"></div>
+    <button type="button" id="addRow">＋ 日付を追加</button>
+
+    <button type="button" class="primary" id="save">保存する</button>
+    <p id="status"></p>
+  </main>
+
+  <script>
+    const rowsEl = document.getElementById("rows");
+    const statusEl = document.getElementById("status");
+
+    function addRow(date = "", note = "") {
+      const div = document.createElement("div");
+      div.className = "row";
+      div.innerHTML = '<input type="date" value="' + date + '">' +
+        '<input type="text" maxlength="60" placeholder="一言（例：貸切のため）" value="' + note.replace(/"/g, "&quot;") + '">' +
+        '<button type="button" aria-label="削除">×</button>';
+      div.querySelector("button").addEventListener("click", () => div.remove());
+      rowsEl.appendChild(div);
+    }
+
+    document.getElementById("addRow").addEventListener("click", () => addRow());
+
+    fetch("/api/news").then(r => r.json()).then(d => {
+      (d.closures || []).forEach(c => addRow(c.date, c.note || ""));
+      if (!rowsEl.children.length) addRow();
+    }).catch(() => addRow());
+
+    document.getElementById("save").addEventListener("click", async () => {
+      const closures = [...rowsEl.querySelectorAll(".row")].map(row => {
+        const inputs = row.querySelectorAll("input");
+        return { date: inputs[0].value, note: inputs[1].value.trim() };
+      }).filter(c => c.date);
+      statusEl.textContent = "保存中…";
+      statusEl.className = "";
+      try {
+        const res = await fetch("/api/news", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: document.getElementById("pw").value, closures })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          statusEl.textContent = "保存しました。サイトに反映されます。";
+          statusEl.className = "ok";
+        } else {
+          statusEl.textContent = data.error === "unauthorized" ? "パスワードが違います。" : "保存できませんでした（" + data.error + "）";
+          statusEl.className = "err";
+        }
+      } catch (e) {
+        statusEl.textContent = "通信エラーです。電波の良い場所でお試しください。";
+        statusEl.className = "err";
+      }
+    });
+  </script>
+</body>
+</html>
