@@ -783,3 +783,160 @@ main > .section:first-child {
     transition: none;
   }
 }
+
+/* ================= イケイケ版（検証用） ================= */
+/* 背景に斜めストライプの気配 */
+body {
+  background-image: repeating-linear-gradient(-45deg,
+      rgba(255, 255, 255, 0.025) 0 14px,
+      transparent 14px 28px);
+}
+
+/* ヒーロー: 写真を濃く、タイトルは特大グラデーション */
+.hero-photo {
+  filter: saturate(1.35) contrast(1.12);
+  animation: ikeIn 1.1s cubic-bezier(0.2, 0.9, 0.25, 1.2) both;
+}
+
+@keyframes ikeIn {
+  from {
+    transform: scale(1.18);
+    opacity: 0.4;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.hero-title {
+  font-size: clamp(4.6rem, 19vw, 10rem);
+  line-height: 0.95;
+  background: linear-gradient(92deg, #ffe9b0 10%, #f0a848 45%, #ff7847 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 6px 22px rgba(240, 168, 72, 0.35));
+}
+
+.hero-eyebrow {
+  display: inline-block;
+  background: var(--copper);
+  color: #221503;
+  font-weight: 700;
+  padding: 4px 12px;
+  transform: rotate(-2deg);
+  border-radius: 4px;
+}
+
+.hero-copy {
+  font-size: 1.3rem;
+  font-weight: 500;
+}
+
+.hero-badges li {
+  background: #f0a848;
+  color: #221503;
+  border-color: #f0a848;
+  font-weight: 700;
+  transform: rotate(-1.2deg);
+}
+
+.hero-badges li:nth-child(2) {
+  transform: rotate(1.4deg);
+}
+
+.hero-badges li:nth-child(3) {
+  transform: rotate(-0.6deg);
+}
+
+/* スクロール帯（マーキー） */
+.marquee {
+  overflow: hidden;
+  background: linear-gradient(90deg, #f0a848, #ff7847);
+  transform: rotate(-1.6deg) scale(1.03);
+  margin: 10px 0 4px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marqueeMove 18s linear infinite;
+}
+
+.marquee-track span {
+  white-space: nowrap;
+  padding: 10px 0;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #221503;
+  font-size: 0.95rem;
+}
+
+@keyframes marqueeMove {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* セクション見出し: ラベルをチップ化、タイトル特大 */
+.section-label {
+  display: inline-block;
+  background: var(--copper);
+  color: #221503;
+  font-weight: 700;
+  font-style: normal;
+  padding: 3px 12px;
+  border-radius: 999px;
+  transform: rotate(-1deg);
+}
+
+.section-title {
+  font-size: clamp(2.2rem, 9vw, 3.2rem);
+}
+
+/* ボタン: ハードシャドウ＋ホバーで沈む */
+.btn-solid {
+  box-shadow: 0 6px 0 #7a4416;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.btn-solid:hover {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #7a4416;
+}
+
+/* ギャラリー: 少し傾けてポラロイド風、ホバーでまっすぐ */
+.gallery-item {
+  transform: rotate(-1.4deg);
+  transition: transform 0.25s ease;
+}
+
+.gallery-item:nth-child(even) {
+  transform: rotate(1.3deg);
+}
+
+.gallery-item:hover {
+  transform: rotate(0) scale(1.03);
+}
+
+/* 価格を大きく太く */
+.menu-price {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffb35c;
+}
+
+/* 下部バー: グラデーション */
+.bottom-bar {
+  background: linear-gradient(90deg, #b06a28, #8a4d16);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track,
+  .hero-photo {
+    animation: none;
+  }
+}
