@@ -25,6 +25,17 @@ tabs.forEach((tab) => {
   });
 });
 
+// FAQ: 1つ開いたら他は閉じる
+const faqItems = document.querySelectorAll(".faq-item");
+faqItems.forEach((item) => {
+  item.addEventListener("toggle", () => {
+    if (!item.open) return;
+    faqItems.forEach((other) => {
+      if (other !== item && other.open) other.open = false;
+    });
+  });
+});
+
 // セクション: スクロールでふわっと表示
 const revealTargets = document.querySelectorAll(".reveal");
 if ("IntersectionObserver" in window) {
