@@ -1246,3 +1246,12 @@ body.external-open-locked {
 .external-open-modal:not(.is-visible) {
   pointer-events: none;
 }
+
+/* チャージ: 注意書きから独立した行 */
+.menu-charge {
+  margin: 12px 0 0;
+  text-align: center;
+  color: #ffb35c;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
