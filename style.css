@@ -1040,3 +1040,9 @@ main > .section:first-child {
 .info-hours dd {
   color: #e8ab6d;
 }
+
+/* 店舗情報の他の金色（電話・予約リンク）も同じ落ち着いた銅色に */
+.info-list a {
+  color: #e8ab6d;
+  border-bottom-color: #e8ab6d;
+}
