@@ -1072,3 +1072,13 @@ main > .section:first-child {
   transform: translateY(4px);
   box-shadow: 0 2px 0 #7a4416;
 }
+
+/* メニュータブ: 色を少し落ち着かせる */
+.menu-tab.is-active {
+  background: linear-gradient(92deg, #ecd3a0 10%, #d89a55 55%, #c07a3e 100%);
+  box-shadow: 0 6px 0 #6e4520, inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.menu-tab.is-active:active {
+  box-shadow: 0 2px 0 #6e4520;
+}
