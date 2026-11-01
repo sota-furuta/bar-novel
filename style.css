@@ -1286,3 +1286,83 @@ body.external-open-locked {
 .menu-photo {
   filter: saturate(1.06) contrast(1.04) brightness(1.02);
 }
+
+/* ==== ドリンク一覧（ギャラリーのカードとメニューで共用） ==== */
+.drink-card {
+  height: 240px;
+  overflow-y: auto;
+  background: linear-gradient(160deg, rgba(43, 29, 15, 0.97), rgba(24, 16, 9, 0.98));
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px 18px 18px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(216, 154, 85, 0.5) transparent;
+}
+
+@media (min-width: 820px) {
+  .drink-card {
+    height: 260px;
+  }
+}
+
+.drink-title {
+  margin: 0 0 2px;
+  text-align: center;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.25rem;
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;
+  color: #e8ab6d;
+}
+
+.drink-cat {
+  margin: 12px 0 3px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: #e8ab6d;
+}
+
+.drink-list > .drink-cat:first-child {
+  margin-top: 4px;
+}
+
+.drink-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 2.5px 0;
+  font-size: 0.82rem;
+  color: #f7ecd7;
+}
+
+.drink-price {
+  color: #ffb35c;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.drink-detail {
+  margin-top: 7px;
+}
+
+.drink-detail summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e8ab6d;
+}
+
+.drink-detail summary::marker {
+  color: #e8ab6d;
+}
+
+.drink-detail .drink-row {
+  font-size: 0.8rem;
+  color: #e9dcc0;
+}
+
+/* 開いた一覧の先頭へ画面を合わせる際の余白 */
+.drink-detail {
+  scroll-margin-top: 14px;
+}

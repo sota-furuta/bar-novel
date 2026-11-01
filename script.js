@@ -25,16 +25,88 @@ tabs.forEach((tab) => {
   });
 });
 
-// FAQ: 1つ開いたら他は閉じる
-const faqItems = document.querySelectorAll(".faq-item");
-faqItems.forEach((item) => {
-  item.addEventListener("toggle", () => {
-    if (!item.open) return;
-    faqItems.forEach((other) => {
-      if (other !== item && other.open) other.open = false;
+// ドリンク一覧: 価格や銘柄の変更は、ここの数字を直すだけでOK（ギャラリーとメニューの両方に自動で反映される）
+const DRINK_LISTS = {
+  cocktails: [
+    { cat: "Gin base", items: [["ギムレット", 900], ["ネグローニ", 900], ["マティーニ", 950], ["ジントニック", 750], ["ニンジャタートル", 800]] },
+    { cat: "Vodka base", items: [["カミカゼ", 900], ["ガルフストリーム", 900], ["スクリュードライバー", 800], ["ブラッディ・メアリー", 850], ["モスコーミュール", 750]] },
+    { cat: "Rum base", items: [["エックスワイジィ", 900], ["キューバリブレ", 750], ["ダイキリ", 900], ["パイナップルフィズ", 750], ["ボストンクーラー", 750]] },
+    { cat: "Tequila base", items: [["マルガリータ", 900], ["モッキンバード", 900], ["エルディアブロ", 800], ["テキーラサンライズ", 800], ["ストローハット", 850]] },
+    { cat: "Whisky base", items: [["マンハッタン", 950], ["ゴッドファーザー", 850], ["ニューヨーク", 900], ["ラスティネイル", 900], ["チャーチル", 900]] },
+    { cat: "Brandy base", items: [["サイドカー", 950], ["ジャックローズ", 900], ["アレキサンダー", 950], ["オリンピック", 950]] },
+    { cat: "Liqueur base", items: [["チャイナブルー", 800], ["チャーリーチャップリン", 850], ["スプモーニ", 750], ["ピーチツリーフィズ", 750], ["カルーアミルク", 750]] },
+    { cat: "Beer base", items: [["レッドアイ", 800], ["ジャンディガフ", 800], ["ディーゼル", 800]] },
+  ],
+  whiskey: [
+    { cat: "Scotch", items: [["グレンリベット12年", 850], ["グレンフィディック12年", 850], ["ジョニーウォーカー ダブルブラック", 850]] },
+    { cat: "American", items: [["ジャックダニエル", 750], ["ワイルドターキー", 800], ["メーカーズマーク", 800], ["ウッドフォードリザーブ", 950]] },
+    { cat: "Canadian and Irish", items: [["カナディアンクラブ", 750], ["ジェムソン", 800], ["ブラックブッシュ", 850]] },
+    { cat: "Japanese", items: [["オールド", 750]] },
+    { cat: "Smoky", items: [["アードベック10年", 900], ["アードベック5年", 900], ["ラフロイグ10年", 1200]] },
+  ],
+  spirits: [
+    { cat: "Gin", items: [["ボンベイサファイヤ", 850], ["タンカレーNo.10", 900]] },
+    { cat: "Vodka", items: [["ズブロッカ", 800]] },
+    { cat: "Rum", items: [["キャプテンモルガン", 800], ["マイヤーズ", 800]] },
+    { cat: "Tequila", items: [["クエルボゴールド", 500]] },
+  ],
+  nonalcohol: [
+    { cat: "Soft drink", items: [["コカコーラ", 550], ["ジンジャエール", 550], ["トマトジュース", 550], ["オレンジジュース", 550], ["パイナップルジュース", 550], ["クランベリージュース", 600], ["グレープフルーツジュース", 600], ["緑茶", 550], ["烏龍茶", 550], ["紅茶", 550], ["コーヒー", 550]] },
+    { cat: "Non alcohol cocktail", items: [["シャーリーテンプル", 650], ["シンデレラ", 650], ["バージンブリーズ", 650]] },
+  ],
+};
+document.querySelectorAll("[data-menu-list]").forEach((box) => {
+  const groups = DRINK_LISTS[box.dataset.menuList] || [];
+  groups.forEach((group) => {
+    const cat = document.createElement("p");
+    cat.className = "drink-cat";
+    cat.textContent = group.cat;
+    box.appendChild(cat);
+    group.items.forEach(([name, price]) => {
+      const row = document.createElement("div");
+      row.className = "drink-row";
+      const n = document.createElement("span");
+      n.textContent = name;
+      const d = document.createElement("span");
+      d.className = "menu-dots";
+      const p = document.createElement("span");
+      p.className = "drink-price";
+      p.textContent = "¥" + price;
+      row.append(n, d, p);
+      box.appendChild(row);
     });
   });
 });
+// カテゴリの「¥○○〜」表記も、データの最安値から自動で合わせる
+document.querySelectorAll("[data-menu-min]").forEach((el) => {
+  const groups = DRINK_LISTS[el.dataset.menuMin] || [];
+  const prices = groups.flatMap((g) => g.items.map((i) => i[1]));
+  if (prices.length) el.textContent = "¥" + Math.min(...prices) + "〜";
+});
+
+// 開閉パネル: 同じグループ内で1つ開いたら他は閉じる（FAQとドリンク一覧）
+function makeExclusive(selector, scrollOnOpen) {
+  const items = document.querySelectorAll(selector);
+  items.forEach((item) => {
+    item.addEventListener("toggle", () => {
+      if (!item.open) return;
+      items.forEach((other) => {
+        if (other !== item && other.open) other.open = false;
+      });
+      if (scrollOnOpen) {
+        const target = item.closest("li") || item;
+        setTimeout(() => {
+          const header = document.querySelector(".site-header");
+          const offset = header ? header.offsetHeight + 10 : 12;
+          const y = target.getBoundingClientRect().top + window.scrollY - offset;
+          window.scrollTo({ top: y, behavior: "smooth" });
+        }, 400);
+      }
+    });
+  });
+}
+makeExclusive(".faq-item", false);
+makeExclusive(".drink-detail", true);
 
 // セクション: スクロールでふわっと表示
 const revealTargets = document.querySelectorAll(".reveal");
