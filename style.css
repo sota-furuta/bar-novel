@@ -1247,17 +1247,8 @@ body.external-open-locked {
   pointer-events: none;
 }
 
-/* チャージ: 注意書きから独立した行 */
-.menu-charge {
-  margin: 6px 0 0;
-  text-align: center;
-  font-size: 0.78rem;
-  color: #c9b586;
-}
-
 /* メニューの注意書き（税込・チャージ）は他と揃えて左寄せ */
-.menu-note,
-.menu-charge {
+.menu-note {
   text-align: left;
 }
 
