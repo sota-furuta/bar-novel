@@ -137,14 +137,6 @@ a {
   position: absolute;
   inset: 0;
   background: url("https://raw.githubusercontent.com/sota-furuta/bar-novel-bootstrap/main/IMG_8581.jpeg") center 30% / cover no-repeat;
-  transform: scale(1.06);
-  animation: heroZoom 14s ease-out forwards;
-}
-
-@keyframes heroZoom {
-  to {
-    transform: scale(1);
-  }
 }
 
 .hero-shade {
@@ -763,4 +755,31 @@ main > .section:first-child {
 /* コンセプトは段落ごとに間を取る */
 #concept .section-text + .section-text {
   margin-top: 16px;
+}
+
+/* ==== 控えめな動き ==== */
+/* メニューのタブ切り替えに短いフェード */
+.menu-panel.is-active {
+  animation: panelIn 0.35s ease;
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* 動きを抑える設定の端末では無効化 */
+@media (prefers-reduced-motion: reduce) {
+  .menu-panel.is-active,
+  .reveal {
+    animation: none;
+    transition: none;
+  }
 }
