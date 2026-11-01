@@ -63,3 +63,25 @@ if (hamburger && hamburgerMenu) {
     if (!hamburgerMenu.hidden && !e.target.closest(".site-header")) setMenu(false);
   });
 }
+
+// 臨時休業のお知らせ帯
+(function () {
+  const banner = document.getElementById("closureBanner");
+  if (!banner) return;
+  fetch("/api/news")
+    .then((r) => r.json())
+    .then((d) => {
+      const list = (d && d.closures) || [];
+      if (!list.length) return;
+      const fmt = (c) => {
+        const dt = new Date(c.date + "T00:00:00+09:00");
+        const w = "日月火水木金土"[dt.getDay()];
+        return `${dt.getMonth() + 1}月${dt.getDate()}日（${w}）は臨時休業です${c.note ? "（" + c.note + "）" : ""}`;
+      };
+      banner.textContent = "【お知らせ】" + list.slice(0, 2).map(fmt).join("／");
+      banner.hidden = false;
+      document.body.classList.add("has-banner");
+      document.body.style.setProperty("--banner-h", banner.offsetHeight + "px");
+    })
+    .catch(() => {});
+})();

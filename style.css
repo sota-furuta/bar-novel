@@ -1126,3 +1126,29 @@ main > .section:first-child {
   color: #faf6ec;
   border-bottom-color: rgba(250, 246, 236, 0.55);
 }
+
+/* 臨時休業のお知らせ帯 */
+.closure-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 120;
+  background: linear-gradient(90deg, #b06a28, #8a4d16);
+  color: #fff7ea;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.6;
+  padding: 9px 14px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+}
+
+body.has-banner .site-header {
+  top: var(--banner-h, 40px);
+}
+
+body.has-banner .hero {
+  padding-top: var(--banner-h, 40px);
+}
