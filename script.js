@@ -85,3 +85,74 @@ if (hamburger && hamburgerMenu) {
     })
     .catch(() => {});
 })();
+
+// 外部リンク: 電話以外は外部サービスを開く前に確認する
+(function () {
+  const links = document.querySelectorAll('a[href^="http"]');
+  if (!links.length) return;
+
+  const modal = document.createElement("div");
+  modal.className = "external-open-modal";
+  modal.hidden = true;
+  modal.innerHTML =
+    '<div class="external-open-dialog" role="dialog" aria-modal="true" aria-labelledby="externalOpenMessage">' +
+    '<p class="external-open-message" id="externalOpenMessage"></p>' +
+    '<div class="external-open-actions">' +
+    '<button type="button" class="external-open-cancel">キャンセル</button>' +
+    '<button type="button" class="external-open-confirm">開く</button>' +
+    "</div></div>";
+  document.body.appendChild(modal);
+
+  const message = modal.querySelector(".external-open-message");
+  const cancelButton = modal.querySelector(".external-open-cancel");
+  const confirmButton = modal.querySelector(".external-open-confirm");
+  let pendingUrl = "";
+  let lastFocused = null;
+
+  const serviceName = (link) => {
+    if (link.href.includes("instagram.com")) return "Instagram";
+    if (link.href.includes("maps.app.goo.gl") || link.href.includes("google.com/maps")) return "Googleマップ";
+    return link.textContent.trim();
+  };
+
+  const close = () => {
+    modal.classList.remove("is-visible");
+    document.body.classList.remove("external-open-locked");
+    window.setTimeout(() => {
+      modal.hidden = true;
+      pendingUrl = "";
+      if (lastFocused) lastFocused.focus();
+    }, 180);
+  };
+
+  const open = (link) => {
+    pendingUrl = link.href;
+    lastFocused = link;
+    message.textContent = `${serviceName(link)}を開きますか？`;
+    modal.hidden = false;
+    document.body.classList.add("external-open-locked");
+    window.requestAnimationFrame(() => {
+      modal.classList.add("is-visible");
+      confirmButton.focus();
+    });
+  };
+
+  links.forEach((link) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      open(link);
+    });
+  });
+
+  cancelButton.addEventListener("click", close);
+  confirmButton.addEventListener("click", () => {
+    if (pendingUrl) window.open(pendingUrl, "_blank", "noopener");
+    close();
+  });
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) close();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !modal.hidden) close();
+  });
+})();
