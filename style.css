@@ -1082,3 +1082,12 @@ main > .section:first-child {
 .menu-tab.is-active:active {
   box-shadow: 0 2px 0 #6e4520;
 }
+
+/* メニュータブ: グラデーションなし（フラット） */
+.menu-tab {
+  background: #38270f;
+}
+
+.menu-tab.is-active {
+  background: #d89a55;
+}
