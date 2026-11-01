@@ -94,9 +94,11 @@ function makeExclusive(selector, scrollOnOpen) {
         if (other !== item && other.open) other.open = false;
       });
       if (scrollOnOpen) {
-        requestAnimationFrame(() => {
-          item.scrollIntoView({ behavior: "smooth", block: "start" });
-        });
+        const target = item.closest("li") || item;
+        setTimeout(() => {
+          const y = target.getBoundingClientRect().top + window.scrollY - 12;
+          window.scrollTo({ top: y, behavior: "smooth" });
+        }, 60);
       }
     });
   });
