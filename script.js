@@ -85,7 +85,7 @@ document.querySelectorAll("[data-menu-min]").forEach((el) => {
 });
 
 // 開閉パネル: 同じグループ内で1つ開いたら他は閉じる（FAQとドリンク一覧）
-function makeExclusive(selector) {
+function makeExclusive(selector, scrollOnOpen) {
   const items = document.querySelectorAll(selector);
   items.forEach((item) => {
     item.addEventListener("toggle", () => {
@@ -93,11 +93,16 @@ function makeExclusive(selector) {
       items.forEach((other) => {
         if (other !== item && other.open) other.open = false;
       });
+      if (scrollOnOpen) {
+        requestAnimationFrame(() => {
+          item.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      }
     });
   });
 }
-makeExclusive(".faq-item");
-makeExclusive(".drink-detail");
+makeExclusive(".faq-item", false);
+makeExclusive(".drink-detail", true);
 
 // セクション: スクロールでふわっと表示
 const revealTargets = document.querySelectorAll(".reveal");

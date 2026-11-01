@@ -1361,3 +1361,8 @@ body.external-open-locked {
   font-size: 0.8rem;
   color: #e9dcc0;
 }
+
+/* 開いた一覧の先頭へ画面を合わせる際の余白 */
+.drink-detail {
+  scroll-margin-top: 14px;
+}
