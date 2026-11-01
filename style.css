@@ -746,3 +746,11 @@ main > .section:first-child {
 #access {
   text-align: center;
 }
+
+/* 見出し（ラベル＋タイトル）は上のセクションと同じ左寄せフォーマットに統一 */
+#access .section-label,
+#access .section-title,
+.insta-band .section-label,
+.insta-band .section-title {
+  text-align: left;
+}
