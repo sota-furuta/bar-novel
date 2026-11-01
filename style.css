@@ -1035,3 +1035,8 @@ main > .section:first-child {
 .info-list dt {
   color: #e0aa6a;
 }
+
+/* 営業時間の色をもう少し落ち着かせる */
+.info-hours dd {
+  color: #e8ab6d;
+}
