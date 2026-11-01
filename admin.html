@@ -25,29 +25,44 @@
     }
     button.primary { background: #d89a55; color: #221503; font-weight: 700; width: 100%; margin-top: 20px;
       box-shadow: 0 4px 0 #6e4520; }
-    #status { margin-top: 16px; font-size: 0.9rem; min-height: 1.4em; }
+    button.ghost { width: 100%; margin-top: 12px; background: transparent; }
+    #status, #gateStatus { margin-top: 16px; font-size: 0.9rem; min-height: 1.4em; }
     .ok { color: #a9dfae; } .err { color: #ff9d8a; }
+    [hidden] { display: none !important; }
   </style>
 </head>
 <body>
   <main>
     <h1>BAR NOVEL お知らせ管理</h1>
-    <p class="note">臨時休業の日を登録すると、ホームページのトップにお知らせの帯が出ます。日付が過ぎたものは自動で消えます。定休日（月曜）は登録不要です。</p>
 
-    <label for="pw">パスワード</label>
-    <input type="password" id="pw" autocomplete="current-password" placeholder="管理用パスワード">
+    <!-- パスワード画面 -->
+    <section id="gate">
+      <p class="note">管理用パスワードを入力してください。</p>
+      <label for="pw">パスワード</label>
+      <input type="password" id="pw" autocomplete="current-password" placeholder="管理用パスワード">
+      <button type="button" class="primary" id="login">ログイン</button>
+      <p id="gateStatus"></p>
+    </section>
 
-    <label>臨時休業の日</label>
-    <div id="rows"></div>
-    <button type="button" id="addRow">＋ 日付を追加</button>
-
-    <button type="button" class="primary" id="save">保存する</button>
-    <p id="status"></p>
+    <!-- 編集画面（ログイン後に切り替え） -->
+    <section id="editor" hidden>
+      <p class="note">臨時休業の日を登録すると、ホームページのトップにお知らせの帯が出ます。日付が過ぎたものは自動で消えます。定休日（月曜）は登録不要です。</p>
+      <label>臨時休業の日</label>
+      <div id="rows"></div>
+      <button type="button" id="addRow">＋ 日付を追加</button>
+      <button type="button" class="primary" id="save">保存する</button>
+      <button type="button" class="ghost" id="logout">ログアウト</button>
+      <p id="status"></p>
+    </section>
   </main>
 
   <script>
+    const gateEl = document.getElementById("gate");
+    const editorEl = document.getElementById("editor");
     const rowsEl = document.getElementById("rows");
     const statusEl = document.getElementById("status");
+    const gateStatusEl = document.getElementById("gateStatus");
+    let password = sessionStorage.getItem("barnovel_pw") || "";
 
     function addRow(date = "", note = "") {
       const div = document.createElement("div");
@@ -61,10 +76,58 @@
 
     document.getElementById("addRow").addEventListener("click", () => addRow());
 
-    fetch("/api/news").then(r => r.json()).then(d => {
-      (d.closures || []).forEach(c => addRow(c.date, c.note || ""));
+    async function loadClosures() {
+      rowsEl.innerHTML = "";
+      try {
+        const r = await fetch("/api/news");
+        const d = await r.json();
+        (d.closures || []).forEach(c => addRow(c.date, c.note || ""));
+      } catch (e) { /* 読み込めなくても空で続行 */ }
       if (!rowsEl.children.length) addRow();
-    }).catch(() => addRow());
+    }
+
+    function showEditor() {
+      gateEl.hidden = true;
+      editorEl.hidden = false;
+      loadClosures();
+    }
+
+    async function tryLogin(pw) {
+      const res = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: pw })
+      });
+      const data = await res.json().catch(() => ({ ok: false }));
+      return !!data.ok;
+    }
+
+    document.getElementById("login").addEventListener("click", async () => {
+      const pw = document.getElementById("pw").value;
+      gateStatusEl.textContent = "確認中…";
+      gateStatusEl.className = "";
+      if (await tryLogin(pw)) {
+        password = pw;
+        sessionStorage.setItem("barnovel_pw", pw);
+        showEditor();
+      } else {
+        gateStatusEl.textContent = "パスワードが違います。";
+        gateStatusEl.className = "err";
+      }
+    });
+
+    document.getElementById("pw").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") document.getElementById("login").click();
+    });
+
+    document.getElementById("logout").addEventListener("click", () => {
+      password = "";
+      sessionStorage.removeItem("barnovel_pw");
+      editorEl.hidden = true;
+      gateEl.hidden = false;
+      document.getElementById("pw").value = "";
+      gateStatusEl.textContent = "";
+    });
 
     document.getElementById("save").addEventListener("click", async () => {
       const closures = [...rowsEl.querySelectorAll(".row")].map(row => {
@@ -77,14 +140,17 @@
         const res = await fetch("/api/news", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ password: document.getElementById("pw").value, closures })
+          body: JSON.stringify({ password, closures })
         });
         const data = await res.json();
         if (data.ok) {
           statusEl.textContent = "保存しました。サイトに反映されます。";
           statusEl.className = "ok";
+        } else if (data.error === "unauthorized") {
+          statusEl.textContent = "パスワードの有効期限が切れました。ログアウトして入り直してください。";
+          statusEl.className = "err";
         } else {
-          statusEl.textContent = data.error === "unauthorized" ? "パスワードが違います。" : "保存できませんでした（" + data.error + "）";
+          statusEl.textContent = "保存できませんでした（" + data.error + "）";
           statusEl.className = "err";
         }
       } catch (e) {
@@ -92,6 +158,11 @@
         statusEl.className = "err";
       }
     });
+
+    // 同じタブで開き直したときは、パスワードが合えばそのまま編集画面へ
+    if (password) {
+      tryLogin(password).then(ok => { if (ok) showEditor(); else sessionStorage.removeItem("barnovel_pw"); });
+    }
   </script>
 </body>
 </html>
