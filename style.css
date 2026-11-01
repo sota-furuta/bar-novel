@@ -1030,56 +1030,6 @@ main > .section:first-child {
   color: #f0c491;
 }
 
-/* ==== 店舗情報: 見直し ==== */
-/* 営業中バッジ */
-.open-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: 10px;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  vertical-align: middle;
-  background: rgba(255, 255, 255, 0.08);
-  color: #d9c9a6;
-}
-
-.open-badge::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #9a8f7a;
-}
-
-.open-badge.is-open {
-  background: rgba(84, 168, 92, 0.18);
-  color: #a9dfae;
-}
-
-.open-badge.is-open::before {
-  background: #63c96e;
-  animation: badgePulse 2.2s ease-in-out infinite;
-}
-
-@keyframes badgePulse {
-  0%, 100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.35;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .open-badge.is-open::before {
-    animation: none;
-  }
-}
-
 /* ==== 店舗情報: 文字色の見直し（階層づけ） ==== */
 /* 項目名は少し深い銅色にして、値とアクセントに差をつける */
 .info-list dt {
