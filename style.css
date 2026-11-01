@@ -766,21 +766,6 @@ main > .section:first-child {
 }
 
 /* ==== 控えめな動き ==== */
-/* ヒーロー写真のゆっくりしたズームアウト */
-.hero-photo {
-  animation: heroZoom 26s ease-out forwards;
-}
-
-@keyframes heroZoom {
-  from {
-    transform: scale(1.12);
-  }
-
-  to {
-    transform: scale(1);
-  }
-}
-
 /* メニューのタブ切り替えに短いフェード */
 .menu-panel.is-active {
   animation: panelIn 0.35s ease;
@@ -800,7 +785,6 @@ main > .section:first-child {
 
 /* 動きを抑える設定の端末では無効化 */
 @media (prefers-reduced-motion: reduce) {
-  .hero-photo,
   .menu-panel.is-active,
   .reveal {
     animation: none;
