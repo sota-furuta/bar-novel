@@ -1,0 +1,43 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "BAR NOVEL",
+    "url": "https://bar-novel.pages.dev/"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:bar-novel.pages.dev:website:home",
+      "displayName": "BAR NOVEL 公式サイト",
+      "type": "text/html",
+      "url": "https://bar-novel.pages.dev/",
+      "description": "神奈川県伊勢原市のバー BAR NOVEL の公式サイト。メニュー、店舗情報、アクセス、よくある質問を掲載。",
+      "representativeQueries": [
+        "伊勢原でおすすめのバーは？",
+        "BAR NOVELの営業時間と定休日は？",
+        "BAR NOVELのメニューと料金は？"
+      ]
+    },
+    {
+      "identifier": "urn:air:bar-novel.pages.dev:api:news",
+      "displayName": "BAR NOVEL 臨時休業のお知らせ",
+      "type": "application/json",
+      "url": "https://bar-novel.pages.dev/api/news",
+      "description": "BAR NOVEL の臨時休業日を JSON で返す公開API。月曜定休以外の休業日がある場合のみ、その日付と補足を返す。",
+      "representativeQueries": [
+        "BAR NOVELは今日営業している？",
+        "BAR NOVELの臨時休業はいつ？"
+      ]
+    },
+    {
+      "identifier": "urn:air:bar-novel.pages.dev:docs:llms",
+      "displayName": "BAR NOVEL 店舗情報（llms.txt）",
+      "type": "text/markdown",
+      "url": "https://bar-novel.pages.dev/llms.txt",
+      "description": "BAR NOVEL の住所、電話番号、営業時間、定休日などの店舗情報をまとめたテキストファイル。",
+      "representativeQueries": [
+        "BAR NOVELの住所と電話番号は？",
+        "伊勢原駅からBAR NOVELまでの行き方は？"
+      ]
+    }
+  ]
+}
