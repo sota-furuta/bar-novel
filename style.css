@@ -101,22 +101,6 @@ a {
   color: var(--copper-soft);
 }
 
-.header-insta {
-  font-size: 0.78rem;
-  letter-spacing: 0.14em;
-  text-decoration: none;
-  border: 1px solid var(--copper);
-  color: var(--copper-soft);
-  padding: 6px 14px;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-
-.header-insta:hover {
-  background: var(--copper);
-  color: #14100b;
-}
-
 @media (min-width: 820px) {
   .header-nav {
     display: flex;
@@ -1362,7 +1346,3 @@ body.external-open-locked {
   color: #e9dcc0;
 }
 
-/* 開いた一覧の先頭へ画面を合わせる際の余白 */
-.drink-detail {
-  scroll-margin-top: 14px;
-}
