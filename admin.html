@@ -38,6 +38,7 @@
     .row input[type="date"] { flex: 0 0 150px; }
     .row input[type="text"] { flex: 1; }
     .row button { flex: 0 0 auto; }
+    .row button, .notice-sub button { min-width: 48px; }
     button {
       padding: 12px 18px; border-radius: 8px; border: 1.5px solid #a8a29e;
       background: #ffffff; color: #1c1917; font-size: 1rem; cursor: pointer; min-height: 48px;
@@ -200,7 +201,14 @@
     const gateStatusEl = document.getElementById("gateStatus");
     let password = sessionStorage.getItem("barnovel_pw") || "";
     const TEST_MODE = location.hostname === "verification.bar-novel.pages.dev";
-    if (TEST_MODE) document.getElementById("testModeBadge").hidden = false;
+    if (TEST_MODE) {
+      document.getElementById("testModeBadge").hidden = false;
+      const _fetch = window.fetch;
+      window.fetch = (...args) => new Promise((resolve, reject) => {
+        const m = (args[1] && args[1].method) || "GET";
+        setTimeout(() => { _fetch(...args).then(resolve, reject); }, m === "GET" ? 600 : 1800);
+      });
+    }
 
     // ===== 画面切り替え =====
     const viewIds = ["menuView", "viewClosures", "viewNotices", "viewPhotos", "viewContact"];
@@ -719,7 +727,12 @@
       }
     });
 
-    if (TEST_MODE) { password = "__test__"; showEditor(); }
+    if (TEST_MODE) {
+      password = "__test__";
+      showEditor();
+      const v = new URLSearchParams(location.search).get("view");
+      if (v && viewIds.includes(v)) showView(v);
+    }
     // 同じタブで開き直したときは、パスワードが合えばそのまま編集画面へ
     if (password) {
       tryLogin(password).then(ok => { if (ok) showEditor(); else sessionStorage.removeItem("barnovel_pw"); });
