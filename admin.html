@@ -83,6 +83,8 @@
     #logout { color: #b91c1c; border-color: #e0a3a3; background: #fdf3f3; font-weight: 700; }
     #adminMenuLogout { color: #b91c1c; font-weight: 700; }
     .ok { color: #15803d; font-weight: 700; } .err { color: #b91c1c; font-weight: 700; }
+    button.danger { color: #b91c1c; border-color: #e0a3a3; background: #fdf3f3; font-weight: 700; }
+    button:disabled { opacity: .55; cursor: default; }
     [hidden] { display: none !important; }
   </style>
 </head>
@@ -219,24 +221,39 @@
       div.className = "row";
       div.innerHTML = '<input type="date" value="' + date + '">' +
         '<input type="text" maxlength="60" placeholder="一言（例：貸切のため）" value="' + note.replace(/"/g, "&quot;") + '">' +
-        '<button type="button" aria-label="削除">×</button>';
+        '<button type="button" class="danger" aria-label="削除">×</button>';
       div.querySelector("button").addEventListener("click", () => div.remove());
       rowsEl.appendChild(div);
     }
 
     document.getElementById("addRow").addEventListener("click", () => addRow());
 
+    let closuresLoaded = false;
     async function loadClosures() {
       rowsEl.innerHTML = "";
+      closuresLoaded = false;
+      document.getElementById("save").disabled = true;
       try {
         const r = await fetch("/api/news");
         const d = await r.json();
         (d.closures || []).forEach(c => addRow(c.date, c.note || ""));
-      } catch (e) { /* 読み込めなくても空で続行 */ }
+        closuresLoaded = true;
+        document.getElementById("save").disabled = false;
+      } catch (e) {
+        statusEl.textContent = "読み込みに失敗しました。通信環境の良い場所で開き直してください（データ保護のため保存を止めています）。";
+        statusEl.className = "err";
+      }
       if (!rowsEl.children.length) addRow();
     }
 
-    document.getElementById("save").addEventListener("click", async () => {
+    document.getElementById("save").addEventListener("click", async (ev) => {
+      if (!closuresLoaded) {
+        statusEl.textContent = "読み込みに失敗しているため保存できません。開き直してください。";
+        statusEl.className = "err";
+        return;
+      }
+      const btn = ev.currentTarget;
+      btn.disabled = true;
       const closures = [...rowsEl.querySelectorAll(".row")].map(row => {
         const inputs = row.querySelectorAll("input");
         return { date: inputs[0].value, note: inputs[1].value.trim() };
@@ -263,6 +280,8 @@
       } catch (e) {
         statusEl.textContent = "通信エラーです。電波の良い場所でお試しください。";
         statusEl.className = "err";
+      } finally {
+        btn.disabled = false;
       }
     });
 
@@ -279,24 +298,37 @@
         '<input type="date" value="' + from + '"></div>' +
         '<div class="notice-sub"><span>掲載を終える日</span>' +
         '<input type="date" value="' + until + '">' +
-        '<button type="button" aria-label="削除">×</button></div>';
+        '<button type="button" class="danger" aria-label="削除">×</button></div>';
       div.querySelector("button").addEventListener("click", () => div.remove());
       noticeRowsEl.appendChild(div);
     }
 
     document.getElementById("addNoticeRow").addEventListener("click", () => addNoticeRow());
 
+    let noticesLoaded = false;
     async function loadNotices() {
       noticeRowsEl.innerHTML = "";
+      noticesLoaded = false;
+      document.getElementById("saveNotices").disabled = true;
       try {
         const r = await fetch("/api/notices");
         const d = await r.json();
         (d.notices || []).forEach(n => addNoticeRow(n.text, n.from || "", n.until));
-      } catch (e) { /* 読み込めなくても空で続行 */ }
+        noticesLoaded = true;
+        document.getElementById("saveNotices").disabled = false;
+      } catch (e) {
+        noticeStatusEl.textContent = "読み込みに失敗しました。通信環境の良い場所で開き直してください（データ保護のため保存を止めています）。";
+        noticeStatusEl.className = "err";
+      }
       if (!noticeRowsEl.children.length) addNoticeRow();
     }
 
-    document.getElementById("saveNotices").addEventListener("click", async () => {
+    document.getElementById("saveNotices").addEventListener("click", async (ev) => {
+      if (!noticesLoaded) {
+        noticeStatusEl.textContent = "読み込みに失敗しているため保存できません。開き直してください。";
+        noticeStatusEl.className = "err";
+        return;
+      }
       const notices = [...noticeRowsEl.querySelectorAll(".notice-row")].map(row => {
         const inputs = row.querySelectorAll("input");
         return { text: inputs[0].value.trim(), from: inputs[1].value, until: inputs[2].value };
@@ -313,6 +345,8 @@
         noticeStatusEl.className = "err";
         return;
       }
+      const btn = ev.currentTarget;
+      btn.disabled = true;
       noticeStatusEl.textContent = "保存中…";
       noticeStatusEl.className = "";
       try {
@@ -335,6 +369,8 @@
       } catch (e) {
         noticeStatusEl.textContent = "通信エラーです。電波の良い場所でお試しください。";
         noticeStatusEl.className = "err";
+      } finally {
+        btn.disabled = false;
       }
     });
 
@@ -398,6 +434,7 @@
           span.textContent = p.caption || "（キャプションなし）";
           const btn = document.createElement("button");
           btn.type = "button";
+          btn.className = "danger";
           btn.textContent = "削除";
           btn.addEventListener("click", async () => {
             if (!confirm("この写真を削除しますか？")) return;
@@ -419,7 +456,8 @@
       } catch (e) { /* 読めなくても続行 */ }
     }
 
-    document.getElementById("photoUpload").addEventListener("click", async () => {
+    document.getElementById("photoUpload").addEventListener("click", async (ev) => {
+      const upBtn = ev.currentTarget;
       if (!photoBlob) {
         photoStatusEl.textContent = "まず写真を選んでください。";
         photoStatusEl.className = "err";
@@ -431,6 +469,7 @@
         photoCaptionEl.focus();
         return;
       }
+      upBtn.disabled = true;
       photoStatusEl.textContent = "投稿中…";
       photoStatusEl.className = "";
       try {
@@ -458,6 +497,8 @@
       } catch (e) {
         photoStatusEl.textContent = "通信エラーです。電波の良い場所でお試しください。";
         photoStatusEl.className = "err";
+      } finally {
+        upBtn.disabled = false;
       }
     });
 
@@ -511,6 +552,7 @@
           });
           const del = document.createElement("button");
           del.type = "button";
+          del.className = "danger";
           del.textContent = "削除";
           del.addEventListener("click", async () => {
             if (!confirm("この問い合わせを削除しますか？")) return;
@@ -532,13 +574,15 @@
       } catch (e) { /* 読めなくても続行 */ }
     }
 
-    document.getElementById("contactSend").addEventListener("click", async () => {
+    document.getElementById("contactSend").addEventListener("click", async (ev) => {
+      const sendBtn = ev.currentTarget;
       const message = document.getElementById("contactMessage").value.trim();
       if (!message) {
         contactStatusEl.textContent = "内容を入力してください。";
         contactStatusEl.className = "err";
         return;
       }
+      sendBtn.disabled = true;
       contactStatusEl.textContent = "送信中…";
       contactStatusEl.className = "";
       try {
@@ -563,6 +607,8 @@
       } catch (e) {
         contactStatusEl.textContent = "通信エラーです。電波の良い場所でお試しください。";
         contactStatusEl.className = "err";
+      } finally {
+        sendBtn.disabled = false;
       }
     });
 
@@ -595,17 +641,23 @@
       return !!data.ok;
     }
 
-    document.getElementById("login").addEventListener("click", async () => {
+    document.getElementById("login").addEventListener("click", async (ev) => {
+      const loginBtn = ev.currentTarget;
+      loginBtn.disabled = true;
       const pw = document.getElementById("pw").value;
       gateStatusEl.textContent = "確認中…";
       gateStatusEl.className = "";
-      if (await tryLogin(pw)) {
-        password = pw;
-        sessionStorage.setItem("barnovel_pw", pw);
-        showEditor();
-      } else {
-        gateStatusEl.textContent = "パスワードが違います。";
-        gateStatusEl.className = "err";
+      try {
+        if (await tryLogin(pw)) {
+          password = pw;
+          sessionStorage.setItem("barnovel_pw", pw);
+          showEditor();
+        } else {
+          gateStatusEl.textContent = "パスワードが違います。";
+          gateStatusEl.className = "err";
+        }
+      } finally {
+        loginBtn.disabled = false;
       }
     });
 
