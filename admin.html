@@ -61,7 +61,7 @@
       <label for="photoFile">写真を選ぶ</label>
       <input type="file" id="photoFile" accept="image/*">
       <img id="photoPreview" alt="" style="display:none;max-width:100%;border-radius:10px;margin-top:6px;">
-      <label for="photoCaption">キャプション（任意）</label>
+      <label for="photoCaption">キャプション（必須）</label>
       <input type="text" id="photoCaption" maxlength="40" placeholder="例：本日のカクテル">
       <button type="button" class="primary" id="photoUpload">この写真を投稿する</button>
       <p id="photoStatus"></p>
@@ -261,6 +261,12 @@
       if (!photoBlob) {
         photoStatusEl.textContent = "まず写真を選んでください。";
         photoStatusEl.className = "err";
+        return;
+      }
+      if (!photoCaptionEl.value.trim()) {
+        photoStatusEl.textContent = "キャプションを入力してください。";
+        photoStatusEl.className = "err";
+        photoCaptionEl.focus();
         return;
       }
       photoStatusEl.textContent = "投稿中…";
