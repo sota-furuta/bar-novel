@@ -12,7 +12,7 @@
   --copper-soft: #e0aa72;
   --serif: "Cormorant Garamond", "Noto Serif JP", serif;
   --jp-serif: "Noto Serif JP", serif;
-  --sans: "Noto Sans JP", sans-serif;
+  --sans: "Noto Serif JP", serif;
 }
 
 * {
@@ -283,6 +283,7 @@ main > .section:first-child {
   margin: 8px 0 20px;
   font-family: var(--jp-serif);
   font-weight: 600;
+  letter-spacing: 0.05em;
   font-size: clamp(1.55rem, 6vw, 2.1rem);
   line-height: 1.55;
 }
@@ -291,6 +292,7 @@ main > .section:first-child {
   margin: 0 0 18px;
   color: #ddd4c3;
   font-size: 0.95rem;
+  line-height: 2.0;
 }
 
 /* Reveal on scroll */
@@ -395,6 +397,7 @@ main > .section:first-child {
   margin: 4px 0 0;
   font-size: 0.82rem;
   color: var(--muted);
+  line-height: 1.9;
 }
 
 .menu-photo {
@@ -1346,3 +1349,12 @@ body.external-open-locked {
   color: #e9dcc0;
 }
 
+
+/* ===== 仕上げ（polish） ===== */
+::selection { background: rgba(216, 154, 85, 0.45); color: #fff8ec; }
+html { -webkit-tap-highlight-color: transparent; }
+a:focus-visible, button:focus-visible, summary:focus-visible {
+  outline: 2px solid #d89a55;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
