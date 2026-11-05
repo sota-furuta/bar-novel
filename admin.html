@@ -8,7 +8,9 @@
   <style>
     body { font-family: sans-serif; background: #171008; color: #f5efe4; margin: 0; padding: 24px 16px 64px; }
     main { max-width: 520px; margin: 0 auto; }
-    h1 { font-size: 1.2rem; letter-spacing: 0.1em; }
+    h1 { font-size: 1.2rem; letter-spacing: 0.1em; margin: 0; }
+    .admin-bar { position: sticky; top: 0; z-index: 20; background: #171008; padding: 10px 0;
+      border-bottom: 1px solid rgba(216,154,85,.25); margin-bottom: 8px; }
     p.note { color: #c9b586; font-size: 0.85rem; line-height: 1.7; }
     label { display: block; margin: 18px 0 6px; font-size: 0.85rem; color: #e0aa6a; }
     input[type="password"], input[type="date"], input[type="text"] {
@@ -26,22 +28,17 @@
     button.primary { background: #d89a55; color: #221503; font-weight: 700; width: 100%; margin-top: 20px;
       box-shadow: 0 4px 0 #6e4520; }
     button.ghost { width: 100%; margin-top: 12px; background: transparent; }
+    .menu-btn { display: flex; justify-content: space-between; align-items: center; width: 100%;
+      padding: 18px 16px; margin-bottom: 12px; font-size: 1rem; text-align: left; }
+    .menu-btn .chev { color: #c9b586; }
+    .back-btn { margin: 14px 0 4px; background: transparent; }
+    h2.view-title { font-size: 1rem; letter-spacing: 0.08em; color: #e0aa6a; margin: 14px 0 4px; }
     #status, #gateStatus, #photoStatus, #noticeStatus { margin-top: 16px; font-size: 0.9rem; min-height: 1.4em; }
     input[type="file"] { color: #f5efe4; margin: 4px 0 8px; }
     .photo-item { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
     .photo-item img { width: 72px; height: 54px; object-fit: cover; border-radius: 8px; flex: 0 0 auto; }
     .photo-item span { flex: 1; font-size: 0.85rem; color: #e9dcc0; overflow: hidden; }
     .ok { color: #a9dfae; } .err { color: #ff9d8a; }
-    .admin-bar { position: sticky; top: 0; z-index: 20; display: flex; justify-content: space-between; align-items: center;
-      background: #171008; padding: 10px 0; border-bottom: 1px solid rgba(216,154,85,.25); }
-    .admin-bar h1 { margin: 0; }
-    #adminMenuBtn { font-size: 1.15rem; line-height: 1; padding: 10px 14px; }
-    .admin-menu { position: sticky; top: 57px; z-index: 19; background: #241708; border: 1px solid rgba(216,154,85,.4);
-      border-radius: 10px; padding: 6px; margin-top: 8px; }
-    .admin-menu button { display: block; width: 100%; text-align: left; border: none; background: transparent;
-      padding: 12px; font-size: 0.95rem; }
-    .admin-menu button:active { background: rgba(216,154,85,.15); }
-    section[id] { scroll-margin-top: 76px; }
     [hidden] { display: none !important; }
   </style>
 </head>
@@ -49,14 +46,7 @@
   <main>
     <header class="admin-bar">
       <h1>BAR NOVEL 管理画面</h1>
-      <button type="button" id="adminMenuBtn" aria-label="メニュー" hidden>☰</button>
     </header>
-    <nav class="admin-menu" id="adminMenu" hidden>
-      <button type="button" data-target="secClosures">臨時休業</button>
-      <button type="button" data-target="secNotices">お知らせ（告知）</button>
-      <button type="button" data-target="secPhotos">写真の投稿</button>
-      <button type="button" id="adminMenuLogout">ログアウト</button>
-    </nav>
 
     <!-- パスワード画面 -->
     <section id="gate">
@@ -67,34 +57,56 @@
       <p id="gateStatus"></p>
     </section>
 
-    <!-- 編集画面（ログイン後に切り替え） -->
+    <!-- ログイン後 -->
     <section id="editor" hidden>
-      <h2 id="secClosures" style="font-size:1rem;letter-spacing:0.08em;color:#e0aa6a;margin:20px 0 4px;scroll-margin-top:76px;">お知らせ管理（臨時休業）</h2>
-      <p class="note">臨時休業の日を登録すると、ホームページのトップにお知らせの帯が出ます。日付が過ぎたものは自動で消えます。定休日（月曜）は登録不要です。</p>
-      <label>臨時休業の日</label>
-      <div id="rows"></div>
-      <button type="button" id="addRow">＋ 日付を追加</button>
-      <button type="button" class="primary" id="save">保存する</button>
-      <h2 id="secNotices" style="font-size:1rem;letter-spacing:0.08em;color:#e0aa6a;margin:28px 0 4px;scroll-margin-top:76px;">お知らせ管理（イベントなどの告知）</h2>
-      <p class="note">入力した文が、そのままホームページのトップのお知らせの帯に出ます。右の日付は表示を終える日で、過ぎると自動で消えます。</p>
-      <label>お知らせの文と終了日</label>
-      <div id="noticeRows"></div>
-      <button type="button" id="addNoticeRow">＋ お知らせを追加</button>
-      <button type="button" class="primary" id="saveNotices">お知らせを保存する</button>
-      <p id="noticeStatus"></p>
-      <h2 id="secPhotos" style="font-size:1rem;letter-spacing:0.08em;color:#e0aa6a;margin:28px 0 4px;scroll-margin-top:76px;">写真の投稿</h2>
-      <p class="note">投稿した写真は、ホームページのギャラリー（いつもの写真の後ろ）に表示されます。写真は自動で軽量化されてから保存されます。</p>
-      <label for="photoFile">写真を選ぶ</label>
-      <input type="file" id="photoFile" accept="image/*">
-      <img id="photoPreview" alt="" style="display:none;max-width:100%;border-radius:10px;margin-top:6px;">
-      <label for="photoCaption">キャプション（必須）</label>
-      <input type="text" id="photoCaption" maxlength="40" placeholder="例：本日のカクテル">
-      <button type="button" class="primary" id="photoUpload">この写真を投稿する</button>
-      <p id="photoStatus"></p>
-      <label>投稿済みの写真</label>
-      <div id="photoList"></div>
-      <button type="button" class="ghost" id="logout">ログアウト</button>
-      <p id="status"></p>
+      <!-- メニュー画面 -->
+      <div id="menuView">
+        <p class="note">行いたい処理を選んでください。</p>
+        <button type="button" class="menu-btn" data-view="viewClosures">臨時休業<span class="chev">›</span></button>
+        <button type="button" class="menu-btn" data-view="viewNotices">お知らせ（イベントなどの告知）<span class="chev">›</span></button>
+        <button type="button" class="menu-btn" data-view="viewPhotos">写真の投稿<span class="chev">›</span></button>
+        <button type="button" class="ghost" id="logout">ログアウト</button>
+      </div>
+
+      <!-- 臨時休業 -->
+      <div id="viewClosures" hidden>
+        <button type="button" class="back-btn" data-back>← メニューに戻る</button>
+        <h2 class="view-title">お知らせ管理（臨時休業）</h2>
+        <p class="note">臨時休業の日を登録すると、ホームページのトップにお知らせの帯が出ます。日付が過ぎたものは自動で消えます。定休日（月曜）は登録不要です。</p>
+        <label>臨時休業の日</label>
+        <div id="rows"></div>
+        <button type="button" id="addRow">＋ 日付を追加</button>
+        <button type="button" class="primary" id="save">保存する</button>
+        <p id="status"></p>
+      </div>
+
+      <!-- お知らせ（告知） -->
+      <div id="viewNotices" hidden>
+        <button type="button" class="back-btn" data-back>← メニューに戻る</button>
+        <h2 class="view-title">お知らせ管理（イベントなどの告知）</h2>
+        <p class="note">入力した文が、そのままホームページのトップのお知らせの帯に出ます。右の日付は表示を終える日で、過ぎると自動で消えます。</p>
+        <label>お知らせの文と終了日</label>
+        <div id="noticeRows"></div>
+        <button type="button" id="addNoticeRow">＋ お知らせを追加</button>
+        <button type="button" class="primary" id="saveNotices">お知らせを保存する</button>
+        <p id="noticeStatus"></p>
+      </div>
+
+      <!-- 写真の投稿 -->
+      <div id="viewPhotos" hidden>
+        <button type="button" class="back-btn" data-back>← メニューに戻る</button>
+        <h2 class="view-title">写真の投稿</h2>
+        <p class="note">投稿した写真は、ホームページのギャラリー（いつもの写真の後ろ）に表示されます。写真は自動で軽量化されてから保存されます。</p>
+        <label for="photoFile">写真を選ぶ</label>
+        <input type="file" id="photoFile" accept="image/*">
+        <img id="photoPreview" alt="" style="display:none;max-width:100%;border-radius:10px;margin-top:6px;">
+        <label for="photoCaption">キャプション（必須）</label>
+        <input type="text" id="photoCaption" maxlength="40" placeholder="例：本日のカクテル">
+        <button type="button" class="primary" id="photoUpload">この写真を投稿する</button>
+        <p id="photoStatus"></p>
+        <label>投稿済みの写真</label>
+        <div id="photoList"></div>
+      </div>
     </section>
   </main>
 
@@ -106,6 +118,23 @@
     const gateStatusEl = document.getElementById("gateStatus");
     let password = sessionStorage.getItem("barnovel_pw") || "";
 
+    // ===== 画面切り替え =====
+    const viewIds = ["menuView", "viewClosures", "viewNotices", "viewPhotos"];
+    function showView(id) {
+      viewIds.forEach((v) => { document.getElementById(v).hidden = v !== id; });
+      window.scrollTo(0, 0);
+      if (id === "viewClosures") loadClosures();
+      if (id === "viewNotices") loadNotices();
+      if (id === "viewPhotos") loadPhotos();
+    }
+    document.querySelectorAll(".menu-btn").forEach((btn) => {
+      btn.addEventListener("click", () => showView(btn.dataset.view));
+    });
+    document.querySelectorAll("[data-back]").forEach((btn) => {
+      btn.addEventListener("click", () => showView("menuView"));
+    });
+
+    // ===== 臨時休業 =====
     function addRow(date = "", note = "") {
       const div = document.createElement("div");
       div.className = "row";
@@ -127,54 +156,6 @@
       } catch (e) { /* 読み込めなくても空で続行 */ }
       if (!rowsEl.children.length) addRow();
     }
-
-    function showEditor() {
-      gateEl.hidden = true;
-      editorEl.hidden = false;
-      document.getElementById("adminMenuBtn").hidden = false;
-      loadClosures();
-      loadNotices();
-      loadPhotos();
-    }
-
-    async function tryLogin(pw) {
-      const res = await fetch("/api/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: pw })
-      });
-      const data = await res.json().catch(() => ({ ok: false }));
-      return !!data.ok;
-    }
-
-    document.getElementById("login").addEventListener("click", async () => {
-      const pw = document.getElementById("pw").value;
-      gateStatusEl.textContent = "確認中…";
-      gateStatusEl.className = "";
-      if (await tryLogin(pw)) {
-        password = pw;
-        sessionStorage.setItem("barnovel_pw", pw);
-        showEditor();
-      } else {
-        gateStatusEl.textContent = "パスワードが違います。";
-        gateStatusEl.className = "err";
-      }
-    });
-
-    document.getElementById("pw").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") document.getElementById("login").click();
-    });
-
-    document.getElementById("logout").addEventListener("click", () => {
-      password = "";
-      sessionStorage.removeItem("barnovel_pw");
-      editorEl.hidden = true;
-      gateEl.hidden = false;
-      document.getElementById("adminMenuBtn").hidden = true;
-      document.getElementById("adminMenu").hidden = true;
-      document.getElementById("pw").value = "";
-      gateStatusEl.textContent = "";
-    });
 
     document.getElementById("save").addEventListener("click", async () => {
       const closures = [...rowsEl.querySelectorAll(".row")].map(row => {
@@ -391,27 +372,48 @@
       }
     });
 
-    // ===== ハンバーガーメニュー =====
-    const adminMenuBtn = document.getElementById("adminMenuBtn");
-    const adminMenu = document.getElementById("adminMenu");
-    adminMenuBtn.addEventListener("click", () => {
-      adminMenu.hidden = !adminMenu.hidden;
-    });
-    adminMenu.querySelectorAll("button[data-target]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        adminMenu.hidden = true;
-        const target = document.getElementById(btn.dataset.target);
-        if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    // ===== ログイン =====
+    function showEditor() {
+      gateEl.hidden = true;
+      editorEl.hidden = false;
+      showView("menuView");
+    }
+
+    async function tryLogin(pw) {
+      const res = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: pw })
       });
-    });
-    document.getElementById("adminMenuLogout").addEventListener("click", () => {
-      adminMenu.hidden = true;
-      document.getElementById("logout").click();
-    });
-    document.addEventListener("click", (e) => {
-      if (!adminMenu.hidden && !e.target.closest(".admin-menu") && !e.target.closest(".admin-bar")) {
-        adminMenu.hidden = true;
+      const data = await res.json().catch(() => ({ ok: false }));
+      return !!data.ok;
+    }
+
+    document.getElementById("login").addEventListener("click", async () => {
+      const pw = document.getElementById("pw").value;
+      gateStatusEl.textContent = "確認中…";
+      gateStatusEl.className = "";
+      if (await tryLogin(pw)) {
+        password = pw;
+        sessionStorage.setItem("barnovel_pw", pw);
+        showEditor();
+      } else {
+        gateStatusEl.textContent = "パスワードが違います。";
+        gateStatusEl.className = "err";
       }
+    });
+
+    document.getElementById("pw").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") document.getElementById("login").click();
+    });
+
+    document.getElementById("logout").addEventListener("click", () => {
+      password = "";
+      sessionStorage.removeItem("barnovel_pw");
+      editorEl.hidden = true;
+      gateEl.hidden = false;
+      document.getElementById("pw").value = "";
+      gateStatusEl.textContent = "";
     });
 
     // 同じタブで開き直したときは、パスワードが合えばそのまま編集画面へ
