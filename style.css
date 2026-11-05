@@ -512,6 +512,7 @@ main > .section:first-child {
 
 .insta-band .section-text {
   text-align: center;
+  text-wrap: balance;
 }
 
 /* ---------- Footer ---------- */
@@ -572,8 +573,9 @@ main > .section:first-child {
   text-align: center;
   color: var(--text);
   text-decoration: none;
-  font-size: 0.85rem;
-  letter-spacing: 0.12em;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
 }
 
 .bottom-bar a + a {
