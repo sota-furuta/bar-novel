@@ -47,8 +47,11 @@ export async function onRequestPost({ request, env }) {
   if (file.size > MAX_BYTES) {
     return Response.json({ ok: false, error: "too_large" }, { status: 413 });
   }
+  const caption = String(form.get("caption") || "").trim().slice(0, 40);
+  if (!caption) {
+    return Response.json({ ok: false, error: "caption_required" }, { status: 400 });
+  }
   const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-  const caption = String(form.get("caption") || "").slice(0, 40);
   const buf = await file.arrayBuffer();
   await env.NEWS_KV.put("photo:" + id, buf, { metadata: { contentType: file.type } });
   const index = await readIndex(env);
