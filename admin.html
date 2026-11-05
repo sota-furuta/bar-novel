@@ -32,12 +32,31 @@
     .photo-item img { width: 72px; height: 54px; object-fit: cover; border-radius: 8px; flex: 0 0 auto; }
     .photo-item span { flex: 1; font-size: 0.85rem; color: #e9dcc0; overflow: hidden; }
     .ok { color: #a9dfae; } .err { color: #ff9d8a; }
+    .admin-bar { position: sticky; top: 0; z-index: 20; display: flex; justify-content: space-between; align-items: center;
+      background: #171008; padding: 10px 0; border-bottom: 1px solid rgba(216,154,85,.25); }
+    .admin-bar h1 { margin: 0; }
+    #adminMenuBtn { font-size: 1.15rem; line-height: 1; padding: 10px 14px; }
+    .admin-menu { position: sticky; top: 57px; z-index: 19; background: #241708; border: 1px solid rgba(216,154,85,.4);
+      border-radius: 10px; padding: 6px; margin-top: 8px; }
+    .admin-menu button { display: block; width: 100%; text-align: left; border: none; background: transparent;
+      padding: 12px; font-size: 0.95rem; }
+    .admin-menu button:active { background: rgba(216,154,85,.15); }
+    section[id] { scroll-margin-top: 76px; }
     [hidden] { display: none !important; }
   </style>
 </head>
 <body>
   <main>
-    <h1>BAR NOVEL 管理画面</h1>
+    <header class="admin-bar">
+      <h1>BAR NOVEL 管理画面</h1>
+      <button type="button" id="adminMenuBtn" aria-label="メニュー" hidden>☰</button>
+    </header>
+    <nav class="admin-menu" id="adminMenu" hidden>
+      <button type="button" data-target="secClosures">臨時休業</button>
+      <button type="button" data-target="secNotices">お知らせ（告知）</button>
+      <button type="button" data-target="secPhotos">写真の投稿</button>
+      <button type="button" id="adminMenuLogout">ログアウト</button>
+    </nav>
 
     <!-- パスワード画面 -->
     <section id="gate">
@@ -50,20 +69,20 @@
 
     <!-- 編集画面（ログイン後に切り替え） -->
     <section id="editor" hidden>
-      <h2 style="font-size:1rem;letter-spacing:0.08em;color:#e0aa6a;margin:20px 0 4px;">お知らせ管理（臨時休業）</h2>
+      <h2 id="secClosures" style="font-size:1rem;letter-spacing:0.08em;color:#e0aa6a;margin:20px 0 4px;scroll-margin-top:76px;">お知らせ管理（臨時休業）</h2>
       <p class="note">臨時休業の日を登録すると、ホームページのトップにお知らせの帯が出ます。日付が過ぎたものは自動で消えます。定休日（月曜）は登録不要です。</p>
       <label>臨時休業の日</label>
       <div id="rows"></div>
       <button type="button" id="addRow">＋ 日付を追加</button>
       <button type="button" class="primary" id="save">保存する</button>
-      <h2 style="font-size:1rem;letter-spacing:0.08em;color:#e0aa6a;margin:28px 0 4px;">お知らせ管理（イベントなどの告知）</h2>
+      <h2 id="secNotices" style="font-size:1rem;letter-spacing:0.08em;color:#e0aa6a;margin:28px 0 4px;scroll-margin-top:76px;">お知らせ管理（イベントなどの告知）</h2>
       <p class="note">入力した文が、そのままホームページのトップのお知らせの帯に出ます。右の日付は表示を終える日で、過ぎると自動で消えます。</p>
       <label>お知らせの文と終了日</label>
       <div id="noticeRows"></div>
       <button type="button" id="addNoticeRow">＋ お知らせを追加</button>
       <button type="button" class="primary" id="saveNotices">お知らせを保存する</button>
       <p id="noticeStatus"></p>
-      <h2 style="font-size:1rem;letter-spacing:0.08em;color:#e0aa6a;margin:28px 0 4px;">写真の投稿</h2>
+      <h2 id="secPhotos" style="font-size:1rem;letter-spacing:0.08em;color:#e0aa6a;margin:28px 0 4px;scroll-margin-top:76px;">写真の投稿</h2>
       <p class="note">投稿した写真は、ホームページのギャラリー（いつもの写真の後ろ）に表示されます。写真は自動で軽量化されてから保存されます。</p>
       <label for="photoFile">写真を選ぶ</label>
       <input type="file" id="photoFile" accept="image/*">
@@ -112,6 +131,7 @@
     function showEditor() {
       gateEl.hidden = true;
       editorEl.hidden = false;
+      document.getElementById("adminMenuBtn").hidden = false;
       loadClosures();
       loadNotices();
       loadPhotos();
@@ -150,6 +170,8 @@
       sessionStorage.removeItem("barnovel_pw");
       editorEl.hidden = true;
       gateEl.hidden = false;
+      document.getElementById("adminMenuBtn").hidden = true;
+      document.getElementById("adminMenu").hidden = true;
       document.getElementById("pw").value = "";
       gateStatusEl.textContent = "";
     });
@@ -366,6 +388,29 @@
       } catch (e) {
         photoStatusEl.textContent = "通信エラーです。電波の良い場所でお試しください。";
         photoStatusEl.className = "err";
+      }
+    });
+
+    // ===== ハンバーガーメニュー =====
+    const adminMenuBtn = document.getElementById("adminMenuBtn");
+    const adminMenu = document.getElementById("adminMenu");
+    adminMenuBtn.addEventListener("click", () => {
+      adminMenu.hidden = !adminMenu.hidden;
+    });
+    adminMenu.querySelectorAll("button[data-target]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        adminMenu.hidden = true;
+        const target = document.getElementById(btn.dataset.target);
+        if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+    document.getElementById("adminMenuLogout").addEventListener("click", () => {
+      adminMenu.hidden = true;
+      document.getElementById("logout").click();
+    });
+    document.addEventListener("click", (e) => {
+      if (!adminMenu.hidden && !e.target.closest(".admin-menu") && !e.target.closest(".admin-bar")) {
+        adminMenu.hidden = true;
       }
     });
 
