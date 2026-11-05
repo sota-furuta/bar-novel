@@ -169,6 +169,34 @@ if (hamburger && hamburgerMenu) {
     .catch(() => {});
 })();
 
+// ギャラリー: 管理画面から投稿された写真を、固定写真の後ろ・メニューカードの前に追加
+(function () {
+  const track = document.getElementById("galleryTrack");
+  if (!track) return;
+  fetch("/api/photos")
+    .then((r) => r.json())
+    .then((d) => {
+      const list = (d && d.photos) || [];
+      if (!list.length) return;
+      const card = track.querySelector(".drink-card");
+      const anchor = card ? card.closest(".gallery-item") : null;
+      list.forEach((p) => {
+        const fig = document.createElement("figure");
+        fig.className = "gallery-item";
+        const img = document.createElement("img");
+        img.src = "/api/photo/" + p.id;
+        img.alt = p.caption || "投稿写真";
+        img.loading = "lazy";
+        const cap = document.createElement("figcaption");
+        cap.textContent = p.caption || "投稿写真";
+        fig.appendChild(img);
+        fig.appendChild(cap);
+        track.insertBefore(fig, anchor);
+      });
+    })
+    .catch(() => {});
+})();
+
 // 外部リンク: 電話以外は外部サービスを開く前に確認する
 (function () {
   const links = document.querySelectorAll('a[href^="http"]');
