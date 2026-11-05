@@ -97,7 +97,8 @@ function makeExclusive(selector, scrollOnOpen) {
         const target = item.closest("li") || item;
         setTimeout(() => {
           const header = document.querySelector(".site-header");
-          const offset = header ? header.offsetHeight + 10 : 12;
+          const bEl = document.getElementById("closureBanner");
+          const offset = (header ? header.offsetHeight : 0) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0) + 10;
           const y = target.getBoundingClientRect().top + window.scrollY - offset;
           window.scrollTo({ top: y, behavior: "smooth" });
         }, 400);
@@ -151,6 +152,12 @@ if (hamburger && hamburgerMenu) {
 (function () {
   const banner = document.getElementById("closureBanner");
   if (!banner) return;
+  const headerEl = document.querySelector(".site-header");
+  const setHeaderH = () => {
+    if (headerEl) document.body.style.setProperty("--header-h", headerEl.offsetHeight + "px");
+  };
+  setHeaderH();
+  window.addEventListener("resize", setHeaderH);
   const fmt = (c) => {
     const dt = new Date(c.date + "T00:00:00+09:00");
     const w = "日月火水木金土"[dt.getDay()];

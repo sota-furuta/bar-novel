@@ -1,6 +1,6 @@
 // BAR NOVEL お知らせ（イベントなどの告知）API
-// GET  /api/notices -> { notices: [{text, until}] }（表示期間内のみ）
-// POST /api/notices { password, notices: [{text, until}] } -> 保存
+// GET  /api/notices -> { notices: [{text, from, until}] }（掲載期間内のみ）
+// POST /api/notices { password, notices: [{text, from, until}] } -> 保存
 function todayJST() {
   return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Tokyo" });
 }
@@ -18,7 +18,7 @@ export async function onRequestGet({ env }) {
   }
   const today = todayJST();
   const notices = (Array.isArray(list) ? list : [])
-    .filter((n) => n && n.text && n.until >= today)
+    .filter((n) => n && n.text && (n.from || "") <= today && n.until >= today)
     .sort((a, b) => (a.until < b.until ? -1 : 1));
   return Response.json({ notices }, { headers: { "Cache-Control": "no-store" } });
 }
@@ -46,6 +46,7 @@ export async function onRequestPost({ request, env }) {
         )
         .map((n) => ({
           text: String(n.text).trim().slice(0, 80),
+          from: /^\d{4}-\d{2}-\d{2}$/.test(n.from || "") ? n.from : "",
           until: n.until,
         }))
         .slice(0, 10)

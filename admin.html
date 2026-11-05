@@ -32,6 +32,7 @@
     .notice-row { margin-bottom: 14px; }
     .notice-row input[type="text"] { width: 100%; margin-bottom: 8px; }
     .notice-sub { display: flex; gap: 8px; align-items: center; }
+    .notice-row .notice-sub + .notice-sub { margin-top: 8px; }
     .notice-sub span { font-size: .9rem; color: #57534e; white-space: nowrap; }
     .notice-sub input[type="date"] { flex: 1; }
     .row input[type="date"] { flex: 0 0 150px; }
@@ -141,8 +142,8 @@
       <div id="viewNotices" hidden>
         <button type="button" class="back-btn" data-back>← メニューに戻る</button>
         <h2 class="view-title">お知らせ管理（イベントなどの告知）</h2>
-        <p class="note">入力した文が、そのままホームページのトップのお知らせの帯に出ます。下の日付は表示を終える日で、過ぎると自動で消えます。</p>
-        <label>お知らせの文と終了日</label>
+        <p class="note">入力した文が、掲載期間の間だけホームページのお知らせの帯に出ます。開始日前は出ず、終了日を過ぎると自動で消えます。</p>
+        <label>お知らせの文と掲載期間</label>
         <div id="noticeRows"></div>
         <button type="button" id="addNoticeRow">＋ お知らせを追加</button>
         <button type="button" class="primary" id="saveNotices">お知らせを保存する</button>
@@ -269,10 +270,13 @@
     const noticeRowsEl = document.getElementById("noticeRows");
     const noticeStatusEl = document.getElementById("noticeStatus");
 
-    function addNoticeRow(text = "", until = "") {
+    function addNoticeRow(text = "", from = "", until = "") {
+      if (!text && !from && !until) from = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Tokyo" });
       const div = document.createElement("div");
       div.className = "notice-row";
       div.innerHTML = '<input type="text" maxlength="80" placeholder="例：12月24日は限定カクテルをご用意します" value="' + text.replace(/"/g, "&quot;") + '">' +
+        '<div class="notice-sub"><span>掲載開始日</span>' +
+        '<input type="date" value="' + from + '"></div>' +
         '<div class="notice-sub"><span>掲載を終える日</span>' +
         '<input type="date" value="' + until + '">' +
         '<button type="button" aria-label="削除">×</button></div>';
@@ -287,7 +291,7 @@
       try {
         const r = await fetch("/api/notices");
         const d = await r.json();
-        (d.notices || []).forEach(n => addNoticeRow(n.text, n.until));
+        (d.notices || []).forEach(n => addNoticeRow(n.text, n.from || "", n.until));
       } catch (e) { /* 読み込めなくても空で続行 */ }
       if (!noticeRowsEl.children.length) addNoticeRow();
     }
@@ -295,11 +299,17 @@
     document.getElementById("saveNotices").addEventListener("click", async () => {
       const notices = [...noticeRowsEl.querySelectorAll(".notice-row")].map(row => {
         const inputs = row.querySelectorAll("input");
-        return { text: inputs[0].value.trim(), until: inputs[1].value };
-      }).filter(n => n.text || n.until);
-      const missing = notices.find(n => !n.text || !n.until);
+        return { text: inputs[0].value.trim(), from: inputs[1].value, until: inputs[2].value };
+      }).filter(n => n.text || n.from || n.until);
+      const missing = notices.find(n => !n.text || !n.from || !n.until);
       if (missing) {
-        noticeStatusEl.textContent = "文と終了日の両方を入力してください。";
+        noticeStatusEl.textContent = "文・開始日・終了日のすべてを入力してください。";
+        noticeStatusEl.className = "err";
+        return;
+      }
+      const reversed = notices.find(n => n.from > n.until);
+      if (reversed) {
+        noticeStatusEl.textContent = "開始日は終了日より前の日付にしてください。";
         noticeStatusEl.className = "err";
         return;
       }
