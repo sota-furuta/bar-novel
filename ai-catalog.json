@@ -29,6 +29,17 @@
       ]
     },
     {
+      "identifier": "urn:air:bar-novel.pages.dev:api:notices",
+      "displayName": "BAR NOVEL イベントなどのお知らせ",
+      "type": "application/json",
+      "url": "https://bar-novel.pages.dev/api/notices",
+      "description": "BAR NOVEL のイベント告知などのお知らせを JSON で返す公開API。表示期間内のお知らせのみ、その文面と表示終了日を返す。",
+      "representativeQueries": [
+        "BAR NOVELでイベントはある？",
+        "BAR NOVELのお知らせは？"
+      ]
+    },
+    {
       "identifier": "urn:air:bar-novel.pages.dev:docs:llms",
       "displayName": "BAR NOVEL 店舗情報（llms.txt）",
       "type": "text/markdown",
