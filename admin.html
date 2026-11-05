@@ -62,6 +62,14 @@
     .contact-msg { white-space: pre-wrap; line-height: 1.6; font-size: 0.95rem; margin: 0 0 10px; }
     .contact-actions { display: flex; gap: 8px; }
     .menu-badge { color: #b45309; font-size: 0.85rem; font-weight: 700; }
+    /* 各処理へのリンクはリンクらしく（青＋下線） */
+    .menu-btn { color: #1d4ed8; text-decoration: underline; text-underline-offset: 3px; }
+    .menu-btn .chev { color: #1d4ed8; text-decoration: none; }
+    .menu-badge { text-decoration: none; }
+    .admin-menu button[data-goto] { color: #1d4ed8; text-decoration: underline; text-underline-offset: 3px; }
+    /* ログアウトは赤系 */
+    #logout { color: #b91c1c; border-color: #e0a3a3; background: #fdf3f3; font-weight: 700; }
+    #adminMenuLogout { color: #b91c1c; font-weight: 700; }
     .ok { color: #15803d; font-weight: 700; } .err { color: #b91c1c; font-weight: 700; }
     [hidden] { display: none !important; }
   </style>
