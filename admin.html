@@ -202,6 +202,18 @@
     let password = sessionStorage.getItem("barnovel_pw") || "";
     const TEST_MODE = location.hostname === "verification.bar-novel.pages.dev";
     if (TEST_MODE) {
+      const panel = document.createElement("div");
+      panel.id = "errPanel";
+      panel.style.cssText = "position:sticky;bottom:0;z-index:30;background:#1c1917;color:#fca5a5;font-size:.75rem;padding:8px 10px;white-space:pre-wrap;max-height:120px;overflow:auto;";
+      panel.textContent = "［テストモード］JSエラー監視中（エラーがあればここに出ます）";
+      document.querySelector("main").appendChild(panel);
+      const show = (m) => { panel.textContent += "\n" + m; };
+      window.addEventListener("error", (e) => show("error: " + e.message));
+      window.addEventListener("unhandledrejection", (e) => show("rejection: " + (e.reason && e.reason.message || e.reason)));
+      const _ce = console.error;
+      console.error = (...xs) => { show("console.error: " + xs.join(" ")); _ce(...xs); };
+    }
+    if (TEST_MODE) {
       document.getElementById("testModeBadge").hidden = false;
       const _fetch = window.fetch;
       window.fetch = (...args) => new Promise((resolve, reject) => {
