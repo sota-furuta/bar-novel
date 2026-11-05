@@ -94,7 +94,6 @@
   <main>
     <header class="admin-bar">
       <h1>BAR NOVEL 管理画面</h1>
-      <span id="testModeBadge" hidden style="color:#b91c1c;font-weight:700;font-size:.8rem;border:1.5px solid #e0a3a3;background:#fdf3f3;border-radius:8px;padding:6px 8px;">検証用テストモード：パスワード無効化中</span>
       <button type="button" id="adminMenuBtn" aria-label="メニュー" hidden>☰</button>
     </header>
     <nav class="admin-menu" id="adminMenu" hidden>
@@ -200,27 +199,6 @@
     const statusEl = document.getElementById("status");
     const gateStatusEl = document.getElementById("gateStatus");
     let password = sessionStorage.getItem("barnovel_pw") || "";
-    const TEST_MODE = location.hostname === "verification.bar-novel.pages.dev";
-    if (TEST_MODE) {
-      const panel = document.createElement("div");
-      panel.id = "errPanel";
-      panel.style.cssText = "position:sticky;bottom:0;z-index:30;background:#1c1917;color:#fca5a5;font-size:.75rem;padding:8px 10px;white-space:pre-wrap;max-height:120px;overflow:auto;";
-      panel.textContent = "［テストモード］JSエラー監視中（エラーがあればここに出ます）";
-      document.querySelector("main").appendChild(panel);
-      const show = (m) => { panel.textContent += "\n" + m; };
-      window.addEventListener("error", (e) => show("error: " + e.message));
-      window.addEventListener("unhandledrejection", (e) => show("rejection: " + (e.reason && e.reason.message || e.reason)));
-      const _ce = console.error;
-      console.error = (...xs) => { show("console.error: " + xs.join(" ")); _ce(...xs); };
-    }
-    if (TEST_MODE) {
-      document.getElementById("testModeBadge").hidden = false;
-      const _fetch = window.fetch;
-      window.fetch = (...args) => new Promise((resolve, reject) => {
-        const m = (args[1] && args[1].method) || "GET";
-        setTimeout(() => { _fetch(...args).then(resolve, reject); }, m === "GET" ? 600 : 1800);
-      });
-    }
 
     // ===== 画面切り替え =====
     const viewIds = ["menuView", "viewClosures", "viewNotices", "viewPhotos", "viewContact"];
@@ -656,7 +634,6 @@
     }
 
     async function tryLogin(pw) {
-      if (TEST_MODE) return true;
       const res = await fetch("/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -739,12 +716,6 @@
       }
     });
 
-    if (TEST_MODE) {
-      password = "__test__";
-      showEditor();
-      const v = new URLSearchParams(location.search).get("view");
-      if (v && viewIds.includes(v)) showView(v);
-    }
     // 同じタブで開き直したときは、パスワードが合えばそのまま編集画面へ
     if (password) {
       tryLogin(password).then(ok => { if (ok) showEditor(); else sessionStorage.removeItem("barnovel_pw"); });
