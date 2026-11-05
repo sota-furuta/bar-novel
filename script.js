@@ -151,17 +151,21 @@ if (hamburger && hamburgerMenu) {
 (function () {
   const banner = document.getElementById("closureBanner");
   if (!banner) return;
-  fetch("/api/news")
-    .then((r) => r.json())
-    .then((d) => {
-      const list = (d && d.closures) || [];
-      if (!list.length) return;
-      const fmt = (c) => {
-        const dt = new Date(c.date + "T00:00:00+09:00");
-        const w = "日月火水木金土"[dt.getDay()];
-        return `${dt.getMonth() + 1}月${dt.getDate()}日（${w}）は臨時休業です${c.note ? "（" + c.note + "）" : ""}`;
-      };
-      banner.textContent = "【お知らせ】" + list.slice(0, 2).map(fmt).join("／");
+  const fmt = (c) => {
+    const dt = new Date(c.date + "T00:00:00+09:00");
+    const w = "日月火水木金土"[dt.getDay()];
+    return `${dt.getMonth() + 1}月${dt.getDate()}日（${w}）は臨時休業です${c.note ? "（" + c.note + "）" : ""}`;
+  };
+  Promise.all([
+    fetch("/api/news").then((r) => r.json()).catch(() => ({})),
+    fetch("/api/notices").then((r) => r.json()).catch(() => ({})),
+  ])
+    .then(([news, noticesData]) => {
+      const items = [];
+      ((news && news.closures) || []).slice(0, 2).forEach((c) => items.push(fmt(c)));
+      ((noticesData && noticesData.notices) || []).forEach((n) => items.push(n.text));
+      if (!items.length) return;
+      banner.textContent = "【お知らせ】" + items.slice(0, 3).join("／");
       banner.hidden = false;
       document.body.classList.add("has-banner");
       document.body.style.setProperty("--banner-h", banner.offsetHeight + "px");

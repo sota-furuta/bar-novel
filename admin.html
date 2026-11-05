@@ -26,7 +26,7 @@
     button.primary { background: #d89a55; color: #221503; font-weight: 700; width: 100%; margin-top: 20px;
       box-shadow: 0 4px 0 #6e4520; }
     button.ghost { width: 100%; margin-top: 12px; background: transparent; }
-    #status, #gateStatus, #photoStatus { margin-top: 16px; font-size: 0.9rem; min-height: 1.4em; }
+    #status, #gateStatus, #photoStatus, #noticeStatus { margin-top: 16px; font-size: 0.9rem; min-height: 1.4em; }
     input[type="file"] { color: #f5efe4; margin: 4px 0 8px; }
     .photo-item { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
     .photo-item img { width: 72px; height: 54px; object-fit: cover; border-radius: 8px; flex: 0 0 auto; }
@@ -56,6 +56,13 @@
       <div id="rows"></div>
       <button type="button" id="addRow">＋ 日付を追加</button>
       <button type="button" class="primary" id="save">保存する</button>
+      <h2 style="font-size:1rem;letter-spacing:0.08em;color:#e0aa6a;margin:28px 0 4px;">お知らせ管理（イベントなどの告知）</h2>
+      <p class="note">入力した文が、そのままホームページのトップのお知らせの帯に出ます。右の日付は表示を終える日で、過ぎると自動で消えます。</p>
+      <label>お知らせの文と終了日</label>
+      <div id="noticeRows"></div>
+      <button type="button" id="addNoticeRow">＋ お知らせを追加</button>
+      <button type="button" class="primary" id="saveNotices">お知らせを保存する</button>
+      <p id="noticeStatus"></p>
       <h2 style="font-size:1rem;letter-spacing:0.08em;color:#e0aa6a;margin:28px 0 4px;">写真の投稿</h2>
       <p class="note">投稿した写真は、ホームページのギャラリー（いつもの写真の後ろ）に表示されます。写真は自動で軽量化されてから保存されます。</p>
       <label for="photoFile">写真を選ぶ</label>
@@ -106,6 +113,7 @@
       gateEl.hidden = true;
       editorEl.hidden = false;
       loadClosures();
+      loadNotices();
       loadPhotos();
     }
 
@@ -173,6 +181,68 @@
       } catch (e) {
         statusEl.textContent = "通信エラーです。電波の良い場所でお試しください。";
         statusEl.className = "err";
+      }
+    });
+
+    // ===== お知らせ（告知）=====
+    const noticeRowsEl = document.getElementById("noticeRows");
+    const noticeStatusEl = document.getElementById("noticeStatus");
+
+    function addNoticeRow(text = "", until = "") {
+      const div = document.createElement("div");
+      div.className = "row";
+      div.innerHTML = '<input type="text" maxlength="80" placeholder="例：12月24日は限定カクテルをご用意します" value="' + text.replace(/"/g, "&quot;") + '">' +
+        '<input type="date" value="' + until + '">' +
+        '<button type="button" aria-label="削除">×</button>';
+      div.querySelector("button").addEventListener("click", () => div.remove());
+      noticeRowsEl.appendChild(div);
+    }
+
+    document.getElementById("addNoticeRow").addEventListener("click", () => addNoticeRow());
+
+    async function loadNotices() {
+      noticeRowsEl.innerHTML = "";
+      try {
+        const r = await fetch("/api/notices");
+        const d = await r.json();
+        (d.notices || []).forEach(n => addNoticeRow(n.text, n.until));
+      } catch (e) { /* 読み込めなくても空で続行 */ }
+      if (!noticeRowsEl.children.length) addNoticeRow();
+    }
+
+    document.getElementById("saveNotices").addEventListener("click", async () => {
+      const notices = [...noticeRowsEl.querySelectorAll(".row")].map(row => {
+        const inputs = row.querySelectorAll("input");
+        return { text: inputs[0].value.trim(), until: inputs[1].value };
+      }).filter(n => n.text || n.until);
+      const missing = notices.find(n => !n.text || !n.until);
+      if (missing) {
+        noticeStatusEl.textContent = "文と終了日の両方を入力してください。";
+        noticeStatusEl.className = "err";
+        return;
+      }
+      noticeStatusEl.textContent = "保存中…";
+      noticeStatusEl.className = "";
+      try {
+        const res = await fetch("/api/notices", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password, notices })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          noticeStatusEl.textContent = "保存しました。サイトのお知らせの帯に表示されます。";
+          noticeStatusEl.className = "ok";
+        } else if (data.error === "unauthorized") {
+          noticeStatusEl.textContent = "パスワードの有効期限が切れました。ログアウトして入り直してください。";
+          noticeStatusEl.className = "err";
+        } else {
+          noticeStatusEl.textContent = "保存できませんでした（" + data.error + "）";
+          noticeStatusEl.className = "err";
+        }
+      } catch (e) {
+        noticeStatusEl.textContent = "通信エラーです。電波の良い場所でお試しください。";
+        noticeStatusEl.className = "err";
       }
     });
 
