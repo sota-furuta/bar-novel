@@ -62,6 +62,11 @@
     .contact-msg { white-space: pre-wrap; line-height: 1.6; font-size: 0.95rem; margin: 0 0 10px; }
     .contact-actions { display: flex; gap: 8px; }
     .menu-badge { color: #b45309; font-size: 0.85rem; font-weight: 700; }
+    .pw-wrap { position: relative; }
+    .pw-wrap input { padding-right: 54px; }
+    #pwToggle { position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+      min-height: 40px; padding: 8px 10px; border: none; background: transparent; color: #57534e;
+      display: flex; align-items: center; }
     /* 各処理へのリンクはリンクらしく（青＋下線） */
     .menu-btn { color: #1d4ed8; text-decoration: underline; text-underline-offset: 3px; }
     .menu-btn .chev { color: #1d4ed8; text-decoration: none; }
@@ -93,7 +98,10 @@
     <section id="gate">
       <p class="note">管理用パスワードを入力してください。</p>
       <label for="pw">パスワード</label>
-      <input type="password" id="pw" autocomplete="current-password" placeholder="管理用パスワード">
+      <div class="pw-wrap">
+        <input type="password" id="pw" autocomplete="current-password" placeholder="管理用パスワード">
+        <button type="button" id="pwToggle" aria-label="パスワードを表示" aria-pressed="false"><span id="pwEye"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></span><span id="pwEyeOff" hidden><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><line x1="3" y1="3" x2="21" y2="21"/></svg></span></button>
+      </div>
       <button type="button" class="primary" id="login">ログイン</button>
       <p id="gateStatus"></p>
       <p id="gateContactCount"></p>
@@ -584,6 +592,18 @@
       }
     });
 
+    const pwInput = document.getElementById("pw");
+    const pwToggle = document.getElementById("pwToggle");
+    pwToggle.addEventListener("click", () => {
+      const show = pwInput.type === "password";
+      pwInput.type = show ? "text" : "password";
+      document.getElementById("pwEye").hidden = show;
+      document.getElementById("pwEyeOff").hidden = !show;
+      pwToggle.setAttribute("aria-label", show ? "パスワードを隠す" : "パスワードを表示");
+      pwToggle.setAttribute("aria-pressed", String(show));
+      pwInput.focus();
+    });
+
     document.getElementById("pw").addEventListener("keydown", (e) => {
       if (e.key === "Enter") document.getElementById("login").click();
     });
@@ -596,6 +616,10 @@
       document.getElementById("adminMenuBtn").hidden = true;
       document.getElementById("adminMenu").hidden = true;
       document.getElementById("pw").value = "";
+      pwInput.type = "password";
+      document.getElementById("pwEye").hidden = false;
+      document.getElementById("pwEyeOff").hidden = true;
+      pwToggle.setAttribute("aria-pressed", "false");
       gateStatusEl.textContent = "";
     });
 
