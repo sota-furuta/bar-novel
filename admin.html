@@ -8,7 +8,9 @@
   <style>
     body { font-family: sans-serif; background: #171008; color: #f5efe4; margin: 0; padding: 24px 16px 64px; }
     main { max-width: 520px; margin: 0 auto; }
-    h1 { font-size: 1.2rem; letter-spacing: 0.1em; }
+    h1 { font-size: 1.2rem; letter-spacing: 0.1em; margin: 0; }
+    .admin-bar { position: sticky; top: 0; z-index: 20; background: #171008; padding: 10px 0;
+      border-bottom: 1px solid rgba(216,154,85,.25); margin-bottom: 8px; }
     p.note { color: #c9b586; font-size: 0.85rem; line-height: 1.7; }
     label { display: block; margin: 18px 0 6px; font-size: 0.85rem; color: #e0aa6a; }
     input[type="password"], input[type="date"], input[type="text"] {
@@ -26,18 +28,42 @@
     button.primary { background: #d89a55; color: #221503; font-weight: 700; width: 100%; margin-top: 20px;
       box-shadow: 0 4px 0 #6e4520; }
     button.ghost { width: 100%; margin-top: 12px; background: transparent; }
+    .menu-btn { display: flex; justify-content: space-between; align-items: center; width: 100%;
+      padding: 18px 16px; margin-bottom: 12px; font-size: 1rem; text-align: left; }
+    .menu-btn .chev { color: #c9b586; }
+    .back-btn { margin: 14px 0 4px; background: transparent; }
+    h2.view-title { font-size: 1rem; letter-spacing: 0.08em; color: #e0aa6a; margin: 14px 0 4px; }
     #status, #gateStatus, #photoStatus, #noticeStatus { margin-top: 16px; font-size: 0.9rem; min-height: 1.4em; }
     input[type="file"] { color: #f5efe4; margin: 4px 0 8px; }
     .photo-item { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
     .photo-item img { width: 72px; height: 54px; object-fit: cover; border-radius: 8px; flex: 0 0 auto; }
     .photo-item span { flex: 1; font-size: 0.85rem; color: #e9dcc0; overflow: hidden; }
+    select, textarea {
+      width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px;
+      border: 1px solid rgba(216,154,85,.4); background: #241708; color: #f5efe4; font-size: 1rem;
+      font-family: inherit;
+    }
+    textarea { min-height: 120px; resize: vertical; }
+    #gateContactCount { margin-top: 14px; color: #ffb35c; font-size: 0.9rem; min-height: 1.2em; }
+    #contactStatus { margin-top: 16px; font-size: 0.9rem; min-height: 1.4em; }
+    .contact-item { border: 1px solid rgba(216,154,85,.3); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+    .contact-item.done { opacity: 0.55; }
+    .contact-meta { font-size: 0.8rem; color: #c9b586; margin-bottom: 6px; }
+    .contact-badge { color: #ffb35c; font-weight: 700; }
+    .contact-item.done .contact-badge { color: #a9dfae; }
+    .contact-msg { white-space: pre-wrap; line-height: 1.6; font-size: 0.92rem; margin: 0 0 10px; }
+    .contact-actions { display: flex; gap: 8px; }
+    .contact-actions button { padding: 7px 12px; font-size: 0.85rem; }
+    .menu-badge { color: #ffb35c; font-size: 0.82rem; font-weight: 700; }
     .ok { color: #a9dfae; } .err { color: #ff9d8a; }
     [hidden] { display: none !important; }
   </style>
 </head>
 <body>
   <main>
-    <h1>BAR NOVEL 管理画面</h1>
+    <header class="admin-bar">
+      <h1>BAR NOVEL 管理画面</h1>
+    </header>
 
     <!-- パスワード画面 -->
     <section id="gate">
@@ -46,36 +72,80 @@
       <input type="password" id="pw" autocomplete="current-password" placeholder="管理用パスワード">
       <button type="button" class="primary" id="login">ログイン</button>
       <p id="gateStatus"></p>
+      <p id="gateContactCount"></p>
     </section>
 
-    <!-- 編集画面（ログイン後に切り替え） -->
+    <!-- ログイン後 -->
     <section id="editor" hidden>
-      <h2 style="font-size:1rem;letter-spacing:0.08em;color:#e0aa6a;margin:20px 0 4px;">お知らせ管理（臨時休業）</h2>
-      <p class="note">臨時休業の日を登録すると、ホームページのトップにお知らせの帯が出ます。日付が過ぎたものは自動で消えます。定休日（月曜）は登録不要です。</p>
-      <label>臨時休業の日</label>
-      <div id="rows"></div>
-      <button type="button" id="addRow">＋ 日付を追加</button>
-      <button type="button" class="primary" id="save">保存する</button>
-      <h2 style="font-size:1rem;letter-spacing:0.08em;color:#e0aa6a;margin:28px 0 4px;">お知らせ管理（イベントなどの告知）</h2>
-      <p class="note">入力した文が、そのままホームページのトップのお知らせの帯に出ます。右の日付は表示を終える日で、過ぎると自動で消えます。</p>
-      <label>お知らせの文と終了日</label>
-      <div id="noticeRows"></div>
-      <button type="button" id="addNoticeRow">＋ お知らせを追加</button>
-      <button type="button" class="primary" id="saveNotices">お知らせを保存する</button>
-      <p id="noticeStatus"></p>
-      <h2 style="font-size:1rem;letter-spacing:0.08em;color:#e0aa6a;margin:28px 0 4px;">写真の投稿</h2>
-      <p class="note">投稿した写真は、ホームページのギャラリー（いつもの写真の後ろ）に表示されます。写真は自動で軽量化されてから保存されます。</p>
-      <label for="photoFile">写真を選ぶ</label>
-      <input type="file" id="photoFile" accept="image/*">
-      <img id="photoPreview" alt="" style="display:none;max-width:100%;border-radius:10px;margin-top:6px;">
-      <label for="photoCaption">キャプション（必須）</label>
-      <input type="text" id="photoCaption" maxlength="40" placeholder="例：本日のカクテル">
-      <button type="button" class="primary" id="photoUpload">この写真を投稿する</button>
-      <p id="photoStatus"></p>
-      <label>投稿済みの写真</label>
-      <div id="photoList"></div>
-      <button type="button" class="ghost" id="logout">ログアウト</button>
-      <p id="status"></p>
+      <!-- メニュー画面 -->
+      <div id="menuView">
+        <p class="note">行いたい処理を選んでください。</p>
+        <button type="button" class="menu-btn" data-view="viewClosures">臨時休業<span class="chev">›</span></button>
+        <button type="button" class="menu-btn" data-view="viewNotices">お知らせ（イベントなどの告知）<span class="chev">›</span></button>
+        <button type="button" class="menu-btn" data-view="viewPhotos">写真の投稿<span class="chev">›</span></button>
+        <button type="button" class="menu-btn" data-view="viewContact">開発者への要望・問い合わせ<span class="menu-badge" id="menuContactBadge"></span></button>
+        <button type="button" class="ghost" id="logout">ログアウト</button>
+      </div>
+
+      <!-- 臨時休業 -->
+      <div id="viewClosures" hidden>
+        <button type="button" class="back-btn" data-back>← メニューに戻る</button>
+        <h2 class="view-title">お知らせ管理（臨時休業）</h2>
+        <p class="note">臨時休業の日を登録すると、ホームページのトップにお知らせの帯が出ます。日付が過ぎたものは自動で消えます。定休日（月曜）は登録不要です。</p>
+        <label>臨時休業の日</label>
+        <div id="rows"></div>
+        <button type="button" id="addRow">＋ 日付を追加</button>
+        <button type="button" class="primary" id="save">保存する</button>
+        <p id="status"></p>
+      </div>
+
+      <!-- お知らせ（告知） -->
+      <div id="viewNotices" hidden>
+        <button type="button" class="back-btn" data-back>← メニューに戻る</button>
+        <h2 class="view-title">お知らせ管理（イベントなどの告知）</h2>
+        <p class="note">入力した文が、そのままホームページのトップのお知らせの帯に出ます。右の日付は表示を終える日で、過ぎると自動で消えます。</p>
+        <label>お知らせの文と終了日</label>
+        <div id="noticeRows"></div>
+        <button type="button" id="addNoticeRow">＋ お知らせを追加</button>
+        <button type="button" class="primary" id="saveNotices">お知らせを保存する</button>
+        <p id="noticeStatus"></p>
+      </div>
+
+      <!-- 写真の投稿 -->
+      <div id="viewPhotos" hidden>
+        <button type="button" class="back-btn" data-back>← メニューに戻る</button>
+        <h2 class="view-title">写真の投稿</h2>
+        <p class="note">投稿した写真は、ホームページのギャラリー（いつもの写真の後ろ）に表示されます。写真は自動で軽量化されてから保存されます。</p>
+        <label for="photoFile">写真を選ぶ</label>
+        <input type="file" id="photoFile" accept="image/*">
+        <img id="photoPreview" alt="" style="display:none;max-width:100%;border-radius:10px;margin-top:6px;">
+        <label for="photoCaption">キャプション（必須）</label>
+        <input type="text" id="photoCaption" maxlength="40" placeholder="例：本日のカクテル">
+        <button type="button" class="primary" id="photoUpload">この写真を投稿する</button>
+        <p id="photoStatus"></p>
+        <label>投稿済みの写真</label>
+        <div id="photoList"></div>
+      </div>
+
+      <!-- 開発者への要望・問い合わせ -->
+      <div id="viewContact" hidden>
+        <button type="button" class="back-btn" data-back>← メニューに戻る</button>
+        <h2 class="view-title">開発者への要望・問い合わせ</h2>
+        <p class="note">サイトへの要望や質問を開発者へ送れます。送った内容はこの画面に残り、開発者が確認します。</p>
+        <label for="contactCategory">種類</label>
+        <select id="contactCategory">
+          <option>機能の要望</option>
+          <option>不具合の報告</option>
+          <option>質問</option>
+          <option>その他</option>
+        </select>
+        <label for="contactMessage">内容</label>
+        <textarea id="contactMessage" maxlength="1000" placeholder="例：営業時間を変えたい／この表示がおかしい など"></textarea>
+        <button type="button" class="primary" id="contactSend">送信する</button>
+        <p id="contactStatus"></p>
+        <label>送信した問い合わせ</label>
+        <div id="contactList"></div>
+      </div>
     </section>
   </main>
 
@@ -87,6 +157,24 @@
     const gateStatusEl = document.getElementById("gateStatus");
     let password = sessionStorage.getItem("barnovel_pw") || "";
 
+    // ===== 画面切り替え =====
+    const viewIds = ["menuView", "viewClosures", "viewNotices", "viewPhotos", "viewContact"];
+    function showView(id) {
+      viewIds.forEach((v) => { document.getElementById(v).hidden = v !== id; });
+      window.scrollTo(0, 0);
+      if (id === "viewClosures") loadClosures();
+      if (id === "viewNotices") loadNotices();
+      if (id === "viewPhotos") loadPhotos();
+      if (id === "viewContact") loadContacts();
+    }
+    document.querySelectorAll(".menu-btn").forEach((btn) => {
+      btn.addEventListener("click", () => showView(btn.dataset.view));
+    });
+    document.querySelectorAll("[data-back]").forEach((btn) => {
+      btn.addEventListener("click", () => showView("menuView"));
+    });
+
+    // ===== 臨時休業 =====
     function addRow(date = "", note = "") {
       const div = document.createElement("div");
       div.className = "row";
@@ -108,51 +196,6 @@
       } catch (e) { /* 読み込めなくても空で続行 */ }
       if (!rowsEl.children.length) addRow();
     }
-
-    function showEditor() {
-      gateEl.hidden = true;
-      editorEl.hidden = false;
-      loadClosures();
-      loadNotices();
-      loadPhotos();
-    }
-
-    async function tryLogin(pw) {
-      const res = await fetch("/api/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: pw })
-      });
-      const data = await res.json().catch(() => ({ ok: false }));
-      return !!data.ok;
-    }
-
-    document.getElementById("login").addEventListener("click", async () => {
-      const pw = document.getElementById("pw").value;
-      gateStatusEl.textContent = "確認中…";
-      gateStatusEl.className = "";
-      if (await tryLogin(pw)) {
-        password = pw;
-        sessionStorage.setItem("barnovel_pw", pw);
-        showEditor();
-      } else {
-        gateStatusEl.textContent = "パスワードが違います。";
-        gateStatusEl.className = "err";
-      }
-    });
-
-    document.getElementById("pw").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") document.getElementById("login").click();
-    });
-
-    document.getElementById("logout").addEventListener("click", () => {
-      password = "";
-      sessionStorage.removeItem("barnovel_pw");
-      editorEl.hidden = true;
-      gateEl.hidden = false;
-      document.getElementById("pw").value = "";
-      gateStatusEl.textContent = "";
-    });
 
     document.getElementById("save").addEventListener("click", async () => {
       const closures = [...rowsEl.querySelectorAll(".row")].map(row => {
@@ -367,6 +410,166 @@
         photoStatusEl.textContent = "通信エラーです。電波の良い場所でお試しください。";
         photoStatusEl.className = "err";
       }
+    });
+
+    // ===== 開発者への要望・問い合わせ =====
+    const contactStatusEl = document.getElementById("contactStatus");
+    const contactListEl = document.getElementById("contactList");
+    const menuContactBadge = document.getElementById("menuContactBadge");
+
+    function fmtDate(iso) {
+      try {
+        return new Date(iso).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+      } catch (e) { return ""; }
+    }
+
+    async function loadContacts() {
+      contactListEl.innerHTML = "";
+      try {
+        const r = await fetch("/api/contact", { headers: { "X-Admin-Password": password } });
+        const d = await r.json();
+        const list = d.contacts || [];
+        const openCount = list.filter((c) => c.status !== "done").length;
+        menuContactBadge.textContent = openCount ? "未対応 " + openCount + " 件" : "";
+        list.forEach((c) => {
+          const div = document.createElement("div");
+          div.className = "contact-item" + (c.status === "done" ? " done" : "");
+          const meta = document.createElement("div");
+          meta.className = "contact-meta";
+          meta.innerHTML = "";
+          meta.textContent = fmtDate(c.createdAt) + "｜" + c.category + "｜";
+          const badge = document.createElement("span");
+          badge.className = "contact-badge";
+          badge.textContent = c.status === "done" ? "完了" : "未対応";
+          meta.appendChild(badge);
+          const msg = document.createElement("p");
+          msg.className = "contact-msg";
+          msg.textContent = c.message;
+          const actions = document.createElement("div");
+          actions.className = "contact-actions";
+          const toggle = document.createElement("button");
+          toggle.type = "button";
+          toggle.textContent = c.status === "done" ? "未対応に戻す" : "完了にする";
+          toggle.addEventListener("click", async () => {
+            const res = await fetch("/api/contact", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ password, action: "status", id: c.id, status: c.status === "done" ? "open" : "done" })
+            });
+            const data = await res.json().catch(() => ({ ok: false }));
+            if (data.ok) loadContacts();
+            else { contactStatusEl.textContent = "状態を変更できませんでした。"; contactStatusEl.className = "err"; }
+          });
+          const del = document.createElement("button");
+          del.type = "button";
+          del.textContent = "削除";
+          del.addEventListener("click", async () => {
+            if (!confirm("この問い合わせを削除しますか？")) return;
+            const res = await fetch("/api/contact", {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ password, id: c.id })
+            });
+            const data = await res.json().catch(() => ({ ok: false }));
+            if (data.ok) loadContacts();
+          });
+          actions.appendChild(toggle); actions.appendChild(del);
+          div.appendChild(meta); div.appendChild(msg); div.appendChild(actions);
+          contactListEl.appendChild(div);
+        });
+        if (!list.length) {
+          contactListEl.innerHTML = '<p class="note">まだ問い合わせはありません。</p>';
+        }
+      } catch (e) { /* 読めなくても続行 */ }
+    }
+
+    document.getElementById("contactSend").addEventListener("click", async () => {
+      const message = document.getElementById("contactMessage").value.trim();
+      if (!message) {
+        contactStatusEl.textContent = "内容を入力してください。";
+        contactStatusEl.className = "err";
+        return;
+      }
+      contactStatusEl.textContent = "送信中…";
+      contactStatusEl.className = "";
+      try {
+        const res = await fetch("/api/contact", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password, category: document.getElementById("contactCategory").value, message })
+        });
+        const data = await res.json().catch(() => ({ ok: false }));
+        if (data.ok) {
+          contactStatusEl.textContent = "送信しました。開発者が確認します。";
+          contactStatusEl.className = "ok";
+          document.getElementById("contactMessage").value = "";
+          loadContacts();
+        } else if (data.error === "unauthorized") {
+          contactStatusEl.textContent = "パスワードの有効期限が切れました。ログアウトして入り直してください。";
+          contactStatusEl.className = "err";
+        } else {
+          contactStatusEl.textContent = "送信できませんでした（" + (data.error || "error") + "）";
+          contactStatusEl.className = "err";
+        }
+      } catch (e) {
+        contactStatusEl.textContent = "通信エラーです。電波の良い場所でお試しください。";
+        contactStatusEl.className = "err";
+      }
+    });
+
+    // ログイン画面に未対応件数を表示
+    fetch("/api/contact-count")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d && d.open > 0) {
+          document.getElementById("gateContactCount").textContent =
+            "未対応の問い合わせが " + d.open + " 件あります。";
+        }
+      })
+      .catch(() => {});
+
+    // ===== ログイン =====
+    function showEditor() {
+      gateEl.hidden = true;
+      editorEl.hidden = false;
+      showView("menuView");
+    }
+
+    async function tryLogin(pw) {
+      const res = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: pw })
+      });
+      const data = await res.json().catch(() => ({ ok: false }));
+      return !!data.ok;
+    }
+
+    document.getElementById("login").addEventListener("click", async () => {
+      const pw = document.getElementById("pw").value;
+      gateStatusEl.textContent = "確認中…";
+      gateStatusEl.className = "";
+      if (await tryLogin(pw)) {
+        password = pw;
+        sessionStorage.setItem("barnovel_pw", pw);
+        showEditor();
+      } else {
+        gateStatusEl.textContent = "パスワードが違います。";
+        gateStatusEl.className = "err";
+      }
+    });
+
+    document.getElementById("pw").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") document.getElementById("login").click();
+    });
+
+    document.getElementById("logout").addEventListener("click", () => {
+      password = "";
+      sessionStorage.removeItem("barnovel_pw");
+      editorEl.hidden = true;
+      gateEl.hidden = false;
+      document.getElementById("pw").value = "";
+      gateStatusEl.textContent = "";
     });
 
     // 同じタブで開き直したときは、パスワードが合えばそのまま編集画面へ
