@@ -92,6 +92,7 @@
   <main>
     <header class="admin-bar">
       <h1>BAR NOVEL 管理画面</h1>
+      <span id="testModeBadge" hidden style="color:#b91c1c;font-weight:700;font-size:.8rem;border:1.5px solid #e0a3a3;background:#fdf3f3;border-radius:8px;padding:6px 8px;">検証用テストモード：パスワード無効化中</span>
       <button type="button" id="adminMenuBtn" aria-label="メニュー" hidden>☰</button>
     </header>
     <nav class="admin-menu" id="adminMenu" hidden>
@@ -197,6 +198,8 @@
     const statusEl = document.getElementById("status");
     const gateStatusEl = document.getElementById("gateStatus");
     let password = sessionStorage.getItem("barnovel_pw") || "";
+    const TEST_MODE = location.hostname === "verification.bar-novel.pages.dev";
+    if (TEST_MODE) document.getElementById("testModeBadge").hidden = false;
 
     // ===== 画面切り替え =====
     const viewIds = ["menuView", "viewClosures", "viewNotices", "viewPhotos", "viewContact"];
@@ -632,6 +635,7 @@
     }
 
     async function tryLogin(pw) {
+      if (TEST_MODE) return true;
       const res = await fetch("/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -714,6 +718,7 @@
       }
     });
 
+    if (TEST_MODE) { password = "__test__"; showEditor(); }
     // 同じタブで開き直したときは、パスワードが合えばそのまま編集画面へ
     if (password) {
       tryLogin(password).then(ok => { if (ok) showEditor(); else sessionStorage.removeItem("barnovel_pw"); });
