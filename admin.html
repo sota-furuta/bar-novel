@@ -6,63 +6,63 @@
   <meta name="robots" content="noindex, nofollow">
   <title>BAR NOVEL 管理画面</title>
   <style>
-    body { font-family: sans-serif; background: #171008; color: #f5efe4; margin: 0; padding: 24px 16px 64px; }
+    body { font-family: sans-serif; background: #f5f5f4; color: #1c1917; margin: 0; padding: 16px 16px 64px; font-size: 16px; }
     main { max-width: 520px; margin: 0 auto; }
-    h1 { font-size: 1.2rem; letter-spacing: 0.1em; margin: 0; }
-    .admin-bar { position: sticky; top: 0; z-index: 20; background: #171008; padding: 10px 0;
-      border-bottom: 1px solid rgba(216,154,85,.25); margin-bottom: 8px;
+    h1 { font-size: 1.15rem; letter-spacing: 0.04em; margin: 0; }
+    .admin-bar { position: sticky; top: 0; z-index: 20; background: #f5f5f4; padding: 10px 0;
+      border-bottom: 2px solid #d6d3d1; margin-bottom: 8px;
       display: flex; justify-content: space-between; align-items: center; }
-    #adminMenuBtn { font-size: 1.15rem; line-height: 1; padding: 10px 14px; }
-    .admin-menu { position: sticky; top: 57px; z-index: 19; background: #241708; border: 1px solid rgba(216,154,85,.4);
-      border-radius: 10px; padding: 6px; margin-bottom: 8px; }
+    #adminMenuBtn { font-size: 1.2rem; line-height: 1; padding: 12px 16px; }
+    .admin-menu { position: sticky; top: 57px; z-index: 19; background: #ffffff; border: 1px solid #d6d3d1;
+      border-radius: 10px; padding: 6px; margin-bottom: 8px; box-shadow: 0 8px 20px rgba(0,0,0,.12); }
     .admin-menu button { display: block; width: 100%; text-align: left; border: none; background: transparent;
-      padding: 12px; font-size: 0.95rem; }
-    .admin-menu button:active { background: rgba(216,154,85,.15); }
-    p.note { color: #c9b586; font-size: 0.85rem; line-height: 1.7; }
-    label { display: block; margin: 18px 0 6px; font-size: 0.85rem; color: #e0aa6a; }
-    input[type="password"], input[type="date"], input[type="text"] {
-      width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px;
-      border: 1px solid rgba(216,154,85,.4); background: #241708; color: #f5efe4; font-size: 1rem;
+      padding: 14px 12px; font-size: 1rem; color: #1c1917; box-shadow: none; }
+    .admin-menu button:active { background: #f0efed; }
+    p.note { color: #57534e; font-size: 0.9rem; line-height: 1.7; }
+    label { display: block; margin: 20px 0 6px; font-size: 0.92rem; font-weight: 700; color: #292524; }
+    input[type="password"], input[type="date"], input[type="text"], select, textarea {
+      width: 100%; box-sizing: border-box; padding: 12px; border-radius: 8px;
+      border: 1.5px solid #a8a29e; background: #ffffff; color: #1c1917; font-size: 1rem;
+      font-family: inherit;
     }
+    input:focus, select:focus, textarea:focus { outline: 3px solid rgba(29,78,216,.35); border-color: #1d4ed8; }
+    textarea { min-height: 120px; resize: vertical; }
     .row { display: flex; gap: 8px; margin-bottom: 10px; }
     .row input[type="date"] { flex: 0 0 150px; }
     .row input[type="text"] { flex: 1; }
     .row button { flex: 0 0 auto; }
     button {
-      padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(216,154,85,.5);
-      background: #38270f; color: #f0c491; font-size: 0.95rem; cursor: pointer;
+      padding: 12px 18px; border-radius: 8px; border: 1.5px solid #a8a29e;
+      background: #ffffff; color: #1c1917; font-size: 1rem; cursor: pointer; min-height: 48px;
     }
-    button.primary { background: #d89a55; color: #221503; font-weight: 700; width: 100%; margin-top: 20px;
-      box-shadow: 0 4px 0 #6e4520; }
+    button:active { background: #f0efed; }
+    button.primary { background: #1d4ed8; border-color: #1d4ed8; color: #ffffff; font-weight: 700; width: 100%; margin-top: 24px;
+      box-shadow: 0 3px 0 #173a8f; }
+    button.primary:active { background: #1e40af; }
     button.ghost { width: 100%; margin-top: 12px; background: transparent; }
     .menu-btn { display: flex; justify-content: space-between; align-items: center; width: 100%;
-      padding: 18px 16px; margin-bottom: 12px; font-size: 1rem; text-align: left; }
-    .menu-btn .chev { color: #c9b586; }
-    .back-btn { margin: 14px 0 4px; background: transparent; }
-    h2.view-title { font-size: 1rem; letter-spacing: 0.08em; color: #e0aa6a; margin: 14px 0 4px; }
-    #status, #gateStatus, #photoStatus, #noticeStatus { margin-top: 16px; font-size: 0.9rem; min-height: 1.4em; }
-    input[type="file"] { color: #f5efe4; margin: 4px 0 8px; }
-    .photo-item { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+      padding: 18px 16px; margin-bottom: 12px; font-size: 1rem; text-align: left; background: #ffffff;
+      box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .menu-btn .chev { color: #a8a29e; font-size: 1.2rem; }
+    .back-btn { margin: 14px 0 4px; background: #ffffff; }
+    h2.view-title { font-size: 1.05rem; letter-spacing: 0.02em; color: #1c1917; margin: 16px 0 6px; }
+    #status, #gateStatus, #photoStatus, #noticeStatus, #contactStatus { margin-top: 16px; font-size: 0.95rem; min-height: 1.4em; }
+    #gateContactCount { margin-top: 14px; color: #b45309; font-weight: 700; font-size: 0.95rem; min-height: 1.2em; }
+    input[type="file"] { color: #1c1917; margin: 4px 0 8px; font-size: 1rem; }
+    .photo-item { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; background: #ffffff;
+      border: 1px solid #e7e5e4; border-radius: 10px; padding: 8px; }
     .photo-item img { width: 72px; height: 54px; object-fit: cover; border-radius: 8px; flex: 0 0 auto; }
-    .photo-item span { flex: 1; font-size: 0.85rem; color: #e9dcc0; overflow: hidden; }
-    select, textarea {
-      width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px;
-      border: 1px solid rgba(216,154,85,.4); background: #241708; color: #f5efe4; font-size: 1rem;
-      font-family: inherit;
-    }
-    textarea { min-height: 120px; resize: vertical; }
-    #gateContactCount { margin-top: 14px; color: #ffb35c; font-size: 0.9rem; min-height: 1.2em; }
-    #contactStatus { margin-top: 16px; font-size: 0.9rem; min-height: 1.4em; }
-    .contact-item { border: 1px solid rgba(216,154,85,.3); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
-    .contact-item.done { opacity: 0.55; }
-    .contact-meta { font-size: 0.8rem; color: #c9b586; margin-bottom: 6px; }
-    .contact-badge { color: #ffb35c; font-weight: 700; }
-    .contact-item.done .contact-badge { color: #a9dfae; }
-    .contact-msg { white-space: pre-wrap; line-height: 1.6; font-size: 0.92rem; margin: 0 0 10px; }
+    .photo-item span { flex: 1; font-size: 0.9rem; color: #292524; overflow: hidden; }
+    .photo-item button, .contact-actions button { min-height: 40px; padding: 8px 12px; font-size: 0.9rem; }
+    .contact-item { background: #ffffff; border: 1px solid #d6d3d1; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+    .contact-item.done { opacity: 0.6; }
+    .contact-meta { font-size: 0.82rem; color: #57534e; margin-bottom: 6px; }
+    .contact-badge { color: #b45309; font-weight: 700; }
+    .contact-item.done .contact-badge { color: #15803d; }
+    .contact-msg { white-space: pre-wrap; line-height: 1.6; font-size: 0.95rem; margin: 0 0 10px; }
     .contact-actions { display: flex; gap: 8px; }
-    .contact-actions button { padding: 7px 12px; font-size: 0.85rem; }
-    .menu-badge { color: #ffb35c; font-size: 0.82rem; font-weight: 700; }
-    .ok { color: #a9dfae; } .err { color: #ff9d8a; }
+    .menu-badge { color: #b45309; font-size: 0.85rem; font-weight: 700; }
+    .ok { color: #15803d; font-weight: 700; } .err { color: #b91c1c; font-weight: 700; }
     [hidden] { display: none !important; }
   </style>
 </head>
