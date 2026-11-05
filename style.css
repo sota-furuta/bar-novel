@@ -258,7 +258,7 @@ a {
   width: calc(100% - 28px);
   margin: 22px auto 0;
   padding: 34px 22px 30px;
-  scroll-margin-top: 84px;
+  scroll-margin-top: calc(84px + var(--banner-h, 0px));
   background: rgba(18, 12, 8, 0.9);
   border: 1px solid #5a3a1d;
   border-radius: 16px;
@@ -1119,10 +1119,10 @@ main > .section:first-child {
 /* 臨時休業のお知らせ帯 */
 .closure-banner {
   position: fixed;
-  top: 0;
+  top: var(--header-h, 68px);
   left: 0;
   right: 0;
-  z-index: 120;
+  z-index: 40;
   background: linear-gradient(90deg, #b06a28, #8a4d16);
   color: #fff7ea;
   text-align: center;
@@ -1134,13 +1134,6 @@ main > .section:first-child {
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
 }
 
-body.has-banner .site-header {
-  top: var(--banner-h, 40px);
-}
-
-body.has-banner .hero {
-  padding-top: var(--banner-h, 40px);
-}
 
 /* 下部固定バー: 外部サービスを開く前の確認ポップアップ */
 .external-open-modal {
