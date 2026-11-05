@@ -38,6 +38,7 @@
     .row input[type="date"] { flex: 0 0 150px; }
     .row input[type="text"] { flex: 1; }
     .row button { flex: 0 0 auto; }
+    .row button, .notice-sub button { min-width: 48px; }
     button {
       padding: 12px 18px; border-radius: 8px; border: 1.5px solid #a8a29e;
       background: #ffffff; color: #1c1917; font-size: 1rem; cursor: pointer; min-height: 48px;
@@ -51,6 +52,7 @@
       padding: 18px 16px; margin-bottom: 12px; font-size: 1rem; text-align: left; background: #ffffff;
       box-shadow: 0 1px 3px rgba(0,0,0,.08); }
     .menu-btn .chev { color: #a8a29e; font-size: 1.2rem; }
+    .menu-right { display: inline-flex; align-items: center; gap: 10px; }
     .back-btn { margin: 14px 0 4px; background: #ffffff; }
     h2.view-title { font-size: 1.05rem; letter-spacing: 0.02em; color: #1c1917; margin: 16px 0 6px; }
     #status, #gateStatus, #photoStatus, #noticeStatus, #contactStatus { margin-top: 16px; font-size: 0.95rem; min-height: 1.4em; }
@@ -83,6 +85,7 @@
     #logout { color: #b91c1c; border-color: #e0a3a3; background: #fdf3f3; font-weight: 700; }
     #adminMenuLogout { color: #b91c1c; font-weight: 700; }
     .ok { color: #15803d; font-weight: 700; } .err { color: #b91c1c; font-weight: 700; }
+    .req { color: #b91c1c; }
     button.danger { color: #b91c1c; border-color: #e0a3a3; background: #fdf3f3; font-weight: 700; }
     button:disabled { opacity: .55; cursor: default; }
     [hidden] { display: none !important; }
@@ -124,7 +127,7 @@
         <button type="button" class="menu-btn" data-view="viewClosures">臨時休業<span class="chev">›</span></button>
         <button type="button" class="menu-btn" data-view="viewNotices">お知らせ（イベントなどの告知）<span class="chev">›</span></button>
         <button type="button" class="menu-btn" data-view="viewPhotos">写真の投稿<span class="chev">›</span></button>
-        <button type="button" class="menu-btn" data-view="viewContact">開発者への要望・問い合わせ<span class="menu-badge" id="menuContactBadge"></span></button>
+        <button type="button" class="menu-btn" data-view="viewContact">開発者への要望・問い合わせ<span class="menu-right"><span class="menu-badge" id="menuContactBadge"></span><span class="chev">›</span></span></button>
         <button type="button" class="ghost" id="logout">ログアウト</button>
       </div>
 
@@ -160,7 +163,7 @@
         <label for="photoFile">写真を選ぶ</label>
         <input type="file" id="photoFile" accept="image/*">
         <img id="photoPreview" alt="" style="display:none;max-width:100%;border-radius:10px;margin-top:6px;">
-        <label for="photoCaption">キャプション（必須）</label>
+        <label for="photoCaption">キャプション（<span class="req">必須</span>）</label>
         <input type="text" id="photoCaption" maxlength="40" placeholder="例：本日のカクテル">
         <button type="button" class="primary" id="photoUpload">この写真を投稿する</button>
         <p id="photoStatus"></p>
@@ -203,6 +206,7 @@
     function showView(id) {
       viewIds.forEach((v) => { document.getElementById(v).hidden = v !== id; });
       window.scrollTo(0, 0);
+      if (id === "menuView") refreshMenuBadge();
       if (id === "viewClosures") loadClosures();
       if (id === "viewNotices") loadNotices();
       if (id === "viewPhotos") loadPhotos();
@@ -506,6 +510,14 @@
     const contactStatusEl = document.getElementById("contactStatus");
     const contactListEl = document.getElementById("contactList");
     const menuContactBadge = document.getElementById("menuContactBadge");
+
+    async function refreshMenuBadge() {
+      try {
+        const r = await fetch("/api/contact-count");
+        const d = await r.json();
+        menuContactBadge.textContent = d && d.open > 0 ? "未対応 " + d.open + " 件" : "";
+      } catch (e) { /* 取れなければバッジなし */ }
+    }
 
     function fmtDate(iso) {
       try {
