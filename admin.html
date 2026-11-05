@@ -38,7 +38,6 @@
     .row input[type="date"] { flex: 0 0 150px; }
     .row input[type="text"] { flex: 1; }
     .row button { flex: 0 0 auto; }
-    .row button, .notice-sub button { min-width: 48px; }
     button {
       padding: 12px 18px; border-radius: 8px; border: 1.5px solid #a8a29e;
       background: #ffffff; color: #1c1917; font-size: 1rem; cursor: pointer; min-height: 48px;
@@ -84,7 +83,6 @@
     #logout { color: #b91c1c; border-color: #e0a3a3; background: #fdf3f3; font-weight: 700; }
     #adminMenuLogout { color: #b91c1c; font-weight: 700; }
     .ok { color: #15803d; font-weight: 700; } .err { color: #b91c1c; font-weight: 700; }
-    .req { color: #b91c1c; }
     button.danger { color: #b91c1c; border-color: #e0a3a3; background: #fdf3f3; font-weight: 700; }
     button:disabled { opacity: .55; cursor: default; }
     [hidden] { display: none !important; }
@@ -162,7 +160,7 @@
         <label for="photoFile">写真を選ぶ</label>
         <input type="file" id="photoFile" accept="image/*">
         <img id="photoPreview" alt="" style="display:none;max-width:100%;border-radius:10px;margin-top:6px;">
-        <label for="photoCaption">キャプション（<span class="req">必須</span>）</label>
+        <label for="photoCaption">キャプション（必須）</label>
         <input type="text" id="photoCaption" maxlength="40" placeholder="例：本日のカクテル">
         <button type="button" class="primary" id="photoUpload">この写真を投稿する</button>
         <p id="photoStatus"></p>
