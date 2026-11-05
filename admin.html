@@ -26,7 +26,11 @@
     button.primary { background: #d89a55; color: #221503; font-weight: 700; width: 100%; margin-top: 20px;
       box-shadow: 0 4px 0 #6e4520; }
     button.ghost { width: 100%; margin-top: 12px; background: transparent; }
-    #status, #gateStatus { margin-top: 16px; font-size: 0.9rem; min-height: 1.4em; }
+    #status, #gateStatus, #photoStatus { margin-top: 16px; font-size: 0.9rem; min-height: 1.4em; }
+    input[type="file"] { color: #f5efe4; margin: 4px 0 8px; }
+    .photo-item { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+    .photo-item img { width: 72px; height: 54px; object-fit: cover; border-radius: 8px; flex: 0 0 auto; }
+    .photo-item span { flex: 1; font-size: 0.85rem; color: #e9dcc0; overflow: hidden; }
     .ok { color: #a9dfae; } .err { color: #ff9d8a; }
     [hidden] { display: none !important; }
   </style>
@@ -52,6 +56,17 @@
       <div id="rows"></div>
       <button type="button" id="addRow">＋ 日付を追加</button>
       <button type="button" class="primary" id="save">保存する</button>
+      <h2 style="font-size:1rem;letter-spacing:0.08em;color:#e0aa6a;margin:28px 0 4px;">写真の投稿</h2>
+      <p class="note">投稿した写真は、ホームページのギャラリー（いつもの写真の後ろ）に表示されます。写真は自動で軽量化されてから保存されます。</p>
+      <label for="photoFile">写真を選ぶ</label>
+      <input type="file" id="photoFile" accept="image/*">
+      <img id="photoPreview" alt="" style="display:none;max-width:100%;border-radius:10px;margin-top:6px;">
+      <label for="photoCaption">キャプション（任意）</label>
+      <input type="text" id="photoCaption" maxlength="40" placeholder="例：本日のカクテル">
+      <button type="button" class="primary" id="photoUpload">この写真を投稿する</button>
+      <p id="photoStatus"></p>
+      <label>投稿済みの写真</label>
+      <div id="photoList"></div>
       <button type="button" class="ghost" id="logout">ログアウト</button>
       <p id="status"></p>
     </section>
@@ -91,6 +106,7 @@
       gateEl.hidden = true;
       editorEl.hidden = false;
       loadClosures();
+      loadPhotos();
     }
 
     async function tryLogin(pw) {
@@ -157,6 +173,123 @@
       } catch (e) {
         statusEl.textContent = "通信エラーです。電波の良い場所でお試しください。";
         statusEl.className = "err";
+      }
+    });
+
+    // ===== 写真の投稿 =====
+    const photoFileEl = document.getElementById("photoFile");
+    const photoPreviewEl = document.getElementById("photoPreview");
+    const photoCaptionEl = document.getElementById("photoCaption");
+    const photoStatusEl = document.getElementById("photoStatus");
+    const photoListEl = document.getElementById("photoList");
+    let photoBlob = null;
+
+    photoFileEl.addEventListener("change", () => {
+      photoBlob = null;
+      photoPreviewEl.style.display = "none";
+      const file = photoFileEl.files && photoFileEl.files[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const max = 1600;
+        let w = img.naturalWidth, hgt = img.naturalHeight;
+        const scale = Math.min(1, max / Math.max(w, hgt));
+        w = Math.round(w * scale); hgt = Math.round(hgt * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = hgt;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, hgt);
+        URL.revokeObjectURL(url);
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            photoStatusEl.textContent = "写真を読み込めませんでした。別の写真でお試しください。";
+            photoStatusEl.className = "err";
+            return;
+          }
+          photoBlob = blob;
+          photoPreviewEl.src = URL.createObjectURL(blob);
+          photoPreviewEl.style.display = "block";
+          photoStatusEl.textContent = "この内容で投稿できます（" + Math.round(blob.size / 1024) + "KB）。";
+          photoStatusEl.className = "";
+        }, "image/jpeg", 0.82);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        photoStatusEl.textContent = "写真を読み込めませんでした。別の写真でお試しください。";
+        photoStatusEl.className = "err";
+      };
+      img.src = url;
+    });
+
+    async function loadPhotos() {
+      photoListEl.innerHTML = "";
+      try {
+        const r = await fetch("/api/photos");
+        const d = await r.json();
+        (d.photos || []).forEach((p) => {
+          const div = document.createElement("div");
+          div.className = "photo-item";
+          const img = document.createElement("img");
+          img.src = "/api/photo/" + p.id;
+          img.alt = "";
+          const span = document.createElement("span");
+          span.textContent = p.caption || "（キャプションなし）";
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.textContent = "削除";
+          btn.addEventListener("click", async () => {
+            if (!confirm("この写真を削除しますか？")) return;
+            const res = await fetch("/api/photos", {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ password, id: p.id })
+            });
+            const data = await res.json().catch(() => ({ ok: false }));
+            if (data.ok) { loadPhotos(); }
+            else { photoStatusEl.textContent = "削除できませんでした。"; photoStatusEl.className = "err"; }
+          });
+          div.appendChild(img); div.appendChild(span); div.appendChild(btn);
+          photoListEl.appendChild(div);
+        });
+        if (!photoListEl.children.length) {
+          photoListEl.innerHTML = '<p class="note">まだ投稿された写真はありません。</p>';
+        }
+      } catch (e) { /* 読めなくても続行 */ }
+    }
+
+    document.getElementById("photoUpload").addEventListener("click", async () => {
+      if (!photoBlob) {
+        photoStatusEl.textContent = "まず写真を選んでください。";
+        photoStatusEl.className = "err";
+        return;
+      }
+      photoStatusEl.textContent = "投稿中…";
+      photoStatusEl.className = "";
+      try {
+        const form = new FormData();
+        form.append("password", password);
+        form.append("caption", photoCaptionEl.value.trim());
+        form.append("file", photoBlob, "photo.jpg");
+        const res = await fetch("/api/photos", { method: "POST", body: form });
+        const data = await res.json().catch(() => ({ ok: false }));
+        if (data.ok) {
+          photoStatusEl.textContent = "投稿しました。サイトのギャラリーに表示されます。";
+          photoStatusEl.className = "ok";
+          photoBlob = null;
+          photoFileEl.value = "";
+          photoCaptionEl.value = "";
+          photoPreviewEl.style.display = "none";
+          loadPhotos();
+        } else if (data.error === "unauthorized") {
+          photoStatusEl.textContent = "パスワードの有効期限が切れました。ログアウトして入り直してください。";
+          photoStatusEl.className = "err";
+        } else {
+          photoStatusEl.textContent = "投稿できませんでした（" + (data.error || "error") + "）";
+          photoStatusEl.className = "err";
+        }
+      } catch (e) {
+        photoStatusEl.textContent = "通信エラーです。電波の良い場所でお試しください。";
+        photoStatusEl.className = "err";
       }
     });
 
