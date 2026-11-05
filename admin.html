@@ -83,6 +83,7 @@
     #logout { color: #b91c1c; border-color: #e0a3a3; background: #fdf3f3; font-weight: 700; }
     #adminMenuLogout { color: #b91c1c; font-weight: 700; }
     .ok { color: #15803d; font-weight: 700; } .err { color: #b91c1c; font-weight: 700; }
+    .req { color: #b91c1c; }
     button.danger { color: #b91c1c; border-color: #e0a3a3; background: #fdf3f3; font-weight: 700; }
     button:disabled { opacity: .55; cursor: default; }
     [hidden] { display: none !important; }
@@ -161,7 +162,7 @@
         <label for="photoFile">写真を選ぶ</label>
         <input type="file" id="photoFile" accept="image/*">
         <img id="photoPreview" alt="" style="display:none;max-width:100%;border-radius:10px;margin-top:6px;">
-        <label for="photoCaption">キャプション（必須）</label>
+        <label for="photoCaption">キャプション（<span class="req">必須</span>）</label>
         <input type="text" id="photoCaption" maxlength="40" placeholder="例：本日のカクテル">
         <button type="button" class="primary" id="photoUpload">この写真を投稿する</button>
         <p id="photoStatus"></p>
