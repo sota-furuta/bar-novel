@@ -102,7 +102,8 @@
     .stat-table th:first-child, .stat-table td:first-child { text-align: left; }
     #viewStats details { margin: 14px 0; }
     .table-scroll { overflow-x: auto; }
-    #viewStats summary { color: #1d4ed8; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; min-height: 32px; }
+    #viewStats summary { color: #1d4ed8; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; min-height: 48px; display: flex; align-items: center; }
+    #viewStats a.big-link { display: inline-flex; align-items: center; min-height: 48px; }
     .req { color: #b91c1c; }
     button.danger { color: #b91c1c; border-color: #e0a3a3; background: #fdf3f3; font-weight: 700; }
     button:disabled { opacity: .55; cursor: default; }
@@ -199,7 +200,7 @@
         <div id="statsBody"></div>
         <h3>検索の表示回数・順位</h3>
         <p class="note">検索での表示回数・クリック・掲載順位は Search Console で確認します（この画面には取り込めません）。</p>
-        <p><a href="https://search.google.com/search-console" target="_blank" rel="noopener">Search Console を開く</a></p>
+        <p><a class="big-link" href="https://search.google.com/search-console" target="_blank" rel="noopener">Search Console を開く</a></p>
       </div>
 
       <!-- 開発者への要望・問い合わせ -->
@@ -544,22 +545,7 @@
     // ===== 統計情報 =====
     const statsBody = document.getElementById("statsBody");
 
-    const TEST_MODE = location.hostname === "verification.bar-novel.pages.dev";
-    function sampleStats() {
-      const taps = [], daily = [];
-      const base = Date.now() + 9 * 3600 * 1000;
-      for (let i = 29; i >= 0; i--) {
-        const t = new Date(base - i * 86400 * 1000);
-        const ds = t.getUTCFullYear() + "-" + String(t.getUTCMonth() + 1).padStart(2, "0") + "-" + String(t.getUTCDate()).padStart(2, "0");
-        const k = 29 - i;
-        const pv = (k * 7) % 19 + (k % 6 === 0 ? 14 : 2);
-        daily.push({ date: ds, pv: pv, visits: Math.max(1, Math.round(pv * 0.62)) });
-        taps.push({ date: ds, tel: k % 4 === 0 ? 2 : (k % 3 === 0 ? 1 : 0), instagram: k % 5 === 0 ? 3 : (k % 2), map: k % 6 === 0 ? 1 : 0 });
-      }
-      return { taps: taps, analytics: { daily: daily, referrers: [{ host: "www.google.com", pv: 96 }, { host: "", pv: 41 }, { host: "l.instagram.com", pv: 18 }, { host: "www.bing.com", pv: 5 }], sampled: true }, analyticsError: false, configured: true };
-    }
     async function fetchStats() {
-      if (TEST_MODE) { await new Promise((r) => setTimeout(r, 600)); return sampleStats(); }
       const r = await fetch("/api/stats", { headers: { "X-Admin-Password": password } });
       if (!r.ok) throw new Error("stats_load_failed");
       return r.json();
@@ -584,8 +570,13 @@
         const v = d[key] || 0;
         const col = el("div", "bar-col");
         const bar = el("div", "bar");
-        bar.style.height = (v > 0 ? Math.max(4, Math.round((v / max) * 100)) : 1) + "%";
-        bar.style.background = color;
+        if (v > 0) {
+          bar.style.height = Math.max(4, Math.round((v / max) * 100)) + "%";
+          bar.style.background = color;
+        } else {
+          bar.style.height = "2px";
+          bar.style.background = "#d6d3d1";
+        }
         bar.title = d.date + "：" + v;
         col.appendChild(bar);
         bars.appendChild(col);
@@ -617,6 +608,7 @@
         ["電話タップ（30日）", String(sumBy(taps, "tel"))],
         ["Instagramタップ（30日）", String(sumBy(taps, "instagram"))],
         ["地図タップ（30日）", String(sumBy(taps, "map"))],
+        ["タップ合計（30日）", String(sumBy(taps, "tel") + sumBy(taps, "instagram") + sumBy(taps, "map"))],
       ];
       boxes.forEach(([label, num]) => {
         const box = el("div", "stat-box");
@@ -631,8 +623,8 @@
       } else if (data.analyticsError || !an) {
         statsBody.appendChild(el("p", "err", "Cloudflareからデータを取得できませんでした。しばらくしてから開き直してください。"));
       } else {
-        statsBody.appendChild(barChart("ページビュー（日別）", an.daily, "pv", "#1d4ed8"));
         statsBody.appendChild(barChart("訪問者数（日別）", an.daily, "visits", "#60a5fa"));
+        statsBody.appendChild(barChart("ページビュー（日別）", an.daily, "pv", "#1d4ed8"));
         if (an.sampled) statsBody.appendChild(el("p", "note", "古い日付分は推定値を含む場合があります。"));
         statsBody.appendChild(el("h3", null, "流入元（30日・ページビュー順）"));
         if (!an.referrers || an.referrers.length === 0) {
@@ -644,11 +636,12 @@
             row.appendChild(el("span", null, r.pv + " 件"));
             statsBody.appendChild(row);
           });
+          statsBody.appendChild(el("p", "note", "流入元は上位10件まで表示します（合計がページビュー総数と一致しない場合があります）。"));
         }
       }
 
       const tapTotals = taps.map((d) => ({ date: d.date, total: (d.tel || 0) + (d.instagram || 0) + (d.map || 0) }));
-      statsBody.appendChild(barChart("ボタンのタップ数（日別・合計）", tapTotals, "total", "#1d4ed8"));
+      statsBody.appendChild(barChart("ボタンのタップ数（日別・合計）", tapTotals, "total", "#0284c7"));
 
       const details = el("details");
       details.appendChild(el("summary", null, "日別の内訳を見る"));
@@ -904,27 +897,6 @@
     // 同じタブで開き直したときは、パスワードが合えばそのまま編集画面へ
     if (password) {
       tryLogin(password).then(ok => { if (ok) showEditor(); else sessionStorage.removeItem("barnovel_pw"); });
-    }
-
-    // ===== 検証用テストモード（verification のみ・本番ホストでは無効） =====
-    if (location.hostname === "verification.bar-novel.pages.dev") {
-      const badge = document.createElement("div");
-      badge.textContent = "検証用テストモード：パスワード無効化中・統計はサンプル表示";
-      badge.style.cssText = "position:sticky;top:0;z-index:60;background:#b91c1c;color:#fff;font-weight:700;text-align:center;padding:8px;font-size:0.9rem;";
-      document.body.prepend(badge);
-      const errPanel = document.createElement("div");
-      errPanel.id = "errPanel";
-      errPanel.style.cssText = "display:none;background:#fef2f2;border:2px solid #b91c1c;color:#b91c1c;padding:8px;margin:8px;font-size:0.8rem;white-space:pre-wrap;";
-      document.body.appendChild(errPanel);
-      const showErr = (m) => { errPanel.style.display = "block"; errPanel.textContent += m + "\n"; };
-      window.addEventListener("error", (e) => showErr("JSエラー: " + e.message));
-      const origErr = console.error.bind(console);
-      console.error = (...args) => { showErr("console.error: " + args.join(" ")); origErr(...args); };
-      password = "test";
-      gateEl.hidden = true;
-      editorEl.hidden = false;
-      adminBar.hidden = false;
-      showView("menuView");
     }
   </script>
 </body>
