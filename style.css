@@ -1380,3 +1380,69 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
 .hero-scroll {
   bottom: 96px;
 }
+
+/* ==== 改善提案の一括反映（2026-11-11） ==== */
+.drink-list-note {
+  font-size: 0.78rem;
+  color: #c9bda6;
+  margin: 14px 0 0;
+}
+.drink-close-btn {
+  display: block;
+  margin: 14px auto 4px;
+  padding: 12px 30px;
+  min-height: 48px;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--copper-soft);
+  font: inherit;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+.header-nav a.is-current {
+  color: #ffb35c;
+  box-shadow: inset 0 -2px 0 #ffb35c;
+}
+.concept-more {
+  text-align: center;
+  margin: 26px 0 0;
+}
+.concept-more a {
+  color: var(--copper-soft);
+  letter-spacing: 0.12em;
+  text-decoration: none;
+  border-bottom: 1px dotted var(--copper);
+  padding-bottom: 4px;
+}
+.info-foot-note {
+  font-size: 0.82rem;
+  color: #c9bda6;
+  margin: 14px 0 0;
+}
+.info-foot-note a {
+  color: #ffb35c;
+}
+.info-list dd a {
+  color: #ffb35c;
+}
+.access-map {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border: 0;
+  border-radius: 14px;
+  margin: 4px 0 18px;
+}
+.menu-photo {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+}
+a:focus-visible, button:focus-visible, summary:focus-visible {
+  outline-color: #ffb35c;
+}
+.btn:focus-visible, .menu-tab:focus-visible {
+  box-shadow: 0 0 0 5px rgba(255, 179, 92, 0.25);
+}

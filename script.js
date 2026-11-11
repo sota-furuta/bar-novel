@@ -11,8 +11,11 @@ onScroll();
 // メニュー: DRINK / FOOD タブ切り替え
 const tabs = document.querySelectorAll(".menu-tab");
 const panels = document.querySelectorAll(".menu-panel");
+const menuSection = document.getElementById("menu");
 tabs.forEach((tab) => {
   tab.addEventListener("click", () => {
+    const menuTopBefore = menuSection ? menuSection.getBoundingClientRect().top + window.scrollY : 0;
+    const relPos = window.scrollY - menuTopBefore;
     tabs.forEach((t) => {
       t.classList.toggle("is-active", t === tab);
       t.setAttribute("aria-selected", t === tab ? "true" : "false");
@@ -22,6 +25,10 @@ tabs.forEach((tab) => {
       p.classList.toggle("is-active", active);
       p.hidden = !active;
     });
+    if (menuSection && relPos > 0) {
+      const menuTopAfter = menuSection.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top: menuTopAfter + relPos, behavior: "auto" });
+    }
   });
 });
 
@@ -76,7 +83,32 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
       box.appendChild(row);
     });
   });
+  const note = document.createElement("p");
+  note.className = "drink-list-note";
+  note.textContent = "※ 価格は税込です。";
+  box.appendChild(note);
+  const detail = box.closest(".drink-detail");
+  if (detail) {
+    const closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.className = "drink-close-btn";
+    closeBtn.textContent = "閉じる";
+    closeBtn.addEventListener("click", () => {
+      detail.open = false;
+      scrollToCategory(detail);
+    });
+    box.appendChild(closeBtn);
+  }
 });
+// 一覧を閉じたら、概要のカテゴリ位置まで戻る
+function scrollToCategory(detail) {
+  const li = detail.closest("li") || detail;
+  const header = document.querySelector(".site-header");
+  const bEl = document.getElementById("closureBanner");
+  const offset = (header ? header.offsetHeight : 0) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0) + 10;
+  const y = li.getBoundingClientRect().top + window.scrollY - offset;
+  window.scrollTo({ top: y, behavior: "auto" });
+}
 // カテゴリの「¥○○〜」表記も、データの最安値から自動で合わせる
 document.querySelectorAll("[data-menu-min]").forEach((el) => {
   const groups = DRINK_LISTS[el.dataset.menuMin] || [];
@@ -113,8 +145,16 @@ document.querySelectorAll(".drink-detail").forEach((item) => {
   const summary = item.querySelector("summary");
   if (!summary) return;
   const label = summary.textContent.trim();
+  let closingBySummary = false;
+  summary.addEventListener("click", () => {
+    closingBySummary = item.open;
+  });
   item.addEventListener("toggle", () => {
     summary.textContent = item.open ? label.replace("見る", "閉じる") : label;
+    if (!item.open && closingBySummary) {
+      closingBySummary = false;
+      scrollToCategory(item);
+    }
   });
 });
 
@@ -230,7 +270,7 @@ if (hamburger && hamburgerMenu) {
     '<p class="external-open-message" id="externalOpenMessage"></p>' +
     '<div class="external-open-actions">' +
     '<button type="button" class="external-open-cancel">キャンセル</button>' +
-    '<button type="button" class="external-open-confirm">開く</button>' +
+    '<button type="button" class="external-open-confirm">新しいタブで開く</button>' +
     "</div></div>";
   document.body.appendChild(modal);
 
@@ -336,4 +376,24 @@ if (hamburger && hamburgerMenu) {
   track.addEventListener("click", function (e) {
     if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; }
   }, true);
+})();
+
+// ヘッダーナビ: 表示中のセクションを現在地として示す
+(function () {
+  const links = document.querySelectorAll('.header-nav a[href^="#"]');
+  if (!links.length || !("IntersectionObserver" in window)) return;
+  const byId = {};
+  links.forEach((a) => { byId[a.getAttribute("href").slice(1)] = a; });
+  const spy = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (!e.isIntersecting) return;
+      links.forEach((a) => a.classList.remove("is-current"));
+      const link = byId[e.target.id];
+      if (link) link.classList.add("is-current");
+    });
+  }, { rootMargin: "-35% 0px -55% 0px" });
+  ["concept", "menu", "gallery", "info", "faq", "access"].forEach((id) => {
+    const s = document.getElementById(id);
+    if (s) spy.observe(s);
+  });
 })();
