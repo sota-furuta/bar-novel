@@ -1362,6 +1362,5 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
   color: #c9bda6;
   margin-top: 2px;
 }
-.footer-nav .nav-jp { text-align: center; }
 .gallery-track { cursor: grab; }
 .gallery-track:active { cursor: grabbing; }
