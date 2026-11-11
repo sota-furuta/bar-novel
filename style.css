@@ -387,8 +387,7 @@ main > .section:first-child {
 }
 
 .menu-price {
-  font-family: var(--serif);
-  font-size: 1.15rem;
+  font-size: 0.9rem;
   color: var(--copper-soft);
   white-space: nowrap;
 }
@@ -409,8 +408,8 @@ main > .section:first-child {
 
 .menu-note {
   margin-top: 18px;
-  font-size: 0.78rem;
-  color: var(--muted);
+  font-size: 0.82rem;
+  color: #c9bda6;
 }
 
 /* ---------- Gallery ---------- */
@@ -457,8 +456,8 @@ main > .section:first-child {
 
 .gallery-hint {
   text-align: center;
-  font-size: 0.75rem;
-  color: var(--muted);
+  font-size: 0.85rem;
+  color: #c9bda6;
   margin: 2px 0 0;
 }
 
@@ -549,8 +548,8 @@ main > .section:first-child {
 
 .footer-note {
   margin: 0;
-  font-size: 0.74rem;
-  color: var(--muted);
+  font-size: 0.78rem;
+  color: #c9bda6;
 }
 
 /* ---------- Bottom bar (mobile) ---------- */
@@ -815,7 +814,7 @@ main > .section:first-child {
 
 /* 価格を大きく太く */
 .menu-price {
-  font-size: 1.15rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: #ffb35c;
 }
@@ -954,24 +953,6 @@ main > .section:first-child {
   }
 }
 
-/* 名前と価格の間の点線が、左からすっと伸びる */
-.menu-panel.is-active .menu-dots {
-  transform-origin: left center;
-  animation: dotsGrow 0.9s ease 0.25s both;
-}
-
-@keyframes dotsGrow {
-  from {
-    transform: scaleX(0);
-    opacity: 0;
-  }
-
-  to {
-    transform: scaleX(1);
-    opacity: 1;
-  }
-}
-
 /* FOODの写真が、ふわっと落ち着く */
 .menu-panel.is-active .menu-photo {
   animation: photoSettle 1.2s cubic-bezier(0.22, 0.8, 0.3, 1) both;
@@ -991,7 +972,6 @@ main > .section:first-child {
 
 @media (prefers-reduced-motion: reduce) {
   .menu-panel.is-active .menu-list li,
-  .menu-panel.is-active .menu-dots,
   .menu-panel.is-active .menu-photo {
     animation: none;
   }
@@ -1330,6 +1310,7 @@ body.external-open-locked {
 
 .drink-detail summary {
   cursor: pointer;
+  padding: 14px 4px;
   font-size: 0.8rem;
   font-weight: 600;
   color: #e8ab6d;
@@ -1353,3 +1334,13 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
   outline-offset: 3px;
   border-radius: 4px;
 }
+
+.nav-jp {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: #c9bda6;
+  margin-top: 2px;
+}
+.gallery-track { cursor: grab; }
+.gallery-track:active { cursor: grabbing; }
