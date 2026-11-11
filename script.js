@@ -104,25 +104,14 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
   note.className = "drink-list-note";
   note.textContent = "※ 価格は税込です。";
   box.appendChild(note);
-  const detail = box.closest(".drink-detail");
-  if (detail) {
-    const closeBtn = document.createElement("button");
-    closeBtn.type = "button";
-    closeBtn.className = "drink-close-btn";
-    closeBtn.textContent = "閉じる";
-    closeBtn.addEventListener("click", () => {
-      detail.open = false;
-      scrollToCategory(detail);
-    });
-    box.appendChild(closeBtn);
-  }
 });
 // 一覧を閉じたら、概要のカテゴリ位置まで戻る
 function scrollToCategory(detail) {
   const li = detail.closest("li") || detail;
   const header = document.querySelector(".site-header");
   const bEl = document.getElementById("closureBanner");
-  const offset = (header ? header.offsetHeight : 0) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0) + 10;
+  const tabsEl = document.querySelector(".menu-tabs");
+          const offset = (header ? header.offsetHeight : 0) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0) + (tabsEl ? tabsEl.offsetHeight : 0) + 10;
   const y = li.getBoundingClientRect().top + window.scrollY - offset;
   window.scrollTo({ top: y, behavior: "auto" });
 }
@@ -147,7 +136,8 @@ function makeExclusive(selector, scrollOnOpen) {
         setTimeout(() => {
           const header = document.querySelector(".site-header");
           const bEl = document.getElementById("closureBanner");
-          const offset = (header ? header.offsetHeight : 0) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0) + 10;
+          const tabsEl = document.querySelector(".menu-tabs");
+          const offset = (header ? header.offsetHeight : 0) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0) + (tabsEl ? tabsEl.offsetHeight : 0) + 10;
           const y = target.getBoundingClientRect().top + window.scrollY - offset;
           window.scrollTo({ top: y, behavior: "auto" });
         }, 0);

@@ -327,11 +327,11 @@ main > .section:first-child {
   top: calc(var(--header-h, 68px) + var(--banner-h, 0px));
   z-index: 30;
   padding: 10px 2px;
-  background: rgba(199, 166, 120, 0.94);
+  background: rgba(18, 12, 8, 0.95);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-radius: 0 0 14px 14px;
-  box-shadow: 0 12px 18px -14px rgba(59, 36, 8, 0.5);
+  box-shadow: 0 12px 18px -14px rgba(0, 0, 0, 0.65);
 }
 
 .menu-tab {
@@ -1306,6 +1306,11 @@ body.external-open-locked {
   font-size: 0.8rem;
   font-weight: 600;
   color: #e8ab6d;
+  position: sticky;
+  top: calc(var(--header-h, 68px) + var(--banner-h, 0px) + 76px);
+  z-index: 20;
+  background: rgba(18, 12, 8, 0.97);
+  border-radius: 0 0 10px 10px;
 }
 
 .drink-detail summary::marker {
@@ -1396,20 +1401,6 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
   color: #c9bda6;
   margin: 14px 0 0;
 }
-.drink-close-btn {
-  display: block;
-  margin: 14px auto 4px;
-  padding: 12px 30px;
-  min-height: 48px;
-  background: none;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  color: var(--copper-soft);
-  font: inherit;
-  font-size: 0.85rem;
-  letter-spacing: 0.1em;
-  cursor: pointer;
-}
 .header-nav a.is-current {
   color: #ffb35c;
   box-shadow: inset 0 -2px 0 #ffb35c;
@@ -1464,5 +1455,5 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
   cursor: pointer;
 }
 .drink-cat {
-  scroll-margin-top: calc(var(--header-h, 68px) + var(--banner-h, 0px) + 84px);
+  scroll-margin-top: calc(var(--header-h, 68px) + var(--banner-h, 0px) + 128px);
 }
