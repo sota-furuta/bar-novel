@@ -1386,3 +1386,9 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
 .bottom-bar {
   box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.45);
 }
+
+/* ヒーローのボタン: 狭い画面でも1行に収める */
+.hero-actions .btn {
+  padding: 13px 20px;
+  white-space: nowrap;
+}
