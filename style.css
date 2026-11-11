@@ -322,14 +322,15 @@ main > .section:first-child {
 .menu-tabs {
   display: flex;
   gap: 10px;
-  margin: 6px 0 26px;
+  margin: 0 0 26px;
   position: sticky;
-  top: calc(var(--header-h, 68px) + var(--banner-h, 0px));
+  /* 上端を6px持ち上げ、padding-top をその分増やすことで、ヘッダーとの
+     間の隙間もタブの背景で覆う（スクロール中の行が隙間から透けないように）。 */
+  top: calc(var(--header-h, 68px) + var(--banner-h, 0px) - 6px);
   z-index: 30;
-  padding: 10px 2px;
-  background: rgba(18, 12, 8, 0.95);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  padding: 16px 2px 10px;
+  /* 背景は不透明にする（半透明＋ぼかしではスクロール中の行が透けて見えるため）。 */
+  background: #120c08;
   border-radius: 0 0 14px 14px;
   box-shadow: 0 12px 18px -14px rgba(0, 0, 0, 0.65);
 }
@@ -1302,14 +1303,18 @@ body.external-open-locked {
 
 .drink-detail summary {
   cursor: pointer;
-  padding: 14px 4px;
+  /* 上端を20px持ち上げ、padding-top をその分増やすことで、タブとの間の
+     隙間も見出しの背景で覆う（スクロール中の行が隙間から透けないように）。
+     文字の位置は変わらない（top 56px＋padding-top 34px＝従来の 76px＋14px）。 */
+  padding: 34px 4px 14px;
   font-size: 0.8rem;
   font-weight: 600;
   color: #e8ab6d;
   position: sticky;
-  top: calc(var(--header-h, 68px) + var(--banner-h, 0px) + 76px);
+  top: calc(var(--header-h, 68px) + var(--banner-h, 0px) + 56px);
   z-index: 20;
-  background: rgba(18, 12, 8, 0.97);
+  /* 背景は不透明にする（半透明ではスクロール中の行が透けて見えるため）。 */
+  background: #120c08;
   border-radius: 0 0 10px 10px;
 }
 
@@ -1442,14 +1447,23 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
   gap: 8px;
   margin: 4px 0 14px;
   /* カクテル一覧の目次をスクロール中も見える位置に固定する。
-     上には固定ヘッダー＋DRINK/FOODタブ（約76px）＋開閉見出し（summary、約52px）が
-     重なるため、その下（header + banner + 128px）に貼り付ける。 */
+     上には固定ヘッダー＋DRINK/FOODタブ＋開閉見出し（summary）が重なるため、
+     目次は見出しの下に固定する（top はヘッダー＋お知らせ帯＋108px）。
+     見出しの追従表示があるため、目次の上端を128pxにすることはできない。
+     上端を20px持ち上げ、padding-top をその分増やすことで、見出しとの間の
+     隙間も目次の背景で覆う。
+     背景は不透明にする（半透明ではスクロール中の行が透けて見えるため）。 */
   position: sticky;
-  top: calc(var(--header-h, 68px) + var(--banner-h, 0px) + 128px);
+  top: calc(var(--header-h, 68px) + var(--banner-h, 0px) + 108px);
   z-index: 15;
-  background: rgba(18, 12, 8, 0.97);
-  padding: 8px 0 10px;
+  background: #120c08;
+  padding: 28px 0 10px;
   border-radius: 0 0 10px 10px;
+}
+/* 目次付きの一覧は下に余白を足す。一覧の末尾付近で目次が押し上げられて
+   欠けるのを遅らせ、最後の行まで目次がすべて表示されたまま読めるようにする。 */
+.drink-list.has-index {
+  padding-bottom: 96px;
 }
 .drink-index-btn {
   background: none;
@@ -1463,6 +1477,5 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
   min-height: 36px;
   cursor: pointer;
 }
-.drink-cat {
-  scroll-margin-top: calc(var(--header-h, 68px) + var(--banner-h, 0px) + 128px);
-}
+/* .drink-cat の scroll-margin-top は削除：見出しへのアンカー移動は存在せず、
+   目次ボタンのスクロールは script.js で実測して行うため、この値は使われない。 */
