@@ -79,7 +79,6 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
   const groups = DRINK_LISTS[box.dataset.menuList] || [];
   const catEls = [];
   if (box.dataset.menuList === "cocktails" && box.closest(".drink-detail") && groups.length > 3) {
-    box.classList.add("has-index");
     const idx = document.createElement("div");
     idx.className = "drink-index";
     groups.forEach((group, gi) => {
@@ -88,15 +87,7 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
       b.className = "drink-index-btn";
       b.textContent = group.cat.replace(" base", "");
       b.addEventListener("click", () => {
-        // 目次は sticky で画面上部に残るため、見出しが目次に隠れないよう
-        // 目次の固定位置（CSS の top の計算値＋自身の高さ）の下へスクロールする。
-        // top の計算値を実測するため、背景を重ねるための上端の持ち上げ
-        // （タブ・見出し・目次）が変わってもオフセットがずれない。
-        const target = catEls[gi];
-        if (!target) return;
-        const topPx = parseFloat(getComputedStyle(idx).top);
-        const under = (Number.isFinite(topPx) ? topPx : 0) + idx.offsetHeight + 8;
-        window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - under, behavior: "auto" });
+        if (catEls[gi]) catEls[gi].scrollIntoView({ behavior: "auto", block: "start" });
       });
       idx.appendChild(b);
     });
