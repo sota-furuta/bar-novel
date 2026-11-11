@@ -27,7 +27,20 @@ tabs.forEach((tab) => {
     });
     if (menuSection && relPos > 0) {
       const menuTopAfter = menuSection.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo({ top: menuTopAfter + relPos, behavior: "auto" });
+      let y = menuTopAfter + relPos;
+      const panel = document.querySelector(".menu-panel.is-active");
+      if (panel) {
+        const panelTopY = panel.getBoundingClientRect().top + window.scrollY;
+        const panelBottomY = panelTopY + panel.offsetHeight;
+        const header = document.querySelector(".site-header");
+        const bEl = document.getElementById("closureBanner");
+        const tabsEl = document.querySelector(".menu-tabs");
+        const topOffset = (header ? header.offsetHeight : 0) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0) + (tabsEl ? tabsEl.offsetHeight : 0) + 10;
+        const minY = panelTopY - topOffset;
+        const maxY = panelBottomY - window.innerHeight * 0.85;
+        if (y > maxY) y = Math.max(minY, maxY);
+      }
+      window.scrollTo({ top: y, behavior: "auto" });
     }
   });
 });
