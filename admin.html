@@ -85,6 +85,25 @@
     #logout { color: #b91c1c; border-color: #e0a3a3; background: #fdf3f3; font-weight: 700; }
     #adminMenuLogout { color: #b91c1c; font-weight: 700; }
     .ok { color: #15803d; font-weight: 700; } .err { color: #b91c1c; font-weight: 700; }
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0 4px; }
+    .stat-box { background: #fff; border: 1px solid #e7e5e4; border-radius: 10px; padding: 10px 12px; }
+    .stat-box .stat-label { font-size: 0.85rem; color: #57534e; }
+    .stat-box .stat-num { font-size: 1.5rem; font-weight: 700; color: #1c1917; }
+    .stat-chart { margin: 16px 0; }
+    .stat-chart h3, #viewStats h3 { font-size: 1rem; margin: 0 0 8px; }
+    .bars { display: flex; align-items: flex-end; gap: 2px; height: 96px; border-bottom: 1px solid #d6d3d1; }
+    .bar-col { flex: 1; height: 100%; display: flex; align-items: flex-end; min-width: 0; }
+    .bar { width: 100%; border-radius: 2px 2px 0 0; }
+    .bar-dates { display: flex; gap: 2px; margin-top: 3px; }
+    .bar-date { flex: 1; font-size: 0.58rem; color: #78716c; text-align: center; height: 1.1em; white-space: nowrap; overflow: visible; }
+    .ref-row { display: flex; justify-content: space-between; gap: 10px; background: #fff; border: 1px solid #e7e5e4; border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; }
+    .stat-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; background: #fff; }
+    .stat-table th, .stat-table td { border: 1px solid #e7e5e4; padding: 5px 6px; text-align: right; }
+    .stat-table th:first-child, .stat-table td:first-child { text-align: left; }
+    #viewStats details { margin: 14px 0; }
+    .table-scroll { overflow-x: auto; }
+    #viewStats summary { color: #1d4ed8; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; min-height: 48px; display: flex; align-items: center; }
+    #viewStats a.big-link { display: inline-flex; align-items: center; min-height: 48px; }
     .req { color: #b91c1c; }
     button.danger { color: #b91c1c; border-color: #e0a3a3; background: #fdf3f3; font-weight: 700; }
     button:disabled { opacity: .55; cursor: default; }
@@ -102,6 +121,7 @@
       <button type="button" data-goto="viewClosures">臨時休業</button>
       <button type="button" data-goto="viewNotices">お知らせ（告知）</button>
       <button type="button" data-goto="viewPhotos">写真の投稿</button>
+      <button type="button" data-goto="viewStats">統計情報</button>
       <button type="button" data-goto="viewContact">開発者への要望・問い合わせ</button>
       <button type="button" id="adminMenuLogout">ログアウト</button>
     </nav>
@@ -127,6 +147,7 @@
         <button type="button" class="menu-btn" data-view="viewClosures">臨時休業<span class="chev">›</span></button>
         <button type="button" class="menu-btn" data-view="viewNotices">お知らせ（イベントなどの告知）<span class="chev">›</span></button>
         <button type="button" class="menu-btn" data-view="viewPhotos">写真の投稿<span class="chev">›</span></button>
+        <button type="button" class="menu-btn" data-view="viewStats">統計情報<span class="chev">›</span></button>
         <button type="button" class="menu-btn" data-view="viewContact">開発者への要望・問い合わせ<span class="menu-right"><span class="menu-badge" id="menuContactBadge"></span><span class="chev">›</span></span></button>
         <button type="button" class="ghost" id="logout">ログアウト</button>
       </div>
@@ -171,6 +192,17 @@
         <div id="photoList"></div>
       </div>
 
+      <!-- 統計情報 -->
+      <div id="viewStats" hidden>
+        <button type="button" class="back-btn" data-back>← メニューに戻る</button>
+        <h2 class="view-title">統計情報</h2>
+        <p class="note">直近30日（今日を含む）の数字です。Cloudflareの数字は反映まで数時間かかる場合があり、当日分は暫定です。</p>
+        <div id="statsBody"></div>
+        <h3>検索の表示回数・順位</h3>
+        <p class="note">検索での表示回数・クリック・掲載順位は Search Console で確認します（この画面には取り込めません）。</p>
+        <p><a class="big-link" href="https://search.google.com/search-console" target="_blank" rel="noopener">Search Console を開く</a></p>
+      </div>
+
       <!-- 開発者への要望・問い合わせ -->
       <div id="viewContact" hidden>
         <button type="button" class="back-btn" data-back>← メニューに戻る</button>
@@ -202,7 +234,7 @@
     let password = sessionStorage.getItem("barnovel_pw") || "";
 
     // ===== 画面切り替え =====
-    const viewIds = ["menuView", "viewClosures", "viewNotices", "viewPhotos", "viewContact"];
+    const viewIds = ["menuView", "viewClosures", "viewNotices", "viewPhotos", "viewStats", "viewContact"];
     function showView(id) {
       viewIds.forEach((v) => { document.getElementById(v).hidden = v !== id; });
       window.scrollTo(0, 0);
@@ -210,6 +242,7 @@
       if (id === "viewClosures") loadClosures();
       if (id === "viewNotices") loadNotices();
       if (id === "viewPhotos") loadPhotos();
+      if (id === "viewStats") loadStats();
       if (id === "viewContact") loadContacts();
     }
     document.querySelectorAll(".menu-btn").forEach((btn) => {
@@ -509,6 +542,141 @@
     // ===== 開発者への要望・問い合わせ =====
     const contactStatusEl = document.getElementById("contactStatus");
     const contactListEl = document.getElementById("contactList");
+    // ===== 統計情報 =====
+    const statsBody = document.getElementById("statsBody");
+
+    async function fetchStats() {
+      const r = await fetch("/api/stats", { headers: { "X-Admin-Password": password } });
+      if (!r.ok) throw new Error("stats_load_failed");
+      return r.json();
+    }
+
+    function sumBy(days, key) { return days.reduce((s, d) => s + (d[key] || 0), 0); }
+
+    function el(tag, cls, text) {
+      const e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (text != null) e.textContent = text;
+      return e;
+    }
+
+    function barChart(title, days, key, color) {
+      const wrap = el("div", "stat-chart");
+      wrap.appendChild(el("h3", null, title));
+      const max = Math.max(1, ...days.map((d) => d[key] || 0));
+      const bars = el("div", "bars");
+      const dates = el("div", "bar-dates");
+      days.forEach((d, i) => {
+        const v = d[key] || 0;
+        const col = el("div", "bar-col");
+        const bar = el("div", "bar");
+        if (v > 0) {
+          bar.style.height = Math.max(4, Math.round((v / max) * 100)) + "%";
+          bar.style.background = color;
+        } else {
+          bar.style.height = "2px";
+          bar.style.background = "#d6d3d1";
+        }
+        bar.title = d.date + "：" + v;
+        col.appendChild(bar);
+        bars.appendChild(col);
+        dates.appendChild(el("div", "bar-date", (i % 5 === 0 || i === days.length - 1) ? d.date.slice(5).replace("-", "/") : ""));
+      });
+      wrap.appendChild(bars);
+      wrap.appendChild(dates);
+      return wrap;
+    }
+
+    function referrerLabel(host) {
+      if (!host) return "直接（ブックマーク・URL入力など）";
+      if (host.includes("google.")) return "Google検索";
+      if (host.includes("instagram.com")) return "Instagram";
+      if (host.includes("bing.com")) return "Bing";
+      if (host.includes("duckduckgo.com")) return "DuckDuckGo";
+      if (host.includes("yahoo.")) return "Yahoo!検索";
+      return host;
+    }
+
+    function renderStats(data) {
+      statsBody.innerHTML = "";
+      const taps = data.taps || [];
+      const an = data.analytics;
+      const grid = el("div", "stat-grid");
+      const boxes = [
+        ["訪問者数（30日）", an ? String(sumBy(an.daily, "visits")) : "未設定"],
+        ["ページビュー（30日）", an ? String(sumBy(an.daily, "pv")) : "未設定"],
+        ["電話タップ（30日）", String(sumBy(taps, "tel"))],
+        ["Instagramタップ（30日）", String(sumBy(taps, "instagram"))],
+        ["地図タップ（30日）", String(sumBy(taps, "map"))],
+        ["タップ合計（30日）", String(sumBy(taps, "tel") + sumBy(taps, "instagram") + sumBy(taps, "map"))],
+      ];
+      boxes.forEach(([label, num]) => {
+        const box = el("div", "stat-box");
+        box.appendChild(el("div", "stat-label", label));
+        box.appendChild(el("div", "stat-num", num));
+        grid.appendChild(box);
+      });
+      statsBody.appendChild(grid);
+
+      if (!data.configured) {
+        statsBody.appendChild(el("p", "note", "アクセス数と流入元は、Cloudflare連携の設定が完了すると表示されます。"));
+      } else if (data.analyticsError || !an) {
+        statsBody.appendChild(el("p", "err", "Cloudflareからデータを取得できませんでした。しばらくしてから開き直してください。"));
+      } else {
+        statsBody.appendChild(barChart("訪問者数（日別）", an.daily, "visits", "#60a5fa"));
+        statsBody.appendChild(barChart("ページビュー（日別）", an.daily, "pv", "#1d4ed8"));
+        if (an.sampled) statsBody.appendChild(el("p", "note", "古い日付分は推定値を含む場合があります。"));
+        statsBody.appendChild(el("h3", null, "流入元（30日・ページビュー順）"));
+        if (!an.referrers || an.referrers.length === 0) {
+          statsBody.appendChild(el("p", "note", "まだデータがありません。"));
+        } else {
+          an.referrers.forEach((r) => {
+            const row = el("div", "ref-row");
+            row.appendChild(el("span", null, referrerLabel(r.host)));
+            row.appendChild(el("span", null, r.pv + " 件"));
+            statsBody.appendChild(row);
+          });
+          statsBody.appendChild(el("p", "note", "流入元は上位10件まで表示します（合計がページビュー総数と一致しない場合があります）。"));
+        }
+      }
+
+      const tapTotals = taps.map((d) => ({ date: d.date, total: (d.tel || 0) + (d.instagram || 0) + (d.map || 0) }));
+      statsBody.appendChild(barChart("ボタンのタップ数（日別・合計）", tapTotals, "total", "#0284c7"));
+
+      const details = el("details");
+      details.appendChild(el("summary", null, "日別の内訳を見る"));
+      const table = el("table", "stat-table");
+      const thead = el("tr");
+      ["日付", "訪問者", "PV", "電話", "Instagram", "地図"].forEach((h) => thead.appendChild(el("th", null, h)));
+      table.appendChild(thead);
+      const anByDate = {};
+      if (an) an.daily.forEach((d) => { anByDate[d.date] = d; });
+      [...taps].reverse().forEach((d) => {
+        const tr = el("tr");
+        const a = anByDate[d.date] || {};
+        [d.date.slice(5).replace("-", "/"), a.visits != null ? String(a.visits) : "―", a.pv != null ? String(a.pv) : "―", String(d.tel || 0), String(d.instagram || 0), String(d.map || 0)].forEach((v) => tr.appendChild(el("td", null, v)));
+        table.appendChild(tr);
+      });
+      const scroller = el("div", "table-scroll");
+      scroller.appendChild(table);
+      details.appendChild(scroller);
+      statsBody.appendChild(details);
+    }
+
+    async function loadStats() {
+      statsBody.innerHTML = "";
+      statsBody.appendChild(el("p", "note", "読み込み中…"));
+      let data;
+      try {
+        data = await fetchStats();
+      } catch (e) {
+        statsBody.innerHTML = "";
+        statsBody.appendChild(el("p", "err", "統計を読み込めませんでした。通信状態を確認して、もう一度開いてください。"));
+        return;
+      }
+      renderStats(data);
+    }
+
     const menuContactBadge = document.getElementById("menuContactBadge");
 
     async function refreshMenuBadge() {
