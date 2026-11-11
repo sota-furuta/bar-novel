@@ -35,7 +35,7 @@ const DRINK_LISTS = {
     { cat: "Whisky base", items: [["マンハッタン", 950], ["ゴッドファーザー", 850], ["ニューヨーク", 900], ["ラスティネイル", 900], ["チャーチル", 900]] },
     { cat: "Brandy base", items: [["サイドカー", 950], ["ジャックローズ", 900], ["アレキサンダー", 950], ["オリンピック", 950]] },
     { cat: "Liqueur base", items: [["チャイナブルー", 800], ["チャーリーチャップリン", 850], ["スプモーニ", 750], ["ピーチツリーフィズ", 750], ["カルーアミルク", 750]] },
-    { cat: "Beer base", items: [["レッドアイ", 800], ["ジャンディガフ", 800], ["ディーゼル", 800]] },
+    { cat: "Beer base", items: [["レッドアイ", 800], ["シャンディガフ", 800], ["ディーゼル", 800]] },
   ],
   whiskey: [
     { cat: "Scotch", items: [["グレンリベット12年", 850], ["グレンフィディック12年", 850], ["ジョニーウォーカー ダブルブラック", 850]] },
@@ -71,7 +71,7 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
       d.className = "menu-dots";
       const p = document.createElement("span");
       p.className = "drink-price";
-      p.textContent = "¥" + price;
+      p.textContent = "¥" + price.toLocaleString("ja-JP");
       row.append(n, d, p);
       box.appendChild(row);
     });
@@ -81,7 +81,7 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
 document.querySelectorAll("[data-menu-min]").forEach((el) => {
   const groups = DRINK_LISTS[el.dataset.menuMin] || [];
   const prices = groups.flatMap((g) => g.items.map((i) => i[1]));
-  if (prices.length) el.textContent = "¥" + Math.min(...prices) + "〜";
+  if (prices.length) el.textContent = "¥" + Math.min(...prices).toLocaleString("ja-JP") + "〜";
 });
 
 // 開閉パネル: 同じグループ内で1つ開いたら他は閉じる（FAQとドリンク一覧）
@@ -302,4 +302,29 @@ if (hamburger && hamburgerMenu) {
     const type = classify(a);
     if (type) a.addEventListener("click", () => send(type));
   });
+})();
+
+// ギャラリーのマウスドラッグ横スクロール（PC向け。タッチは標準スワイプのまま）
+(function () {
+  var track = document.getElementById("galleryTrack");
+  if (!track) return;
+  var down = false, moved = false, startX = 0, startScroll = 0;
+  track.addEventListener("pointerdown", function (e) {
+    if (e.pointerType !== "mouse") return;
+    down = true; moved = false;
+    startX = e.clientX; startScroll = track.scrollLeft;
+    e.preventDefault();
+  });
+  track.addEventListener("pointermove", function (e) {
+    if (!down) return;
+    var dx = e.clientX - startX;
+    if (Math.abs(dx) > 4) moved = true;
+    if (moved) track.scrollLeft = startScroll - dx;
+  });
+  ["pointerup", "pointercancel", "pointerleave"].forEach(function (t) {
+    track.addEventListener(t, function () { down = false; });
+  });
+  track.addEventListener("click", function (e) {
+    if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; }
+  }, true);
 })();
