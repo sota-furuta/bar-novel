@@ -278,3 +278,28 @@ if (hamburger && hamburgerMenu) {
     if (event.key === "Escape" && !modal.hidden) close();
   });
 })();
+
+// ===== CTAタップ計測（管理画面の統計用） =====
+(() => {
+  const send = (type) => {
+    try {
+      const body = JSON.stringify({ type });
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon("/api/track", new Blob([body], { type: "application/json" }));
+      } else {
+        fetch("/api/track", { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true }).catch(() => {});
+      }
+    } catch (e) { /* 計測の失敗は無視する */ }
+  };
+  const classify = (a) => {
+    const href = a.getAttribute("href") || "";
+    if (href.indexOf("tel:") === 0) return "tel";
+    if (href.indexOf("instagram.com") !== -1) return "instagram";
+    if (href.indexOf("maps.app.goo.gl") !== -1 || href.indexOf("google.com/maps") !== -1 || href.indexOf("maps.google") !== -1) return "map";
+    return null;
+  };
+  document.querySelectorAll("a[href]").forEach((a) => {
+    const type = classify(a);
+    if (type) a.addEventListener("click", () => send(type));
+  });
+})();
