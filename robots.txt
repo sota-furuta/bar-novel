@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://bar-novel.pages.dev/sitemap.xml
+# env-refresh 2026-11-11
