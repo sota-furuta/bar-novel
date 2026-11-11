@@ -64,10 +64,27 @@ const DRINK_LISTS = {
 };
 document.querySelectorAll("[data-menu-list]").forEach((box) => {
   const groups = DRINK_LISTS[box.dataset.menuList] || [];
+  const catEls = [];
+  if (box.dataset.menuList === "cocktails" && box.closest(".drink-detail") && groups.length > 3) {
+    const idx = document.createElement("div");
+    idx.className = "drink-index";
+    groups.forEach((group, gi) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "drink-index-btn";
+      b.textContent = group.cat.replace(" base", "");
+      b.addEventListener("click", () => {
+        if (catEls[gi]) catEls[gi].scrollIntoView({ behavior: "auto", block: "start" });
+      });
+      idx.appendChild(b);
+    });
+    box.appendChild(idx);
+  }
   groups.forEach((group) => {
     const cat = document.createElement("p");
     cat.className = "drink-cat";
     cat.textContent = group.cat;
+    catEls.push(cat);
     box.appendChild(cat);
     group.items.forEach(([name, price]) => {
       const row = document.createElement("div");
