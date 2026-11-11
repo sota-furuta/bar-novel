@@ -1363,11 +1363,5 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
   margin-top: 2px;
 }
 .footer-nav .nav-jp { text-align: center; }
-.info-note {
-  display: block;
-  font-size: 0.78rem;
-  color: #c9bda6;
-  margin-top: 4px;
-}
 .gallery-track { cursor: grab; }
 .gallery-track:active { cursor: grabbing; }
