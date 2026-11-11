@@ -108,6 +108,15 @@ function makeExclusive(selector, scrollOnOpen) {
 }
 makeExclusive(".faq-item", false);
 makeExclusive(".drink-detail", true);
+// ドリンク一覧の開閉ラベル: 開いたら「閉じる」に切り替える
+document.querySelectorAll(".drink-detail").forEach((item) => {
+  const summary = item.querySelector("summary");
+  if (!summary) return;
+  const label = summary.textContent.trim();
+  item.addEventListener("toggle", () => {
+    summary.textContent = item.open ? "閉じる" : label;
+  });
+});
 
 // セクション: スクロールでふわっと表示
 const revealTargets = document.querySelectorAll(".reveal");
