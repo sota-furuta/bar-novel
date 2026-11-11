@@ -1441,6 +1441,15 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
   flex-wrap: wrap;
   gap: 8px;
   margin: 4px 0 14px;
+  /* カクテル一覧の目次をスクロール中も見える位置に固定する。
+     上には固定ヘッダー＋DRINK/FOODタブ（約76px）＋開閉見出し（summary、約52px）が
+     重なるため、その下（header + banner + 128px）に貼り付ける。 */
+  position: sticky;
+  top: calc(var(--header-h, 68px) + var(--banner-h, 0px) + 128px);
+  z-index: 15;
+  background: rgba(18, 12, 8, 0.97);
+  padding: 8px 0 10px;
+  border-radius: 0 0 10px 10px;
 }
 .drink-index-btn {
   background: none;

@@ -87,7 +87,23 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
       b.className = "drink-index-btn";
       b.textContent = group.cat.replace(" base", "");
       b.addEventListener("click", () => {
-        if (catEls[gi]) catEls[gi].scrollIntoView({ behavior: "auto", block: "start" });
+        // 目次は sticky で画面上部に残るため、見出しが目次に隠れないよう
+        // ヘッダー＋タブ＋summary＋目次自身の高さ分を差し引いてスクロールする
+        // （目次の高さは画面幅で変わる＝折り返し行数で変わるため、実測値を使う）。
+        const target = catEls[gi];
+        if (!target) return;
+        const headerEl = document.querySelector(".site-header");
+        const bannerEl = document.getElementById("closureBanner");
+        const tabsEl = document.querySelector(".menu-tabs");
+        const summaryEl = box.closest(".drink-detail")?.querySelector("summary");
+        const offset =
+          (headerEl ? headerEl.offsetHeight : 0) +
+          (bannerEl && !bannerEl.hidden ? bannerEl.offsetHeight : 0) +
+          (tabsEl ? tabsEl.offsetHeight : 0) +
+          (summaryEl ? summaryEl.offsetHeight : 0) +
+          idx.offsetHeight +
+          8;
+        window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - offset, behavior: "auto" });
       });
       idx.appendChild(b);
     });
