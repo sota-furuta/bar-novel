@@ -100,7 +100,7 @@ function makeExclusive(selector, scrollOnOpen) {
           const bEl = document.getElementById("closureBanner");
           const offset = (header ? header.offsetHeight : 0) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0) + 10;
           const y = target.getBoundingClientRect().top + window.scrollY - offset;
-          window.scrollTo({ top: y, behavior: "smooth" });
+          window.scrollTo({ top: y, behavior: "auto" });
         }, 400);
       }
     });

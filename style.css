@@ -387,7 +387,6 @@ main > .section:first-child {
 }
 
 .menu-price {
-  font-family: var(--serif);
   font-size: 1.15rem;
   color: var(--copper-soft);
   white-space: nowrap;
