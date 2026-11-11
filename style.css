@@ -1468,8 +1468,3 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
 .drink-cat {
   scroll-margin-top: calc(var(--header-h, 68px) + var(--banner-h, 0px) + 14px);
 }
-.info-tel-note {
-  font-size: 0.78rem;
-  color: #c9bda6;
-  margin-left: 8px;
-}
