@@ -1054,16 +1054,6 @@ main > .section:first-child {
   background: #d89a55;
 }
 
-/* 店舗情報: 右側の値を茶色っぽい丸枠で囲む */
-.info-list dd {
-  justify-self: start;
-  align-self: center;
-  background: rgba(216, 154, 85, 0.1);
-  border: 1px solid rgba(216, 154, 85, 0.3);
-  border-radius: 10px;
-  padding: 6px 14px;
-}
-
 /* 店舗情報: 丸枠の中の文字色を柔らかい金クリームに統一 */
 .info-list dd {
   color: #f0dcb2;
