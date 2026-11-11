@@ -544,7 +544,22 @@
     // ===== 統計情報 =====
     const statsBody = document.getElementById("statsBody");
 
+    const TEST_MODE = location.hostname === "verification.bar-novel.pages.dev";
+    function sampleStats() {
+      const taps = [], daily = [];
+      const base = Date.now() + 9 * 3600 * 1000;
+      for (let i = 29; i >= 0; i--) {
+        const t = new Date(base - i * 86400 * 1000);
+        const ds = t.getUTCFullYear() + "-" + String(t.getUTCMonth() + 1).padStart(2, "0") + "-" + String(t.getUTCDate()).padStart(2, "0");
+        const k = 29 - i;
+        const pv = (k * 7) % 19 + (k % 6 === 0 ? 14 : 2);
+        daily.push({ date: ds, pv: pv, visits: Math.max(1, Math.round(pv * 0.62)) });
+        taps.push({ date: ds, tel: k % 4 === 0 ? 2 : (k % 3 === 0 ? 1 : 0), instagram: k % 5 === 0 ? 3 : (k % 2), map: k % 6 === 0 ? 1 : 0 });
+      }
+      return { taps: taps, analytics: { daily: daily, referrers: [{ host: "www.google.com", pv: 96 }, { host: "", pv: 41 }, { host: "l.instagram.com", pv: 18 }, { host: "www.bing.com", pv: 5 }], sampled: true }, analyticsError: false, configured: true };
+    }
     async function fetchStats() {
+      if (TEST_MODE) { await new Promise((r) => setTimeout(r, 600)); return sampleStats(); }
       const r = await fetch("/api/stats", { headers: { "X-Admin-Password": password } });
       if (!r.ok) throw new Error("stats_load_failed");
       return r.json();
@@ -889,6 +904,27 @@
     // 同じタブで開き直したときは、パスワードが合えばそのまま編集画面へ
     if (password) {
       tryLogin(password).then(ok => { if (ok) showEditor(); else sessionStorage.removeItem("barnovel_pw"); });
+    }
+
+    // ===== 検証用テストモード（verification のみ・本番ホストでは無効） =====
+    if (location.hostname === "verification.bar-novel.pages.dev") {
+      const badge = document.createElement("div");
+      badge.textContent = "検証用テストモード：パスワード無効化中・統計はサンプル表示";
+      badge.style.cssText = "position:sticky;top:0;z-index:60;background:#b91c1c;color:#fff;font-weight:700;text-align:center;padding:8px;font-size:0.9rem;";
+      document.body.prepend(badge);
+      const errPanel = document.createElement("div");
+      errPanel.id = "errPanel";
+      errPanel.style.cssText = "display:none;background:#fef2f2;border:2px solid #b91c1c;color:#b91c1c;padding:8px;margin:8px;font-size:0.8rem;white-space:pre-wrap;";
+      document.body.appendChild(errPanel);
+      const showErr = (m) => { errPanel.style.display = "block"; errPanel.textContent += m + "\n"; };
+      window.addEventListener("error", (e) => showErr("JSエラー: " + e.message));
+      const origErr = console.error.bind(console);
+      console.error = (...args) => { showErr("console.error: " + args.join(" ")); origErr(...args); };
+      password = "test";
+      gateEl.hidden = true;
+      editorEl.hidden = false;
+      adminBar.hidden = false;
+      showView("menuView");
     }
   </script>
 </body>
