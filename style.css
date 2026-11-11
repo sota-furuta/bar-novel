@@ -387,7 +387,7 @@ main > .section:first-child {
 }
 
 .menu-price {
-  font-size: 1.15rem;
+  font-size: 1rem;
   color: var(--copper-soft);
   white-space: nowrap;
 }
@@ -814,7 +814,7 @@ main > .section:first-child {
 
 /* 価格を大きく太く */
 .menu-price {
-  font-size: 1.15rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #ffb35c;
 }
