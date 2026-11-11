@@ -114,7 +114,7 @@ document.querySelectorAll(".drink-detail").forEach((item) => {
   if (!summary) return;
   const label = summary.textContent.trim();
   item.addEventListener("toggle", () => {
-    summary.textContent = item.open ? "閉じる" : label;
+    summary.textContent = item.open ? label.replace("見る", "閉じる") : label;
   });
 });
 
