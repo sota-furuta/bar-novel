@@ -323,6 +323,15 @@ main > .section:first-child {
   display: flex;
   gap: 10px;
   margin: 6px 0 26px;
+  position: sticky;
+  top: calc(var(--header-h, 68px) + var(--banner-h, 0px));
+  z-index: 30;
+  padding: 10px 2px;
+  background: rgba(18, 12, 8, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 0 0 14px 14px;
+  box-shadow: 0 12px 18px -14px rgba(0, 0, 0, 0.65);
 }
 
 .menu-tab {
@@ -1297,6 +1306,11 @@ body.external-open-locked {
   font-size: 0.8rem;
   font-weight: 600;
   color: #e8ab6d;
+  position: sticky;
+  top: calc(var(--header-h, 68px) + var(--banner-h, 0px) + 76px);
+  z-index: 20;
+  background: rgba(18, 12, 8, 0.97);
+  border-radius: 0 0 10px 10px;
 }
 
 .drink-detail summary::marker {
@@ -1379,4 +1393,67 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
 }
 .hero-scroll {
   bottom: 96px;
+}
+
+/* ==== 改善提案の一括反映（2026-11-11） ==== */
+.drink-list-note {
+  font-size: 0.78rem;
+  color: #c9bda6;
+  margin: 14px 0 0;
+}
+.header-nav a.is-current {
+  color: #ffb35c;
+  box-shadow: inset 0 -2px 0 #ffb35c;
+}
+.info-foot-note {
+  font-size: 0.82rem;
+  color: #c9bda6;
+  margin: 14px 0 0;
+}
+.info-foot-note a {
+  color: #ffb35c;
+}
+.info-list dd a {
+  color: #ffb35c;
+}
+.access-map {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border: 0;
+  border-radius: 14px;
+  margin: 4px 0 18px;
+}
+.menu-photo {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+}
+a:focus-visible, button:focus-visible, summary:focus-visible {
+  outline-color: #ffb35c;
+}
+.btn:focus-visible, .menu-tab:focus-visible {
+  box-shadow: 0 0 0 5px rgba(255, 179, 92, 0.25);
+}
+
+.drink-index {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 14px;
+}
+.drink-index-btn {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--copper-soft);
+  font: inherit;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  padding: 7px 13px;
+  min-height: 36px;
+  cursor: pointer;
+}
+.drink-cat {
+  scroll-margin-top: calc(var(--header-h, 68px) + var(--banner-h, 0px) + 128px);
 }
