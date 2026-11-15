@@ -80,6 +80,37 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
   const catEls = [];
   const idxBtns = [];
   let idxEl = null;
+  // 目次ハイライトの現在地表示
+  const visibleCats = new Set();
+  const setCurrent = (gi) => {
+    idxBtns.forEach((b, bi) => {
+      const current = bi === gi;
+      b.classList.toggle("is-current", current);
+      if (current) b.setAttribute("aria-current", "true");
+      else b.removeAttribute("aria-current");
+    });
+  };
+  const applyFromVisible = () => {
+    if (!visibleCats.size) return;
+    const ordered = [...visibleCats].sort((a, b) => catEls.indexOf(a) - catEls.indexOf(b));
+    const gi = catEls.indexOf(ordered[ordered.length - 1]);
+    if (gi >= 0) setCurrent(gi);
+  };
+  // チップタップ直後のハイライト固定：スクロール完了までObserverの更新を無視する
+  let holdGi = null;
+  let holdTimer = null;
+  const scheduleHoldRelease = () => {
+    if (holdTimer) clearTimeout(holdTimer);
+    holdTimer = setTimeout(() => {
+      if (holdGi === null) return;
+      const gi = holdGi;
+      holdGi = null;
+      // タップした見出しが判定帯より上に残っている間は固定を維持する。
+      // すでに通り過ぎていたら（タップ後に手動でスクロールしていた場合）、帯域から再計算する
+      const top = catEls[gi] ? catEls[gi].getBoundingClientRect().top : -1;
+      if (top < 0 || top >= window.innerHeight * 0.35) applyFromVisible();
+    }, 250);
+  };
   if (box.dataset.menuList === "cocktails" && box.closest(".drink-detail") && groups.length > 3) {
     const idx = document.createElement("div");
     idx.className = "drink-index";
@@ -91,6 +122,9 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
       b.textContent = group.cat.replace(" base", "");
       b.addEventListener("click", () => {
         if (!catEls[gi]) return;
+        holdGi = gi;
+        setCurrent(gi);
+        scheduleHoldRelease();
         const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         catEls[gi].scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
       });
@@ -127,24 +161,21 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
   if (idxEl && idxBtns.length && "IntersectionObserver" in window) {
     const tocSpy = new IntersectionObserver(
       (entries) => {
-        // 同時に複数の見出しが帯域に入ったときは、文書順で最後のもの（表示中のカテゴリ）を選ぶ
-        const targets = entries
-          .filter((e) => e.isIntersecting)
-          .map((e) => e.target)
-          .sort((a, b) => catEls.indexOf(a) - catEls.indexOf(b));
-        if (!targets.length) return;
-        const gi = catEls.indexOf(targets[targets.length - 1]);
-        if (gi < 0) return;
-        idxBtns.forEach((b, bi) => {
-          const current = bi === gi;
-          b.classList.toggle("is-current", current);
-          if (current) b.setAttribute("aria-current", "true");
-          else b.removeAttribute("aria-current");
+        entries.forEach((e) => {
+          if (e.isIntersecting) visibleCats.add(e.target);
+          else visibleCats.delete(e.target);
         });
+        // タップ直後の固定中は、帯域に入った次の見出しで上書きしない
+        if (holdGi !== null) return;
+        applyFromVisible();
       },
       { rootMargin: "-35% 0px -55% 0px" }
     );
     catEls.forEach((cat) => tocSpy.observe(cat));
+    // スクロール中は固定の解除を先送りし、止まってから解除する
+    window.addEventListener("scroll", () => {
+      if (holdGi !== null) scheduleHoldRelease();
+    }, { passive: true });
   }
 });
 // 一覧を閉じたら、概要のカテゴリ位置まで戻る
