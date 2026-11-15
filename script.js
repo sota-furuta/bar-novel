@@ -87,7 +87,9 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
       b.className = "drink-index-btn";
       b.textContent = group.cat.replace(" base", "");
       b.addEventListener("click", () => {
-        if (catEls[gi]) catEls[gi].scrollIntoView({ behavior: "auto", block: "start" });
+        if (!catEls[gi]) return;
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        catEls[gi].scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
       });
       idx.appendChild(b);
     });
