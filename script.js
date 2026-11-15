@@ -99,16 +99,22 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
   // チップタップ直後のハイライト固定：スクロール完了までObserverの更新を無視する
   let holdGi = null;
   let holdTimer = null;
+  // タップした見出しの着地位置（.drink-cat の scroll-margin-top と同じ計算）
+  const expectedRestTop = () => {
+    const h = document.querySelector(".site-header");
+    const bEl = document.getElementById("closureBanner");
+    return (h ? h.offsetHeight : 68) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0) + 128;
+  };
   const scheduleHoldRelease = () => {
     if (holdTimer) clearTimeout(holdTimer);
     holdTimer = setTimeout(() => {
       if (holdGi === null) return;
       const gi = holdGi;
       holdGi = null;
-      // タップした見出しが判定帯より上に残っている間は固定を維持する。
-      // すでに通り過ぎていたら（タップ後に手動でスクロールしていた場合）、帯域から再計算する
+      // タップした見出しが着地位置から動いていたら（タップ後に手動でスクロールしていた場合）、
+      // 帯域の集合からハイライトを再計算する。動いていなければタップしたカテゴリのままにする
       const top = catEls[gi] ? catEls[gi].getBoundingClientRect().top : -1;
-      if (top < 0 || top >= window.innerHeight * 0.35) applyFromVisible();
+      if (Math.abs(top - expectedRestTop()) > 4) applyFromVisible();
     }, 250);
   };
   if (box.dataset.menuList === "cocktails" && box.closest(".drink-detail") && groups.length > 3) {
