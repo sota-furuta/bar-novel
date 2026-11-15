@@ -8,6 +8,10 @@ const onScroll = () => {
 window.addEventListener("scroll", onScroll, { passive: true });
 onScroll();
 
+// 滑らかなスクロール（reduced-motion の場合は即時移動）
+const prefersReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const scrollToY = (y) => window.scrollTo({ top: y, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+
 // メニュー: DRINK / FOOD タブ切り替え
 const tabs = document.querySelectorAll(".menu-tab");
 const panels = document.querySelectorAll(".menu-panel");
@@ -99,11 +103,20 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
   // チップタップ直後のハイライト固定：スクロール完了までObserverの更新を無視する
   let holdGi = null;
   let holdTimer = null;
-  // タップした見出しの着地位置（.drink-cat の scroll-margin-top と同じ計算）
+  // タップした見出しの着地位置（.drink-cat の scroll-margin-top の計算値を直接読む）
   const expectedRestTop = () => {
+    const cat = catEls[holdGi];
+    if (cat) {
+      const v = parseFloat(window.getComputedStyle(cat).scrollMarginTop);
+      if (Number.isFinite(v)) return v;
+    }
+    // 保険：CSS変数から同じ値を組み立てる（128px等の直書きはしない）
+    const root = window.getComputedStyle(document.documentElement);
+    const tabsH = parseFloat(root.getPropertyValue("--tabs-h")) || 76;
+    const headH = parseFloat(root.getPropertyValue("--heading-h")) || 52;
     const h = document.querySelector(".site-header");
     const bEl = document.getElementById("closureBanner");
-    return (h ? h.offsetHeight : 68) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0) + 128;
+    return (h ? h.offsetHeight : 68) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0) + tabsH + headH;
   };
   const scheduleHoldRelease = () => {
     if (holdTimer) clearTimeout(holdTimer);
@@ -117,7 +130,7 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
       if (Math.abs(top - expectedRestTop()) > 4) applyFromVisible();
     }, 250);
   };
-  if (box.dataset.menuList === "cocktails" && box.closest(".drink-detail") && groups.length > 3) {
+  if (["cocktails", "whiskey"].includes(box.dataset.menuList) && box.closest(".drink-detail") && groups.length > 3) {
     const idx = document.createElement("div");
     idx.className = "drink-index";
     idxEl = idx;
@@ -131,8 +144,7 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
         holdGi = gi;
         setCurrent(gi);
         scheduleHoldRelease();
-        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        catEls[gi].scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+        catEls[gi].scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "start" });
       });
       idxBtns.push(b);
       idx.appendChild(b);
@@ -183,6 +195,37 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
       if (holdGi !== null) scheduleHoldRelease();
     }, { passive: true });
   }
+  // 一覧を開いた直後に、表示中のカテゴリを初期ハイライトする
+  const detailEl = box.closest(".drink-detail");
+  if (idxEl && detailEl) {
+    const highlightOnOpen = () => {
+      if (!detailEl.open) return;
+      applyFromVisible();
+      if (idxBtns.some((b) => b.classList.contains("is-current"))) return;
+      // 帯域にどの見出しも入っていない間は、sticky スタック直下の見出しを現在地とする
+      const headerEl = document.querySelector(".site-header");
+      const bEl = document.getElementById("closureBanner");
+      const tabsEl = document.querySelector(".menu-tabs");
+      const summaryEl = detailEl.querySelector("summary");
+      const stackBottom = (headerEl ? headerEl.offsetHeight : 0)
+        + (bEl && !bEl.hidden ? bEl.offsetHeight : 0)
+        + (tabsEl ? tabsEl.offsetHeight : 0)
+        + (summaryEl ? summaryEl.offsetHeight : 0);
+      let gi = -1;
+      catEls.forEach((cat, i) => {
+        if (gi === -1 && cat.getBoundingClientRect().top >= stackBottom - 4) gi = i;
+      });
+      if (gi === -1) {
+        for (let i = catEls.length - 1; i >= 0; i--) {
+          if (catEls[i].getBoundingClientRect().top < stackBottom) { gi = i; break; }
+        }
+      }
+      if (gi >= 0) setCurrent(gi);
+    };
+    detailEl.addEventListener("toggle", () => {
+      if (detailEl.open) setTimeout(highlightOnOpen, 60);
+    });
+  }
 });
 // 一覧を閉じたら、概要のカテゴリ位置まで戻る
 function scrollToCategory(detail) {
@@ -192,7 +235,7 @@ function scrollToCategory(detail) {
   const tabsEl = document.querySelector(".menu-tabs");
           const offset = (header ? header.offsetHeight : 0) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0) + (tabsEl ? tabsEl.offsetHeight : 0) + 10;
   const y = li.getBoundingClientRect().top + window.scrollY - offset;
-  window.scrollTo({ top: y, behavior: "auto" });
+  scrollToY(y);
 }
 // カテゴリの「¥○○〜」表記も、データの最安値から自動で合わせる
 document.querySelectorAll("[data-menu-min]").forEach((el) => {
@@ -218,7 +261,7 @@ function makeExclusive(selector, scrollOnOpen) {
           const tabsEl = document.querySelector(".menu-tabs");
           const offset = (header ? header.offsetHeight : 0) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0) + (tabsEl ? tabsEl.offsetHeight : 0) + 10;
           const y = target.getBoundingClientRect().top + window.scrollY - offset;
-          window.scrollTo({ top: y, behavior: "auto" });
+          scrollToY(y);
         }, 0);
       }
     });

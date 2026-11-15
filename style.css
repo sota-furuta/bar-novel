@@ -10,6 +10,11 @@
   --muted: #a79c8a;
   --copper: #d08a4a;
   --copper-soft: #e0aa72;
+  /* ハイライト色（目次チップの現在地・メニュータブの選択色で共通） */
+  --copper-active: #d89a55;
+  /* sticky スタックの高さ（実測相当値。タブ＋見出し＝128px） */
+  --tabs-h: 76px;
+  --heading-h: 52px;
   --serif: "Cormorant Garamond", "Noto Serif JP", serif;
   --jp-serif: "Noto Serif JP", serif;
   --sans: "Noto Serif JP", serif;
@@ -314,6 +319,10 @@ main > .section:first-child {
 
   html {
     scroll-behavior: auto;
+  }
+
+  .drink-index-btn {
+    transition: none;
   }
 }
 
@@ -1060,7 +1069,7 @@ main > .section:first-child {
 }
 
 .menu-tab.is-active {
-  background: #d89a55;
+  background: var(--copper-active);
 }
 
 /* 店舗情報: 丸枠の中の文字色を柔らかい金クリームに統一 */
@@ -1307,7 +1316,7 @@ body.external-open-locked {
   font-weight: 600;
   color: #e8ab6d;
   position: sticky;
-  top: calc(var(--header-h, 68px) + var(--banner-h, 0px) + 76px);
+  top: calc(var(--header-h, 68px) + var(--banner-h, 0px) + var(--tabs-h));
   z-index: 20;
   background: rgba(18, 12, 8, 0.97);
   border-radius: 0 0 10px 10px;
@@ -1453,13 +1462,14 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
   padding: 7px 13px;
   min-height: 36px;
   cursor: pointer;
+  transition: background-color .15s ease, color .15s ease, border-color .15s ease;
 }
 .drink-index-btn.is-current {
   color: #17110a;
-  background: #d89a55;
-  border-color: #d89a55;
+  background: var(--copper-active);
+  border-color: var(--copper-active);
   font-weight: 600;
 }
 .drink-cat {
-  scroll-margin-top: calc(var(--header-h, 68px) + var(--banner-h, 0px) + 128px);
+  scroll-margin-top: calc(var(--header-h, 68px) + var(--banner-h, 0px) + var(--tabs-h) + var(--heading-h));
 }
