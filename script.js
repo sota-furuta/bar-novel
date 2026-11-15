@@ -78,9 +78,12 @@ const DRINK_LISTS = {
 document.querySelectorAll("[data-menu-list]").forEach((box) => {
   const groups = DRINK_LISTS[box.dataset.menuList] || [];
   const catEls = [];
+  const idxBtns = [];
+  let idxEl = null;
   if (box.dataset.menuList === "cocktails" && box.closest(".drink-detail") && groups.length > 3) {
     const idx = document.createElement("div");
     idx.className = "drink-index";
+    idxEl = idx;
     groups.forEach((group, gi) => {
       const b = document.createElement("button");
       b.type = "button";
@@ -91,6 +94,7 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
         const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         catEls[gi].scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
       });
+      idxBtns.push(b);
       idx.appendChild(b);
     });
     box.appendChild(idx);
@@ -119,6 +123,26 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
   note.className = "drink-list-note";
   note.textContent = "※ 価格は税込です。";
   box.appendChild(note);
+  // カクテル目次: 現在表示中のベースのチップをハイライトする（ヘッダーナビの現在地表示と同じ方式）
+  if (idxEl && idxBtns.length && "IntersectionObserver" in window) {
+    const tocSpy = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          const gi = catEls.indexOf(e.target);
+          if (gi < 0) return;
+          idxBtns.forEach((b, bi) => {
+            const current = bi === gi;
+            b.classList.toggle("is-current", current);
+            if (current) b.setAttribute("aria-current", "true");
+            else b.removeAttribute("aria-current");
+          });
+        });
+      },
+      { rootMargin: "-35% 0px -55% 0px" }
+    );
+    catEls.forEach((cat) => tocSpy.observe(cat));
+  }
 });
 // 一覧を閉じたら、概要のカテゴリ位置まで戻る
 function scrollToCategory(detail) {

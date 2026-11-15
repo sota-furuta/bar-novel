@@ -1454,6 +1454,12 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
   min-height: 36px;
   cursor: pointer;
 }
+.drink-index-btn.is-current {
+  color: #17110a;
+  background: var(--copper);
+  border-color: var(--copper);
+  font-weight: 600;
+}
 .drink-cat {
   scroll-margin-top: calc(var(--header-h, 68px) + var(--banner-h, 0px) + 128px);
 }
