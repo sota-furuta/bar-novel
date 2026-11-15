@@ -127,16 +127,19 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
   if (idxEl && idxBtns.length && "IntersectionObserver" in window) {
     const tocSpy = new IntersectionObserver(
       (entries) => {
-        entries.forEach((e) => {
-          if (!e.isIntersecting) return;
-          const gi = catEls.indexOf(e.target);
-          if (gi < 0) return;
-          idxBtns.forEach((b, bi) => {
-            const current = bi === gi;
-            b.classList.toggle("is-current", current);
-            if (current) b.setAttribute("aria-current", "true");
-            else b.removeAttribute("aria-current");
-          });
+        // 同時に複数の見出しが帯域に入ったときは、文書順で最後のもの（表示中のカテゴリ）を選ぶ
+        const targets = entries
+          .filter((e) => e.isIntersecting)
+          .map((e) => e.target)
+          .sort((a, b) => catEls.indexOf(a) - catEls.indexOf(b));
+        if (!targets.length) return;
+        const gi = catEls.indexOf(targets[targets.length - 1]);
+        if (gi < 0) return;
+        idxBtns.forEach((b, bi) => {
+          const current = bi === gi;
+          b.classList.toggle("is-current", current);
+          if (current) b.setAttribute("aria-current", "true");
+          else b.removeAttribute("aria-current");
         });
       },
       { rootMargin: "-35% 0px -55% 0px" }
