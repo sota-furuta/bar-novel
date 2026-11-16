@@ -8,6 +8,10 @@ const onScroll = () => {
 window.addEventListener("scroll", onScroll, { passive: true });
 onScroll();
 
+// 滑らかなスクロール（reduced-motion の場合は即時移動）
+const prefersReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const scrollToY = (y) => window.scrollTo({ top: y, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+
 // メニュー: DRINK / FOOD タブ切り替え
 const tabs = document.querySelectorAll(".menu-tab");
 const panels = document.querySelectorAll(".menu-panel");
@@ -78,9 +82,73 @@ const DRINK_LISTS = {
 document.querySelectorAll("[data-menu-list]").forEach((box) => {
   const groups = DRINK_LISTS[box.dataset.menuList] || [];
   const catEls = [];
-  if (box.dataset.menuList === "cocktails" && box.closest(".drink-detail") && groups.length > 3) {
+  const idxBtns = [];
+  let idxEl = null;
+  // 目次ハイライトの現在地表示
+  const visibleCats = new Set();
+  const setCurrent = (gi) => {
+    idxBtns.forEach((b, bi) => {
+      const current = bi === gi;
+      b.classList.toggle("is-current", current);
+      if (current) b.setAttribute("aria-current", "true");
+      else b.removeAttribute("aria-current");
+    });
+  };
+  const applyFromVisible = () => {
+    if (visibleCats.size) {
+      const ordered = [...visibleCats].sort((a, b) => catEls.indexOf(a) - catEls.indexOf(b));
+      const gi = catEls.indexOf(ordered[ordered.length - 1]);
+      if (gi >= 0) { setCurrent(gi); return; }
+    }
+    // 帯域にどの見出しも入っていない間は、帯域（rootMargin -35% の上端）の直上に
+    // ある直近の見出しを現在地とする
+    const bandTop = window.innerHeight * 0.35;
+    let gi = -1;
+    catEls.forEach((cat, i) => {
+      if (cat.getBoundingClientRect().top < bandTop) gi = i;
+    });
+    if (gi >= 0) setCurrent(gi);
+  };
+  // チップタップ直後のハイライト固定：スクロール完了までObserverの更新を無視する
+  let holdGi = null;
+  let holdTimer = null;
+  // タップした見出しの着地位置（.drink-cat の scroll-margin-top の計算値を直接読む）
+  const expectedRestTop = () => {
+    const cat = catEls[holdGi];
+    if (cat) {
+      const v = parseFloat(window.getComputedStyle(cat).scrollMarginTop);
+      if (Number.isFinite(v)) return v;
+    }
+    // 保険：CSS変数から同じ値を組み立てる（128px等の直書きはしない）
+    const root = window.getComputedStyle(document.documentElement);
+    const tabsH = parseFloat(root.getPropertyValue("--tabs-h")) || 76;
+    const headH = parseFloat(root.getPropertyValue("--heading-h")) || 52;
+    const h = document.querySelector(".site-header");
+    const bEl = document.getElementById("closureBanner");
+    return (h ? h.offsetHeight : 68) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0) + tabsH + headH;
+  };
+  const scheduleHoldRelease = () => {
+    if (holdTimer) clearTimeout(holdTimer);
+    holdTimer = setTimeout(() => {
+      if (holdGi === null) return;
+      const gi = holdGi;
+      holdGi = null;
+      // タップした見出しが着地位置から動いていたら（タップ後に手動でスクロールしていた場合）、
+      // 帯域の集合からハイライトを再計算する
+      const top = catEls[gi] ? catEls[gi].getBoundingClientRect().top : -1;
+      if (Math.abs(top - expectedRestTop()) > 4) {
+        applyFromVisible();
+      } else {
+        // スクロール完了：移動先のカテゴリ見出しへフォーカスを移す（スクリーンリーダー向け）。
+        // preventScroll でフォーカス自体による余計なスクロールを起こさない
+        if (catEls[gi]) catEls[gi].focus({ preventScroll: true });
+      }
+    }, 250);
+  };
+  if (["cocktails", "whiskey"].includes(box.dataset.menuList) && box.closest(".drink-detail") && groups.length > 3) {
     const idx = document.createElement("div");
     idx.className = "drink-index";
+    idxEl = idx;
     groups.forEach((group, gi) => {
       const b = document.createElement("button");
       b.type = "button";
@@ -88,9 +156,12 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
       b.textContent = group.cat.replace(" base", "");
       b.addEventListener("click", () => {
         if (!catEls[gi]) return;
-        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        catEls[gi].scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+        holdGi = gi;
+        setCurrent(gi);
+        scheduleHoldRelease();
+        catEls[gi].scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "start" });
       });
+      idxBtns.push(b);
       idx.appendChild(b);
     });
     box.appendChild(idx);
@@ -99,6 +170,8 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
     const cat = document.createElement("p");
     cat.className = "drink-cat";
     cat.textContent = group.cat;
+    // 目次チップからの移動先としてフォーカス可能にする（タブ移動の対象にはならない）
+    cat.tabIndex = -1;
     catEls.push(cat);
     box.appendChild(cat);
     group.items.forEach(([name, price]) => {
@@ -119,6 +192,57 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
   note.className = "drink-list-note";
   note.textContent = "※ 価格は税込です。";
   box.appendChild(note);
+  // カクテル目次: 現在表示中のベースのチップをハイライトする（ヘッダーナビの現在地表示と同じ方式）
+  if (idxEl && idxBtns.length && "IntersectionObserver" in window) {
+    const tocSpy = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) visibleCats.add(e.target);
+          else visibleCats.delete(e.target);
+        });
+        // タップ直後の固定中は、帯域に入った次の見出しで上書きしない
+        if (holdGi !== null) return;
+        applyFromVisible();
+      },
+      { rootMargin: "-35% 0px -55% 0px" }
+    );
+    catEls.forEach((cat) => tocSpy.observe(cat));
+    // スクロール中は固定の解除を先送りし、止まってから解除する
+    window.addEventListener("scroll", () => {
+      if (holdGi !== null) scheduleHoldRelease();
+    }, { passive: true });
+  }
+  // 一覧を開いた直後に、表示中のカテゴリを初期ハイライトする
+  const detailEl = box.closest(".drink-detail");
+  if (idxEl && detailEl) {
+    const highlightOnOpen = () => {
+      if (!detailEl.open) return;
+      applyFromVisible();
+      if (idxBtns.some((b) => b.classList.contains("is-current"))) return;
+      // 帯域にどの見出しも入っていない間は、sticky スタック直下の見出しを現在地とする
+      const headerEl = document.querySelector(".site-header");
+      const bEl = document.getElementById("closureBanner");
+      const tabsEl = document.querySelector(".menu-tabs");
+      const summaryEl = detailEl.querySelector("summary");
+      const stackBottom = (headerEl ? headerEl.offsetHeight : 0)
+        + (bEl && !bEl.hidden ? bEl.offsetHeight : 0)
+        + (tabsEl ? tabsEl.offsetHeight : 0)
+        + (summaryEl ? summaryEl.offsetHeight : 0);
+      let gi = -1;
+      catEls.forEach((cat, i) => {
+        if (gi === -1 && cat.getBoundingClientRect().top >= stackBottom - 4) gi = i;
+      });
+      if (gi === -1) {
+        for (let i = catEls.length - 1; i >= 0; i--) {
+          if (catEls[i].getBoundingClientRect().top < stackBottom) { gi = i; break; }
+        }
+      }
+      if (gi >= 0) setCurrent(gi);
+    };
+    detailEl.addEventListener("toggle", () => {
+      if (detailEl.open) setTimeout(highlightOnOpen, 60);
+    });
+  }
 });
 // 一覧を閉じたら、概要のカテゴリ位置まで戻る
 function scrollToCategory(detail) {
@@ -128,7 +252,7 @@ function scrollToCategory(detail) {
   const tabsEl = document.querySelector(".menu-tabs");
           const offset = (header ? header.offsetHeight : 0) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0) + (tabsEl ? tabsEl.offsetHeight : 0) + 10;
   const y = li.getBoundingClientRect().top + window.scrollY - offset;
-  window.scrollTo({ top: y, behavior: "auto" });
+  scrollToY(y);
 }
 // カテゴリの「¥○○〜」表記も、データの最安値から自動で合わせる
 document.querySelectorAll("[data-menu-min]").forEach((el) => {
@@ -154,7 +278,7 @@ function makeExclusive(selector, scrollOnOpen) {
           const tabsEl = document.querySelector(".menu-tabs");
           const offset = (header ? header.offsetHeight : 0) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0) + (tabsEl ? tabsEl.offsetHeight : 0) + 10;
           const y = target.getBoundingClientRect().top + window.scrollY - offset;
-          window.scrollTo({ top: y, behavior: "auto" });
+          scrollToY(y);
         }, 0);
       }
     });

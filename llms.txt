@@ -8,7 +8,7 @@
 - 電話: 070-3861-1472
 - 営業時間: 20:00〜翌04:00
 - 定休日: 月曜日
-- 決済方法: 現金・クレジットカード・QR決済（PayPayなど）
+- 決済方法: 現金・クレジットカード（Visa・Mastercard・JCB・American Expressなど）・QR決済（PayPayなど）
 
 ## リンク
 - [公式サイト](https://bar-novel.pages.dev/)
