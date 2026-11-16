@@ -95,9 +95,18 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
     });
   };
   const applyFromVisible = () => {
-    if (!visibleCats.size) return;
-    const ordered = [...visibleCats].sort((a, b) => catEls.indexOf(a) - catEls.indexOf(b));
-    const gi = catEls.indexOf(ordered[ordered.length - 1]);
+    if (visibleCats.size) {
+      const ordered = [...visibleCats].sort((a, b) => catEls.indexOf(a) - catEls.indexOf(b));
+      const gi = catEls.indexOf(ordered[ordered.length - 1]);
+      if (gi >= 0) { setCurrent(gi); return; }
+    }
+    // 帯域にどの見出しも入っていない間は、帯域（rootMargin -35% の上端）の直上に
+    // ある直近の見出しを現在地とする
+    const bandTop = window.innerHeight * 0.35;
+    let gi = -1;
+    catEls.forEach((cat, i) => {
+      if (cat.getBoundingClientRect().top < bandTop) gi = i;
+    });
     if (gi >= 0) setCurrent(gi);
   };
   // チップタップ直後のハイライト固定：スクロール完了までObserverの更新を無視する
@@ -125,9 +134,15 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
       const gi = holdGi;
       holdGi = null;
       // タップした見出しが着地位置から動いていたら（タップ後に手動でスクロールしていた場合）、
-      // 帯域の集合からハイライトを再計算する。動いていなければタップしたカテゴリのままにする
+      // 帯域の集合からハイライトを再計算する
       const top = catEls[gi] ? catEls[gi].getBoundingClientRect().top : -1;
-      if (Math.abs(top - expectedRestTop()) > 4) applyFromVisible();
+      if (Math.abs(top - expectedRestTop()) > 4) {
+        applyFromVisible();
+      } else {
+        // スクロール完了：移動先のカテゴリ見出しへフォーカスを移す（スクリーンリーダー向け）。
+        // preventScroll でフォーカス自体による余計なスクロールを起こさない
+        if (catEls[gi]) catEls[gi].focus({ preventScroll: true });
+      }
     }, 250);
   };
   if (["cocktails", "whiskey"].includes(box.dataset.menuList) && box.closest(".drink-detail") && groups.length > 3) {
@@ -155,6 +170,8 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
     const cat = document.createElement("p");
     cat.className = "drink-cat";
     cat.textContent = group.cat;
+    // 目次チップからの移動先としてフォーカス可能にする（タブ移動の対象にはならない）
+    cat.tabIndex = -1;
     catEls.push(cat);
     box.appendChild(cat);
     group.items.forEach(([name, price]) => {

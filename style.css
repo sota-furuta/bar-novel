@@ -1473,3 +1473,8 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
 .drink-cat {
   scroll-margin-top: calc(var(--header-h, 68px) + var(--banner-h, 0px) + var(--tabs-h) + var(--heading-h));
 }
+/* 目次チップからの移動先としてフォーカスする見出し。フォーカスはスクリーンリーダー向けで、
+   見出し自体がスクロール位置で既に見えているため視覚的な枠は出さない */
+.drink-cat:focus {
+  outline: none;
+}
