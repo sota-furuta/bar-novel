@@ -64,7 +64,7 @@ const DRINK_LISTS = {
   whiskey: [
     { cat: "Scotch", items: [["グレンリベット12年", 850], ["グレンフィディック12年", 850], ["ジョニーウォーカー ダブルブラック", 850]] },
     { cat: "American", items: [["ジャックダニエル", 750], ["ワイルドターキー", 800], ["メーカーズマーク", 800], ["ウッドフォードリザーブ", 950]] },
-    { cat: "Canadian and Irish", items: [["カナディアンクラブ", 750], ["ジェムソン", 800], ["ブラックブッシュ", 850]] },
+    { cat: "Canadian and Irish", chip: "Canadian/Irish", items: [["カナディアンクラブ", 750], ["ジェムソン", 800], ["ブラックブッシュ", 850]] },
     { cat: "Japanese", items: [["オールド", 750]] },
     { cat: "Smoky", items: [["アードベック10年", 900], ["アードベック5年", 900], ["ラフロイグ10年", 1200]] },
   ],
@@ -160,7 +160,10 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "drink-index-btn";
-      b.textContent = group.cat.replace(" base", "");
+      // chip があるカテゴリは目次チップだけ短縮表示にする（見出しは正式名称のまま）。
+      // 読み上げでは正式名称が分かるよう aria-label に正式名称を入れる
+      b.textContent = group.chip || group.cat.replace(" base", "");
+      if (group.chip) b.setAttribute("aria-label", group.cat);
       b.addEventListener("click", () => {
         if (!catEls[gi]) return;
         holdGi = gi;
