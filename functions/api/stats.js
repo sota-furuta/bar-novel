@@ -1,6 +1,9 @@
 // GET /api/stats — 管理画面の統計情報（要 X-Admin-Password ヘッダー）
 // taps: KV の日別タップ数（直近30日）
 // analytics: Cloudflare Web Analytics（env の CF_API_TOKEN / CF_ACCOUNT_ID / CF_SITE_TAG が揃ったときだけ）
+// 日付の基準: taps は日本時間（JST）で記録する一方、RUM の date は UTC 基準。
+// そのため analytics は UTC の日付で取得・集計し、画面側で基準を注記する
+// （JST の日付のまま取得すると、日別の帰属が9時間分ずれるため）。
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -11,6 +14,18 @@ function json(data, status = 200) {
 function jstDays(n) {
   const days = [];
   const base = Date.now() + 9 * 60 * 60 * 1000;
+  for (let i = n - 1; i >= 0; i--) {
+    const t = new Date(base - i * 86400 * 1000);
+    const m = String(t.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(t.getUTCDate()).padStart(2, "0");
+    days.push(`${t.getUTCFullYear()}-${m}-${d}`);
+  }
+  return days;
+}
+
+function utcDays(n) {
+  const days = [];
+  const base = Date.now();
   for (let i = n - 1; i >= 0; i--) {
     const t = new Date(base - i * 86400 * 1000);
     const m = String(t.getUTCMonth() + 1).padStart(2, "0");
@@ -123,14 +138,18 @@ export async function onRequestGet(context) {
   let analyticsError = false;
   if (configured) {
     try {
-      const { dailyMap, referrers } = await fetchAnalytics(env, days[0], days[days.length - 1]);
-      const daily = days.map((d) => ({
+      // RUM の date は UTC 基準なので、取得範囲と日別集計は UTC の日付に合わせる。
+      // taps（JST）との基準の違いは、画面側の静的な注記で伝える
+      // （dateBasis は将来画面側で出し分ける場合に備えて返している）。
+      const rumDays = utcDays(30);
+      const { dailyMap, referrers } = await fetchAnalytics(env, rumDays[0], rumDays[rumDays.length - 1]);
+      const daily = rumDays.map((d) => ({
         date: d,
         pv: dailyMap[d] ? dailyMap[d].pv : 0,
         visits: dailyMap[d] ? dailyMap[d].visits : 0,
       }));
       const sampled = Object.values(dailyMap).some((v) => v.sample > 1);
-      analytics = { daily, referrers, sampled };
+      analytics = { daily, referrers, sampled, dateBasis: "UTC" };
     } catch (e) {
       analyticsError = true;
     }
