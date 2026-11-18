@@ -101,13 +101,15 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
       if (gi >= 0) { setCurrent(gi); return; }
     }
     // 帯域にどの見出しも入っていない間は、帯域（rootMargin -35% の上端）の直上に
-    // ある直近の見出しを現在地とする
+    // ある直近の見出しを現在地とする。直上に見出しが無い（先頭より上を見ている）場合は
+    // 先頭のカテゴリを現在地とする（デフォルトは先頭）。
+    // 閉じている一覧の見出しはレイアウトが無いので数えない
     const bandTop = window.innerHeight * 0.35;
     let gi = -1;
     catEls.forEach((cat, i) => {
-      if (cat.getBoundingClientRect().top < bandTop) gi = i;
+      if (cat.getClientRects().length && cat.getBoundingClientRect().top < bandTop) gi = i;
     });
-    if (gi >= 0) setCurrent(gi);
+    setCurrent(gi >= 0 ? gi : 0);
   };
   // チップタップ直後のハイライト固定：スクロール完了までObserverの更新を無視する
   let holdGi = null;
@@ -228,27 +230,9 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
   if (idxEl && detailEl) {
     const highlightOnOpen = () => {
       if (!detailEl.open) return;
-      applyFromVisible();
-      if (idxBtns.some((b) => b.classList.contains("is-current"))) return;
-      // 帯域にどの見出しも入っていない間は、sticky スタック直下の見出しを現在地とする
-      const headerEl = document.querySelector(".site-header");
-      const bEl = document.getElementById("closureBanner");
-      const tabsEl = document.querySelector(".menu-tabs");
-      const summaryEl = detailEl.querySelector("summary");
-      const stackBottom = (headerEl ? headerEl.offsetHeight : 0)
-        + (bEl && !bEl.hidden ? bEl.offsetHeight : 0)
-        + (tabsEl ? tabsEl.offsetHeight : 0)
-        + (summaryEl ? summaryEl.offsetHeight : 0);
-      let gi = -1;
-      catEls.forEach((cat, i) => {
-        if (gi === -1 && cat.getBoundingClientRect().top >= stackBottom - 4) gi = i;
-      });
-      if (gi === -1) {
-        for (let i = catEls.length - 1; i >= 0; i--) {
-          if (catEls[i].getBoundingClientRect().top < stackBottom) { gi = i; break; }
-        }
-      }
-      if (gi >= 0) setCurrent(gi);
+      // 開いた直後のデフォルトは先頭のカテゴリ（位置からの推定で末尾が残ることがあったため、
+      // 推定はやめて先頭に決める。スクロールに合わせた切り替えは Observer 側が担う）
+      setCurrent(0);
     };
     detailEl.addEventListener("toggle", () => {
       if (detailEl.open) setTimeout(highlightOnOpen, 60);
