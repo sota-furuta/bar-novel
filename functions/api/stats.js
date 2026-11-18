@@ -56,13 +56,33 @@ async function runRumQuery(env, start, end, extraFilter) {
   return acct;
 }
 
+function rumHasData(acct) {
+  if (!acct) return false;
+  const rows = [...(acct.daily || []), ...(acct.referrers || [])];
+  return rows.some((r) => (r.count || 0) > 0);
+}
+
 async function fetchAnalytics(env, start, end) {
-  let acct;
-  try {
-    acct = await runRumQuery(env, start, end, ', bot: 0, requestHost: "bar-novel.pages.dev"');
-  } catch (e) {
-    acct = await runRumQuery(env, start, end, "");
+  // 絞り込みの強い順に試し、データが取れた段階の結果を使う。
+  // 以前はエラー時にしか条件を緩めなかったため、絞り込みが強すぎて
+  // 「成功したが0件」になる場合に拾えなかった。
+  const stages = [
+    ', bot: 0, requestHost: "bar-novel.pages.dev"',
+    ", bot: 0",
+    "",
+  ];
+  let acct = null;
+  let lastError = null;
+  for (const extraFilter of stages) {
+    try {
+      const result = await runRumQuery(env, start, end, extraFilter);
+      if (rumHasData(result)) { acct = result; break; }
+      if (!acct) acct = result;
+    } catch (e) {
+      lastError = e;
+    }
   }
+  if (!acct) throw lastError || new Error("cloudflare_api_error");
   const dailyMap = {};
   for (const row of acct.daily || []) {
     dailyMap[row.dimensions.date] = {
