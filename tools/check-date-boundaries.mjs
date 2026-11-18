@@ -1,7 +1,8 @@
 // 日付境界の確認スクリプト（BAR NOVEL 管理画面の統計まわり）
 //
 //
-// stats.js の日付生成（jstDays / utcDays）と track.js の jstToday は、
+// 日付生成は functions/api/_date.js の共通ヘルパーに寄せてあり、
+// stats.js（jstDays / utcDays）と track.js（jstToday）はそれを使う。
 // 「JST の日」と「UTC の日」の境界が9時間ずれることが不具合の温床になる。
 // この種のずれは通常表示では見えないため、境界ケースをモック時刻で固定確認できるよう、
 // このスクリプトを残す（2026-11-18、改善提案台帳の採用を受けて追加）。
@@ -15,10 +16,9 @@
 // 全ケース合格なら終了コード 0、1件でも失敗したら 1 で終了する。
 //
 //
-// テスト用の複製ロジックは持たない。対象ファイルのソースから
-// jstDays / utcDays / jstToday の関数定義そのものを取り出して評価し、
-// Date.now だけをモック時刻に差し替えて実行する。
-// そのため、実装側の関数名や所在が変わると取り出しに失敗してエラーになる。
+// テスト用の複製ロジックは持たない。共通ヘルパー（functions/api/_date.js）を
+// そのまま import し、Date.now だけをモック時刻に差し替えて実行する。
+// そのため、実装側の関数名や所在が変わると import に失敗してエラーになる。
 // その場合は実装の変更に合わせて、このスクリプトの対象定義も更新すること。
 //
 //
@@ -30,36 +30,15 @@
 // あわせて全ケース共通で、30日分の長さ・書式（YYYY-MM-DD）・重複なし・
 // 1日ずつ連続していること、jstDays の末尾と jstToday が一致することも確認する。
 
-import { readFileSync} from "node:fs";
 import { dirname, join} from "node:path";
-import { fileURLToPath} from "node:url";
+import { fileURLToPath, pathToFileURL} from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-function extractFunction(source, name, fileLabel) {
-const start = source.indexOf(`function ${name}(`);
-if (start < 0) throw new Error(`${fileLabel}: function ${name} が見つかりません（実装が変わった場合はこのスクリプトも更新してください）`);
-const braceStart = source.indexOf("{", start);
-let depth = 0;
-for (let i = braceStart; i < source.length; i++) {
-if (source[i] === "{") depth++;
-else if (source[i] === "}") {
-depth--;
-if (depth === 0) return source.slice(start, i + 1);
-}
-}
-throw new Error(`${fileLabel}: function ${name} の終端が見つかりません`);
-}
-
-function loadFn(file, name) {
-const source = readFileSync(join(root, file), "utf8");
-const code = extractFunction(source, name, file);
-return new Function(`${code}\nreturn ${name};`)();
-}
-
-const jstDays = loadFn("functions/api/stats.js", "jstDays");
-const utcDays = loadFn("functions/api/stats.js", "utcDays");
-const jstToday = loadFn("functions/api/track.js", "jstToday");
+// 共通ヘルパーをそのまま読み込む（複製ロジックは持たない）。
+const { jstDays, utcDays, jstToday } = await import(
+pathToFileURL(join(root, "functions/api/_date.js")).href
+);
 
 // JST の壁時計時刻を UTC ミリ秒に変換する（JST = UTC+9、夏時間なし）
 const jstMs = (y, mo, d, h = 0, mi = 0, s = 0) => Date.UTC(y, mo - 1, d, h, mi, s) - 9 * 60 * 60 * 1000;

@@ -1,5 +1,8 @@
 // POST /api/track {type: "tel" | "instagram" | "map"}
 // 公開サイトのCTAタップ計測。日別に KV (taps:YYYY-MM-DD) へ加算する。
+// 日付生成は共通ヘルパー（_date.js）に寄せている（stats.js と同じ生成ロジックを使う）。
+import { jstToday } from "./_date.js";
+
 const TYPES = ["tel", "instagram", "map"];
 
 function json(data, status = 200) {
@@ -7,13 +10,6 @@ function json(data, status = 200) {
     status,
     headers: { "Content-Type": "application/json" },
   });
-}
-
-function jstToday() {
-  const t = new Date(Date.now() + 9 * 60 * 60 * 1000);
-  const m = String(t.getUTCMonth() + 1).padStart(2, "0");
-  const d = String(t.getUTCDate()).padStart(2, "0");
-  return `${t.getUTCFullYear()}-${m}-${d}`;
 }
 
 export async function onRequestPost(context) {
