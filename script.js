@@ -114,6 +114,11 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
   // チップタップ直後のハイライト固定：スクロール完了までObserverの更新を無視する
   let holdGi = null;
   let holdTimer = null;
+  // 開いた直後の初期ハイライト（スクロール完了待ち）の保留を取り消すための受け口。
+  // チップをタップしたら保留を取り消し、タップ先のハイライトを初期ハイライトで
+  // 上書きしないようにする（保留側の finish が固定解除より後に発火しうるため、
+  // holdGi の状態チェックでは防げない）
+  let pendingInitial = null;
   // タップした見出しの着地位置（.drink-cat の scroll-margin-top の計算値を直接読む）
   const expectedRestTop = () => {
     const cat = catEls[holdGi];
@@ -168,6 +173,8 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
       if (group.chip) b.setAttribute("aria-label", group.cat);
       b.addEventListener("click", () => {
         if (!catEls[gi]) return;
+        // 保留中の初期ハイライトがあれば取り消す（タップ先を先頭で上書きしない）
+        if (pendingInitial) pendingInitial();
         holdGi = gi;
         setCurrent(gi);
         scheduleHoldRelease();
@@ -235,7 +242,36 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
       setCurrent(0);
     };
     detailEl.addEventListener("toggle", () => {
-      if (detailEl.open) setTimeout(highlightOnOpen, 60);
+      if (!detailEl.open) return;
+      // 前回の保留が残っていたら取り消す（保留は常に1つだけにする）
+      if (pendingInitial) pendingInitial();
+      // 初期ハイライトは固定待ち（60ms）ではなく、開いた直後の自動スクロール
+      // （makeExclusive 側の scrollToY）が完了してから行う。スクロール中は
+      // タイマーを先送りし、止まってから実行する（チップの固定解除と同じ方式）。
+      // スクロールが発生しない場合（既に着地位置にいる／reduced-motion で即時
+      // 移動した場合）でも実行されるよう、最初のタイマー自体が保険になる。
+      // 途中で閉じた場合は highlightOnOpen 側の open チェックで何もしない。
+      let timer = null;
+      const finish = () => {
+        window.removeEventListener("scroll", onScroll);
+        if (timer) clearTimeout(timer);
+        timer = null;
+        pendingInitial = null;
+        highlightOnOpen();
+      };
+      const onScroll = () => {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(finish, 250);
+      };
+      // チップタップ時などに保留を取り消すための受け口
+      pendingInitial = () => {
+        window.removeEventListener("scroll", onScroll);
+        if (timer) clearTimeout(timer);
+        timer = null;
+        pendingInitial = null;
+      };
+      window.addEventListener("scroll", onScroll, { passive: true });
+      timer = setTimeout(finish, 250);
     });
   }
 });
