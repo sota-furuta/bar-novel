@@ -572,7 +572,12 @@ if (hamburger && hamburgerMenu) {
     if (!visibleSections.size) return;
     const ordered = [...visibleSections].sort((a, b) => sections.indexOf(a) - sections.indexOf(b));
     const current = ordered[ordered.length - 1];
-    links.forEach((a) => a.classList.toggle("is-current", a === byId[current.id]));
+    links.forEach((a) => {
+      const isCurrent = a === byId[current.id];
+      a.classList.toggle("is-current", isCurrent);
+      if (isCurrent) a.setAttribute("aria-current", "true");
+      else a.removeAttribute("aria-current");
+    });
   };
   const spy = new IntersectionObserver((entries) => {
     entries.forEach((e) => {
