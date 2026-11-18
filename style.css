@@ -1445,11 +1445,17 @@ a:focus-visible, button:focus-visible, summary:focus-visible {
   box-shadow: 0 0 0 5px rgba(255, 179, 92, 0.25);
 }
 
+.drink-index-label {
+  margin: 6px 0 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
 .drink-index {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 4px 0 14px;
+  margin: 2px 0 14px;
 }
 .drink-index-btn {
   background: none;

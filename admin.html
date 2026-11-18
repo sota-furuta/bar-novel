@@ -196,7 +196,7 @@
       <div id="viewStats" hidden>
         <button type="button" class="back-btn" data-back>← メニューに戻る</button>
         <h2 class="view-title">統計情報</h2>
-        <p class="note">直近30日（今日を含む）の数字です。Cloudflareの数字は反映まで数時間かかる場合があり、当日分は暫定です。</p>
+        <p class="note">直近30日の数字です（タップ数は今日を含みます）。Cloudflareの数字は反映まで数時間かかる場合があり、当日分は暫定です。訪問者数・ページビューの日付はCloudflareの集計に合わせてUTC（世界標準時）基準で、日本時間の午前9時に切り替わります。そのため午前9時までは、訪問者・PVは日本時間の前日分までとなり、日別の表で当日の行は「―」になります。電話などのタップ数は日本時間基準で、日付が同じでも対象の時間帯が9時間異なるため、日別の対応がずれる場合があります。</p>
         <div id="statsBody"></div>
         <h3>検索の表示回数・順位</h3>
         <p class="note">検索での表示回数・クリック・掲載順位は Search Console で確認します（この画面には取り込めません）。</p>
@@ -603,8 +603,8 @@
       const an = data.analytics;
       const grid = el("div", "stat-grid");
       const boxes = [
-        ["訪問者数（30日）", an ? String(sumBy(an.daily, "visits")) : "未設定"],
-        ["ページビュー（30日）", an ? String(sumBy(an.daily, "pv")) : "未設定"],
+        ["訪問者数（30日・UTC基準）", an ? String(sumBy(an.daily, "visits")) : "未設定"],
+        ["ページビュー（30日・UTC基準）", an ? String(sumBy(an.daily, "pv")) : "未設定"],
         ["電話タップ（30日）", String(sumBy(taps, "tel"))],
         ["Instagramタップ（30日）", String(sumBy(taps, "instagram"))],
         ["地図タップ（30日）", String(sumBy(taps, "map"))],
@@ -623,10 +623,10 @@
       } else if (data.analyticsError || !an) {
         statsBody.appendChild(el("p", "err", "Cloudflareからデータを取得できませんでした。しばらくしてから開き直してください。"));
       } else {
-        statsBody.appendChild(barChart("訪問者数（日別）", an.daily, "visits", "#60a5fa"));
-        statsBody.appendChild(barChart("ページビュー（日別）", an.daily, "pv", "#1d4ed8"));
+        statsBody.appendChild(barChart("訪問者数（日別・UTC基準）", an.daily, "visits", "#60a5fa"));
+        statsBody.appendChild(barChart("ページビュー（日別・UTC基準）", an.daily, "pv", "#1d4ed8"));
         if (an.sampled) statsBody.appendChild(el("p", "note", "古い日付分は推定値を含む場合があります。"));
-        statsBody.appendChild(el("h3", null, "流入元（30日・ページビュー順）"));
+        statsBody.appendChild(el("h3", null, "流入元（30日・UTC基準／ページビュー順）"));
         if (!an.referrers || an.referrers.length === 0) {
           statsBody.appendChild(el("p", "note", "まだデータがありません。"));
         } else {
@@ -647,7 +647,7 @@
       details.appendChild(el("summary", null, "日別の内訳を見る"));
       const table = el("table", "stat-table");
       const thead = el("tr");
-      ["日付", "訪問者", "PV", "電話", "Instagram", "地図"].forEach((h) => thead.appendChild(el("th", null, h)));
+      ["日付", "訪問者（UTC）", "PV（UTC）", "電話", "Instagram", "地図"].forEach((h) => thead.appendChild(el("th", null, h)));
       table.appendChild(thead);
       const anByDate = {};
       if (an) an.daily.forEach((d) => { anByDate[d.date] = d; });
