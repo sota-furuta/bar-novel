@@ -85,7 +85,6 @@
     #logout { color: #b91c1c; border-color: #e0a3a3; background: #fdf3f3; font-weight: 700; }
     #adminMenuLogout { color: #b91c1c; font-weight: 700; }
     .ok { color: #15803d; font-weight: 700; } .err { color: #b91c1c; font-weight: 700; }
-    .debug-pre { white-space: pre-wrap; font-size: 0.8rem; background: #f3f4f6; padding: 10px; border-radius: 8px; overflow-x: auto; line-height: 1.6; }
     .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0 4px; }
     .stat-box { background: #fff; border: 1px solid #e7e5e4; border-radius: 10px; padding: 10px 12px; }
     .stat-box .stat-label { font-size: 0.85rem; color: #57534e; }
@@ -639,35 +638,6 @@
           });
           statsBody.appendChild(el("p", "note", "流入元は上位10件まで表示します（合計がページビュー総数と一致しない場合があります）。"));
         }
-      }
-
-      if (data.debug) {
-        const dbg = data.debug;
-        const det = el("details");
-        det.appendChild(el("summary", null, "診断情報（開発用）"));
-        const pre = el("pre", "debug-pre");
-        const lines = [];
-        lines.push("siteTag: " + dbg.siteTag + "（" + dbg.siteTagLength + "文字）");
-        lines.push("accountId: " + dbg.accountId + "（" + dbg.accountIdLength + "文字）");
-        (dbg.stages || []).forEach((st, i) => {
-          lines.push("段階" + (i + 1) + " " + st.name + ": " + (st.ok ? "成功 / 日別" + st.rows + "件 / PV合計" + st.pv : "エラー / " + (st.error || "")));
-        });
-        if (dbg.noSiteTag) {
-          const n = dbg.noSiteTag;
-          lines.push("siteTagなし: " + (n.ok ? "成功 / 日別" + n.rows + "件 / PV合計" + n.pv : "エラー / " + (n.error || "")));
-        }
-        const fmtProbe = (p) => {
-          if (!p) return "なし";
-          if (!p.ok) return "エラー / " + (p.error || "");
-          if (!p.rows || !p.rows.length) return "成功 / 0件";
-          return "成功 / " + p.rows.map((r) => (r.key || "(空)") + "=" + r.pv).join(" , ");
-        };
-        lines.push("タグなし・ホスト別: " + fmtProbe(dbg.hostsNoTag));
-        lines.push("タグなし・タグ別: " + fmtProbe(dbg.tagsNoTag));
-        lines.push("タグあり・ホスト別: " + fmtProbe(dbg.hostsWithTag));
-        pre.textContent = lines.join("\n");
-        det.appendChild(pre);
-        statsBody.appendChild(det);
       }
 
       const tapTotals = taps.map((d) => ({ date: d.date, total: (d.tel || 0) + (d.instagram || 0) + (d.map || 0) }));
