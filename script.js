@@ -12,6 +12,39 @@ onScroll();
 const prefersReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const scrollToY = (y) => window.scrollTo({ top: y, behavior: prefersReducedMotion() ? "auto" : "smooth" });
 
+// 「スクロールが止まったら実行する」共通ヘルパー（デバウンスの一元化）。
+// scroll のたびにタイマーを先送りし、最後のスクロールから delay ミリ秒止まったら
+// callback を1回だけ実行する。スクロールが発生しない場合でも実行されるよう、
+// 登録時点から最初のタイマーをかける（保険）。戻り値は取り消し関数で、呼ぶと
+// リスナーとタイマーを解除して callback は実行されない（何度呼んでもよい）。
+const onScrollSettled = (callback, delay = 250) => {
+  let timer = null;
+  let active = true;
+  const cleanup = () => {
+    window.removeEventListener("scroll", postpone);
+    if (timer) clearTimeout(timer);
+    timer = null;
+  };
+  const finish = () => {
+    if (!active) return;
+    active = false;
+    cleanup();
+    callback();
+  };
+  const postpone = () => {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(finish, delay);
+  };
+  const cancel = () => {
+    if (!active) return;
+    active = false;
+    cleanup();
+  };
+  window.addEventListener("scroll", postpone, { passive: true });
+  timer = setTimeout(finish, delay);
+  return cancel;
+};
+
 // スクロールスパイ共通ヘルパー: 帯域内にある要素を Set で保持し、
 // 文書順（orderedEls の並び順）で最後のものを現在地として返す。
 // 目次ハイライトとヘッダーナビの両スパイで共用する（entries の届く順には依存しない）
@@ -136,10 +169,10 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
   };
   // チップタップ直後のハイライト固定：スクロール完了までObserverの更新を無視する
   let holdGi = null;
-  let holdTimer = null;
+  let cancelHoldRelease = null;
   // 開いた直後の初期ハイライト（スクロール完了待ち）の保留を取り消すための受け口。
   // チップをタップしたら保留を取り消し、タップ先のハイライトを初期ハイライトで
-  // 上書きしないようにする（保留側の finish が固定解除より後に発火しうるため、
+  // 上書きしないようにする（保留側の実行が固定解除より後に来うるため、
   // holdGi の状態チェックでは防げない）
   let pendingInitial = null;
   // タップした見出しの着地位置（.drink-cat の scroll-margin-top の計算値を直接読む）
@@ -157,9 +190,12 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
     const bEl = document.getElementById("closureBanner");
     return (h ? h.offsetHeight : 68) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0) + tabsH + headH;
   };
+  // 固定の解除は共通ヘルパー onScrollSettled に寄せる（スクロール中はヘルパー側が
+  // タイマーを先送りし続けるため、scroll イベントから個別に再予約する必要はない）
   const scheduleHoldRelease = () => {
-    if (holdTimer) clearTimeout(holdTimer);
-    holdTimer = setTimeout(() => {
+    if (cancelHoldRelease) cancelHoldRelease();
+    cancelHoldRelease = onScrollSettled(() => {
+      cancelHoldRelease = null;
       if (holdGi === null) return;
       const gi = holdGi;
       holdGi = null;
@@ -173,7 +209,7 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
         // preventScroll でフォーカス自体による余計なスクロールを起こさない
         if (catEls[gi]) catEls[gi].focus({ preventScroll: true });
       }
-    }, 250);
+    });
   };
   if (["cocktails", "whiskey"].includes(box.dataset.menuList) && box.closest(".drink-detail") && groups.length > 3) { // スピリッツは6品のみで一覧が短いため目次を付けない（意図的に除外）
     // 目次チップの上に小さな案内ラベルを付ける（チップの役割を初めて見る人にも伝える）
@@ -247,10 +283,8 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
       { rootMargin: "-35% 0px -55% 0px" }
     );
     catEls.forEach((cat) => tocSpy.observe(cat));
-    // スクロール中は固定の解除を先送りし、止まってから解除する
-    window.addEventListener("scroll", () => {
-      if (holdGi !== null) scheduleHoldRelease();
-    }, { passive: true });
+    // 固定の解除を先送りする処理は scheduleHoldRelease 側の共通ヘルパーが担う
+    // （ヘルパーが scroll を監視してタイマーを先送りするため、ここでの個別登録は不要）
   }
   // 一覧を開いた直後に、表示中のカテゴリを初期ハイライトする
   const detailEl = box.closest(".drink-detail");
@@ -266,32 +300,17 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
       // 前回の保留が残っていたら取り消す（保留は常に1つだけにする）
       if (pendingInitial) pendingInitial();
       // 初期ハイライトは固定待ち（60ms）ではなく、開いた直後の自動スクロール
-      // （makeExclusive 側の scrollToY）が完了してから行う。スクロール中は
-      // タイマーを先送りし、止まってから実行する（チップの固定解除と同じ方式）。
-      // スクロールが発生しない場合（既に着地位置にいる／reduced-motion で即時
-      // 移動した場合）でも実行されるよう、最初のタイマー自体が保険になる。
+      // （makeExclusive 側の scrollToY）が完了してから行う。共通ヘルパー
+      // onScrollSettled がスクロール中はタイマーを先送りし、止まってから実行する
+      // （チップの固定解除と同じヘルパー）。スクロールが発生しない場合（既に着地
+      // 位置にいる／reduced-motion で即時移動した場合）でも、ヘルパーの最初の
+      // タイマーが保険になって実行される。
       // 途中で閉じた場合は highlightOnOpen 側の open チェックで何もしない。
-      let timer = null;
-      const finish = () => {
-        window.removeEventListener("scroll", onOpenScroll);
-        if (timer) clearTimeout(timer);
-        timer = null;
+      // pendingInitial にはヘルパーの取り消し関数が入る（チップタップ時に呼ぶ受け口）
+      pendingInitial = onScrollSettled(() => {
         pendingInitial = null;
         highlightOnOpen();
-      };
-      const onOpenScroll = () => {
-        if (timer) clearTimeout(timer);
-        timer = setTimeout(finish, 250);
-      };
-      // チップタップ時などに保留を取り消すための受け口
-      pendingInitial = () => {
-        window.removeEventListener("scroll", onOpenScroll);
-        if (timer) clearTimeout(timer);
-        timer = null;
-        pendingInitial = null;
-      };
-      window.addEventListener("scroll", onOpenScroll, { passive: true });
-      timer = setTimeout(finish, 250);
+      });
     });
   }
 });
