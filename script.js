@@ -50,6 +50,7 @@ tabs.forEach((tab) => {
 });
 
 // ドリンク一覧: 価格や銘柄の変更は、ここの数字を直すだけでOK（ギャラリーとメニューの両方に自動で反映される）
+// chip は目次チップの短縮表示名（見出しは cat の正式名称のまま）。カテゴリを追加・改名するときは、chip の付け忘れ・消し忘れに注意
 const DRINK_LISTS = {
   cocktails: [
     { cat: "Gin base", items: [["ギムレット", 900], ["ネグローニ", 900], ["マティーニ", 950], ["ジントニック", 750], ["ニンジャタートル", 800]] },
@@ -571,12 +572,7 @@ if (hamburger && hamburgerMenu) {
     if (!visibleSections.size) return;
     const ordered = [...visibleSections].sort((a, b) => sections.indexOf(a) - sections.indexOf(b));
     const current = ordered[ordered.length - 1];
-    links.forEach((a) => {
-      const isCurrent = a === byId[current.id];
-      a.classList.toggle("is-current", isCurrent);
-      if (isCurrent) a.setAttribute("aria-current", "true");
-      else a.removeAttribute("aria-current");
-    });
+    links.forEach((a) => a.classList.toggle("is-current", a === byId[current.id]));
   };
   const spy = new IntersectionObserver((entries) => {
     entries.forEach((e) => {
