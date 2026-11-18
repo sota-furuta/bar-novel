@@ -78,6 +78,43 @@ async function runRumQueryNoTag(env, start, end) {
   return postGraphQL(env, query, { account: env.CF_ACCOUNT_ID, start, end });
 }
 
+// 診断用: 任意のディメンションでグループ化して内訳を見る
+async function probeGroups(env, start, end, withTag, dimension) {
+  const varsDecl = withTag
+    ? "($account: String!, $siteTag: String!, $start: Date!, $end: Date!)"
+    : "($account: String!, $start: Date!, $end: Date!)";
+  const tagFilter = withTag ? "siteTag: $siteTag, " : "";
+  const query = `
+    query${varsDecl} {
+      viewer {
+        accounts(filter: { accountTag: $account }) {
+          groups: rumPageloadEventsAdaptiveGroups(
+            limit: 20
+            filter: { ${tagFilter}date_geq: $start, date_leq: $end }
+            orderBy: [count_DESC]
+          ) { count dimensions { ${dimension} } }
+        }
+      }
+    }`;
+  const variables = withTag
+    ? { account: env.CF_ACCOUNT_ID, siteTag: env.CF_SITE_TAG, start, end }
+    : { account: env.CF_ACCOUNT_ID, start, end };
+  const acct = await postGraphQL(env, query, variables);
+  return (acct.groups || []).map((g) => ({
+    key: (g.dimensions && g.dimensions[dimension]) || "",
+    pv: g.count || 0,
+  }));
+}
+
+async function probeSafe(env, start, end, withTag, dimension) {
+  try {
+    const rows = await probeGroups(env, start, end, withTag, dimension);
+    return { ok: true, rows };
+  } catch (e) {
+    return { ok: false, error: String((e && e.message) || e) };
+  }
+}
+
 function rumHasData(acct) {
   if (!acct) return false;
   const rows = [...(acct.daily || []), ...(acct.referrers || [])];
@@ -182,6 +219,9 @@ export async function onRequestGet(context) {
     } catch (e) {
       noSiteTag = { ok: false, error: String((e && e.message) || e) };
     }
+    const hostsNoTag = await probeSafe(env, days[0], days[days.length - 1], false, "requestHost");
+    const tagsNoTag = await probeSafe(env, days[0], days[days.length - 1], false, "siteTag");
+    const hostsWithTag = await probeSafe(env, days[0], days[days.length - 1], true, "requestHost");
     debug = {
       siteTag: env.CF_SITE_TAG,
       siteTagLength: env.CF_SITE_TAG.length,
@@ -189,6 +229,9 @@ export async function onRequestGet(context) {
       accountIdLength: env.CF_ACCOUNT_ID.length,
       stages: stageResults,
       noSiteTag,
+      hostsNoTag,
+      tagsNoTag,
+      hostsWithTag,
     };
   }
   return json({ taps, analytics, analyticsError, configured, debug });

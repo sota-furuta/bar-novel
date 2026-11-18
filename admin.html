@@ -656,6 +656,15 @@
           const n = dbg.noSiteTag;
           lines.push("siteTagなし: " + (n.ok ? "成功 / 日別" + n.rows + "件 / PV合計" + n.pv : "エラー / " + (n.error || "")));
         }
+        const fmtProbe = (p) => {
+          if (!p) return "なし";
+          if (!p.ok) return "エラー / " + (p.error || "");
+          if (!p.rows || !p.rows.length) return "成功 / 0件";
+          return "成功 / " + p.rows.map((r) => (r.key || "(空)") + "=" + r.pv).join(" , ");
+        };
+        lines.push("タグなし・ホスト別: " + fmtProbe(dbg.hostsNoTag));
+        lines.push("タグなし・タグ別: " + fmtProbe(dbg.tagsNoTag));
+        lines.push("タグあり・ホスト別: " + fmtProbe(dbg.hostsWithTag));
         pre.textContent = lines.join("\n");
         det.appendChild(pre);
         statsBody.appendChild(det);
