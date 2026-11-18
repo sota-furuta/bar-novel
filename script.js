@@ -145,7 +145,7 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
       }
     }, 250);
   };
-  if (["cocktails", "whiskey"].includes(box.dataset.menuList) && box.closest(".drink-detail") && groups.length > 3) {
+  if (["cocktails", "whiskey"].includes(box.dataset.menuList) && box.closest(".drink-detail") && groups.length > 3) { // スピリッツは6品のみで一覧が短いため目次を付けない（意図的に除外）
     // 目次チップの上に小さな案内ラベルを付ける（チップの役割を初めて見る人にも伝える）
     const idxLabel = document.createElement("p");
     idxLabel.className = "drink-index-label";
