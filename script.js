@@ -12,27 +12,6 @@ onScroll();
 const prefersReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const scrollToY = (y) => window.scrollTo({ top: y, behavior: prefersReducedMotion() ? "auto" : "smooth" });
 
-// スクロールスパイ共通ヘルパー: 帯域内にある要素を Set で保持し、
-// 文書順（orderedEls の並び順）で最後のものを現在地として返す。
-// 目次ハイライトとヘッダーナビの両スパイで共用する（entries の届く順には依存しない）
-const createVisibleTracker = (orderedEls) => {
-  const visible = new Set();
-  return {
-    update(entries) {
-      entries.forEach((e) => {
-        if (e.isIntersecting) visible.add(e.target);
-        else visible.delete(e.target);
-      });
-    },
-    // 帯域内に要素が無ければ null、あれば文書順で最後の要素を返す
-    last() {
-      if (!visible.size) return null;
-      const ordered = [...visible].sort((a, b) => orderedEls.indexOf(a) - orderedEls.indexOf(b));
-      return ordered[ordered.length - 1];
-    },
-  };
-};
-
 // メニュー: DRINK / FOOD タブ切り替え
 const tabs = document.querySelectorAll(".menu-tab");
 const panels = document.querySelectorAll(".menu-panel");
@@ -105,8 +84,8 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
   const catEls = [];
   const idxBtns = [];
   let idxEl = null;
-  // 目次ハイライトの現在地表示（共通ヘルパーで帯域内の見出しを保持する）
-  const visibleCats = createVisibleTracker(catEls);
+  // 目次ハイライトの現在地表示
+  const visibleCats = new Set();
   const setCurrent = (gi) => {
     idxBtns.forEach((b, bi) => {
       const current = bi === gi;
@@ -116,9 +95,9 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
     });
   };
   const applyFromVisible = () => {
-    const lastCat = visibleCats.last();
-    if (lastCat) {
-      const gi = catEls.indexOf(lastCat);
+    if (visibleCats.size) {
+      const ordered = [...visibleCats].sort((a, b) => catEls.indexOf(a) - catEls.indexOf(b));
+      const gi = catEls.indexOf(ordered[ordered.length - 1]);
       if (gi >= 0) { setCurrent(gi); return; }
     }
     // 帯域にどの見出しも入っていない間は、帯域（rootMargin -35% の上端）の直上に
@@ -237,7 +216,10 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
   if (idxEl && idxBtns.length && "IntersectionObserver" in window) {
     const tocSpy = new IntersectionObserver(
       (entries) => {
-        visibleCats.update(entries);
+        entries.forEach((e) => {
+          if (e.isIntersecting) visibleCats.add(e.target);
+          else visibleCats.delete(e.target);
+        });
         // タップ直後の固定中は、帯域に入った次の見出しで上書きしない
         if (holdGi !== null) return;
         applyFromVisible();
@@ -584,14 +566,23 @@ if (hamburger && hamburgerMenu) {
     .filter(Boolean);
   // 目次ハイライトと同じ方式: 帯域内にあるセクションを集合で保持し、
   // 文書順で最後のものを現在地とする（entries の届く順には依存しない）
-  const visibleSections = createVisibleTracker(sections);
+  const visibleSections = new Set();
   const applyFromVisible = () => {
-    const current = visibleSections.last();
-    if (!current) return;
-    links.forEach((a) => a.classList.toggle("is-current", a === byId[current.id]));
+    if (!visibleSections.size) return;
+    const ordered = [...visibleSections].sort((a, b) => sections.indexOf(a) - sections.indexOf(b));
+    const current = ordered[ordered.length - 1];
+    links.forEach((a) => {
+      const isCurrent = a === byId[current.id];
+      a.classList.toggle("is-current", isCurrent);
+      if (isCurrent) a.setAttribute("aria-current", "true");
+      else a.removeAttribute("aria-current");
+    });
   };
   const spy = new IntersectionObserver((entries) => {
-    visibleSections.update(entries);
+    entries.forEach((e) => {
+      if (e.isIntersecting) visibleSections.add(e.target);
+      else visibleSections.delete(e.target);
+    });
     applyFromVisible();
   }, { rootMargin: "-35% 0px -55% 0px" });
   sections.forEach((s) => spy.observe(s));
