@@ -530,16 +530,24 @@ if (hamburger && hamburgerMenu) {
   if (!links.length || !("IntersectionObserver" in window)) return;
   const byId = {};
   links.forEach((a) => { byId[a.getAttribute("href").slice(1)] = a; });
+  const sections = ["concept", "menu", "gallery", "info", "faq", "access"]
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
+  // 目次ハイライトと同じ方式: 帯域内にあるセクションを集合で保持し、
+  // 文書順で最後のものを現在地とする（entries の届く順には依存しない）
+  const visibleSections = new Set();
+  const applyFromVisible = () => {
+    if (!visibleSections.size) return;
+    const ordered = [...visibleSections].sort((a, b) => sections.indexOf(a) - sections.indexOf(b));
+    const current = ordered[ordered.length - 1];
+    links.forEach((a) => a.classList.toggle("is-current", a === byId[current.id]));
+  };
   const spy = new IntersectionObserver((entries) => {
     entries.forEach((e) => {
-      if (!e.isIntersecting) return;
-      links.forEach((a) => a.classList.remove("is-current"));
-      const link = byId[e.target.id];
-      if (link) link.classList.add("is-current");
+      if (e.isIntersecting) visibleSections.add(e.target);
+      else visibleSections.delete(e.target);
     });
+    applyFromVisible();
   }, { rootMargin: "-35% 0px -55% 0px" });
-  ["concept", "menu", "gallery", "info", "faq", "access"].forEach((id) => {
-    const s = document.getElementById(id);
-    if (s) spy.observe(s);
-  });
+  sections.forEach((s) => spy.observe(s));
 })();
