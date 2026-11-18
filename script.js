@@ -240,7 +240,26 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
       if (gi >= 0) setCurrent(gi);
     };
     detailEl.addEventListener("toggle", () => {
-      if (detailEl.open) setTimeout(highlightOnOpen, 60);
+      if (!detailEl.open) return;
+      // 初期ハイライトは固定待ち（60ms）ではなく、開いた直後の自動スクロール
+      // （makeExclusive 側の scrollToY）が完了してから行う。スクロール中は
+      // タイマーを先送りし、止まってから実行する（チップの固定解除と同じ方式）。
+      // スクロールが発生しない場合（既に着地位置にいる／reduced-motion で即時
+      // 移動した場合）でも実行されるよう、最初のタイマー自体が保険になる。
+      // 途中で閉じた場合は highlightOnOpen 側の open チェックで何もしない。
+      let timer = null;
+      const finish = () => {
+        window.removeEventListener("scroll", onScroll);
+        if (timer) clearTimeout(timer);
+        timer = null;
+        highlightOnOpen();
+      };
+      const onScroll = () => {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(finish, 250);
+      };
+      window.addEventListener("scroll", onScroll, { passive: true });
+      timer = setTimeout(finish, 250);
     });
   }
 });
@@ -530,24 +549,16 @@ if (hamburger && hamburgerMenu) {
   if (!links.length || !("IntersectionObserver" in window)) return;
   const byId = {};
   links.forEach((a) => { byId[a.getAttribute("href").slice(1)] = a; });
-  const sections = ["concept", "menu", "gallery", "info", "faq", "access"]
-    .map((id) => document.getElementById(id))
-    .filter(Boolean);
-  // 目次ハイライトと同じ方式: 帯域内にあるセクションを集合で保持し、
-  // 文書順で最後のものを現在地とする（entries の届く順には依存しない）
-  const visibleSections = new Set();
-  const applyFromVisible = () => {
-    if (!visibleSections.size) return;
-    const ordered = [...visibleSections].sort((a, b) => sections.indexOf(a) - sections.indexOf(b));
-    const current = ordered[ordered.length - 1];
-    links.forEach((a) => a.classList.toggle("is-current", a === byId[current.id]));
-  };
   const spy = new IntersectionObserver((entries) => {
     entries.forEach((e) => {
-      if (e.isIntersecting) visibleSections.add(e.target);
-      else visibleSections.delete(e.target);
+      if (!e.isIntersecting) return;
+      links.forEach((a) => a.classList.remove("is-current"));
+      const link = byId[e.target.id];
+      if (link) link.classList.add("is-current");
     });
-    applyFromVisible();
   }, { rootMargin: "-35% 0px -55% 0px" });
-  sections.forEach((s) => spy.observe(s));
+  ["concept", "menu", "gallery", "info", "faq", "access"].forEach((id) => {
+    const s = document.getElementById(id);
+    if (s) spy.observe(s);
+  });
 })();
