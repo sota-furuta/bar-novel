@@ -64,7 +64,7 @@ const DRINK_LISTS = {
   whiskey: [
     { cat: "Scotch", items: [["グレンリベット12年", 850], ["グレンフィディック12年", 850], ["ジョニーウォーカー ダブルブラック", 850]] },
     { cat: "American", items: [["ジャックダニエル", 750], ["ワイルドターキー", 800], ["メーカーズマーク", 800], ["ウッドフォードリザーブ", 950]] },
-    { cat: "Canadian and Irish", chip: "Canadian/Irish", items: [["カナディアンクラブ", 750], ["ジェムソン", 800], ["ブラックブッシュ", 850]] },
+    { cat: "Canadian and Irish", items: [["カナディアンクラブ", 750], ["ジェムソン", 800], ["ブラックブッシュ", 850]] },
     { cat: "Japanese", items: [["オールド", 750]] },
     { cat: "Smoky", items: [["アードベック10年", 900], ["アードベック5年", 900], ["ラフロイグ10年", 1200]] },
   ],
@@ -146,17 +146,21 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
     }, 250);
   };
   if (["cocktails", "whiskey"].includes(box.dataset.menuList) && box.closest(".drink-detail") && groups.length > 3) {
+    // 目次チップの上に小さな案内ラベルを付ける（チップの役割を初めて見る人にも伝える）
+    const idxLabel = document.createElement("p");
+    idxLabel.className = "drink-index-label";
+    idxLabel.id = "drink-index-label-" + box.dataset.menuList;
+    idxLabel.textContent = box.dataset.menuList === "whiskey" ? "種類から探す" : "ベースから探す";
     const idx = document.createElement("div");
     idx.className = "drink-index";
+    idx.setAttribute("role", "group");
+    idx.setAttribute("aria-labelledby", idxLabel.id);
     idxEl = idx;
     groups.forEach((group, gi) => {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "drink-index-btn";
-      // chip があるカテゴリは目次チップだけ短縮表示にする（見出しは正式名称のまま）。
-      // 読み上げでは正式名称が分かるよう aria-label に正式名称を入れる
-      b.textContent = group.chip || group.cat.replace(" base", "");
-      if (group.chip) b.setAttribute("aria-label", group.cat);
+      b.textContent = group.cat.replace(" base", "");
       b.addEventListener("click", () => {
         if (!catEls[gi]) return;
         holdGi = gi;
@@ -167,6 +171,7 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
       idxBtns.push(b);
       idx.appendChild(b);
     });
+    box.appendChild(idxLabel);
     box.appendChild(idx);
   }
   groups.forEach((group) => {
