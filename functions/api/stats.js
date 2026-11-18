@@ -1,7 +1,6 @@
 // GET /api/stats — 管理画面の統計情報（要 X-Admin-Password ヘッダー）
 // taps: KV の日別タップ数（直近30日）
 // analytics: Cloudflare Web Analytics（env の CF_API_TOKEN / CF_ACCOUNT_ID / CF_SITE_TAG が揃ったときだけ）
-// debug: 訪問者数0件問題の診断用（段階ごとの結果・siteTagなしの結果・使用中の識別子）。原因が判明したら外す。
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -19,25 +18,6 @@ function jstDays(n) {
     days.push(`${t.getUTCFullYear()}-${m}-${d}`);
   }
   return days;
-}
-
-async function postGraphQL(env, query, variables) {
-  const res = await fetch("https://api.cloudflare.com/client/v4/graphql", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + env.CF_API_TOKEN,
-    },
-    body: JSON.stringify({ query, variables }),
-  });
-  const data = await res.json();
-  if (!res.ok || (data.errors && data.errors.length)) {
-    const msg = data.errors && data.errors[0] && data.errors[0].message ? data.errors[0].message : "http_" + res.status;
-    throw new Error("cloudflare_api_error: " + msg);
-  }
-  const acct = data.data && data.data.viewer && data.data.viewer.accounts && data.data.viewer.accounts[0];
-  if (!acct) throw new Error("cloudflare_api_error: account_not_found");
-  return acct;
 }
 
 async function runRumQuery(env, start, end, extraFilter) {
@@ -58,24 +38,22 @@ async function runRumQuery(env, start, end, extraFilter) {
         }
       }
     }`;
-  return postGraphQL(env, query, { account: env.CF_ACCOUNT_ID, siteTag: env.CF_SITE_TAG, start, end });
-}
-
-// 診断用: siteTag を付けずにアカウント全体の日別件数を取る
-async function runRumQueryNoTag(env, start, end) {
-  const query = `
-    query($account: String!, $start: Date!, $end: Date!) {
-      viewer {
-        accounts(filter: { accountTag: $account }) {
-          daily: rumPageloadEventsAdaptiveGroups(
-            limit: 100
-            filter: { date_geq: $start, date_leq: $end }
-            orderBy: [date_ASC]
-          ) { count dimensions { date } }
-        }
-      }
-    }`;
-  return postGraphQL(env, query, { account: env.CF_ACCOUNT_ID, start, end });
+  const res = await fetch("https://api.cloudflare.com/client/v4/graphql", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + env.CF_API_TOKEN,
+    },
+    body: JSON.stringify({
+      query,
+      variables: { account: env.CF_ACCOUNT_ID, siteTag: env.CF_SITE_TAG, start, end },
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok || (data.errors && data.errors.length)) throw new Error("cloudflare_api_error");
+  const acct = data.data && data.data.viewer && data.data.viewer.accounts && data.data.viewer.accounts[0];
+  if (!acct) throw new Error("cloudflare_api_error");
+  return acct;
 }
 
 function rumHasData(acct) {
@@ -84,40 +62,27 @@ function rumHasData(acct) {
   return rows.some((r) => (r.count || 0) > 0);
 }
 
-function summarizeAcct(acct) {
-  const daily = (acct && acct.daily) || [];
-  return { rows: daily.length, pv: daily.reduce((s, r) => s + (r.count || 0), 0) };
-}
-
 async function fetchAnalytics(env, start, end) {
   // 絞り込みの強い順に試し、データが取れた段階の結果を使う。
   // 以前はエラー時にしか条件を緩めなかったため、絞り込みが強すぎて
   // 「成功したが0件」になる場合に拾えなかった。
-  const stageDefs = [
-    { name: "bot+host", filter: ', bot: 0, requestHost: "bar-novel.pages.dev"' },
-    { name: "botのみ", filter: ", bot: 0" },
-    { name: "条件なし", filter: "" },
+  const stages = [
+    ', bot: 0, requestHost: "bar-novel.pages.dev"',
+    ", bot: 0",
+    "",
   ];
-  const stageResults = [];
   let acct = null;
   let lastError = null;
-  for (const s of stageDefs) {
+  for (const extraFilter of stages) {
     try {
-      const result = await runRumQuery(env, start, end, s.filter);
-      const sum = summarizeAcct(result);
-      stageResults.push({ name: s.name, ok: true, rows: sum.rows, pv: sum.pv });
+      const result = await runRumQuery(env, start, end, extraFilter);
       if (rumHasData(result)) { acct = result; break; }
       if (!acct) acct = result;
     } catch (e) {
-      stageResults.push({ name: s.name, ok: false, error: String((e && e.message) || e) });
       lastError = e;
     }
   }
-  if (!acct) {
-    const err = lastError || new Error("cloudflare_api_error");
-    err.stageResults = stageResults;
-    throw err;
-  }
+  if (!acct) throw lastError || new Error("cloudflare_api_error");
   const dailyMap = {};
   for (const row of acct.daily || []) {
     dailyMap[row.dimensions.date] = {
@@ -130,7 +95,7 @@ async function fetchAnalytics(env, start, end) {
     host: (r.dimensions && r.dimensions.refererHost) || "",
     pv: r.count || 0,
   }));
-  return { dailyMap, referrers, stageResults };
+  return { dailyMap, referrers };
 }
 
 export async function onRequestGet(context) {
@@ -156,40 +121,19 @@ export async function onRequestGet(context) {
   const configured = !!(env.CF_API_TOKEN && env.CF_ACCOUNT_ID && env.CF_SITE_TAG);
   let analytics = null;
   let analyticsError = false;
-  let debug = null;
   if (configured) {
-    let stageResults = [];
     try {
-      const r = await fetchAnalytics(env, days[0], days[days.length - 1]);
-      stageResults = r.stageResults;
+      const { dailyMap, referrers } = await fetchAnalytics(env, days[0], days[days.length - 1]);
       const daily = days.map((d) => ({
         date: d,
-        pv: r.dailyMap[d] ? r.dailyMap[d].pv : 0,
-        visits: r.dailyMap[d] ? r.dailyMap[d].visits : 0,
+        pv: dailyMap[d] ? dailyMap[d].pv : 0,
+        visits: dailyMap[d] ? dailyMap[d].visits : 0,
       }));
-      const sampled = Object.values(r.dailyMap).some((v) => v.sample > 1);
-      analytics = { daily, referrers: r.referrers, sampled };
+      const sampled = Object.values(dailyMap).some((v) => v.sample > 1);
+      analytics = { daily, referrers, sampled };
     } catch (e) {
       analyticsError = true;
-      stageResults = e.stageResults || [];
     }
-    // 診断: siteTagなしでもアカウントにデータがあるか
-    let noSiteTag = null;
-    try {
-      const a2 = await runRumQueryNoTag(env, days[0], days[days.length - 1]);
-      const s2 = summarizeAcct(a2);
-      noSiteTag = { ok: true, rows: s2.rows, pv: s2.pv };
-    } catch (e) {
-      noSiteTag = { ok: false, error: String((e && e.message) || e) };
-    }
-    debug = {
-      siteTag: env.CF_SITE_TAG,
-      siteTagLength: env.CF_SITE_TAG.length,
-      accountId: env.CF_ACCOUNT_ID,
-      accountIdLength: env.CF_ACCOUNT_ID.length,
-      stages: stageResults,
-      noSiteTag,
-    };
   }
-  return json({ taps, analytics, analyticsError, configured, debug });
+  return json({ taps, analytics, analyticsError, configured });
 }
