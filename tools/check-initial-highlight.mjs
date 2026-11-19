@@ -47,6 +47,10 @@
 // 4. 開く→保留中にタップ→その後もスクロール: 初期ハイライトは復活しない
 // 5. 開き直し: 前回の保留は取り消され、最新の保留だけが発火する
 // 6. 保留中に閉じる: 完了処理は後片付けだけ行い、先頭は点けない
+// 7. 閉じたまま保険タイマーが発火した後に開き直す（ケース5の派生）:
+//    閉じる toggle では保留は取り消されず、閉じたまま発火して自己解消する。
+//    その後の開き直しでは取り消すべき保留が無い（pendingInitial は null）
+//    分岐を通り、新しい保留だけが発火して先頭が1回だけ点く
 // あわせて構造ガードとして、60ms固定待ちへの巻き戻しと、
 // チップ側の取り消し呼び出しの順序（setCurrent より前）も確認する。
 
@@ -328,6 +332,35 @@ runCase("6. 保留中に閉じる（後片付けのみ、先頭は点けない�
   check("6", "閉じている間は先頭を点けない", h.api.calls.history, []);
   check("6", "保留は自己解消する", h.api.getPending(), null);
   check("6", "scroll リスナーが残らない", h.win.listenerCount("scroll"), 0);
+});
+
+runCase("7. 閉じたまま保険タイマーが発火した後に開き直す（ケース5の派生）", () => {
+  const h = makeHarness();
+  h.detailEl.open = true;
+  h.detailEl.fireToggle();
+  check("7", "開いた直後は保留が登録される", typeof h.api.getPending(), "function");
+  // 閉じる toggle は open=false で発火し、ハンドラは早期 return で保留を取り消さない
+  h.detailEl.open = false;
+  h.detailEl.fireToggle();
+  check("7", "閉じた直後は保留がまだ残る（閉じる toggle では取り消されない）", typeof h.api.getPending(), "function");
+  check("7", "閉じた直後は scroll リスナーがまだ残る", h.win.listenerCount("scroll"), 1);
+  // 閉じたまま保険タイマーが発火する（highlightOnOpen の open チェックで無効化され、保留は自己解消する）
+  h.clock.advance(1000);
+  check("7", "閉じたまま発火しても先頭は点かない", h.api.calls.history, []);
+  check("7", "発火後は保留が自己解消する", h.api.getPending(), null);
+  check("7", "発火後は scroll リスナーが残らない", h.win.listenerCount("scroll"), 0);
+  check("7", "発火後はタイマーが残らない", h.clock.pendingCount(), 0);
+  // 開き直す: pendingInitial は既に null なので、取り消しが不要な分岐を通って新しい保留だけが作られる
+  h.detailEl.open = true;
+  h.detailEl.fireToggle();
+  check("7", "開き直しで新しい保留が登録される", typeof h.api.getPending(), "function");
+  check("7", "開き直し後の scroll リスナーは1つだけ", h.win.listenerCount("scroll"), 1);
+  h.clock.advance(249);
+  check("7", "開き直し後250ms未満ではまだ点かない", h.api.calls.history, []);
+  h.clock.advance(1);
+  check("7", "開き直し後は先頭が1回だけ点く", h.api.calls.history, [0]);
+  check("7", "完了後は保留が消える", h.api.getPending(), null);
+  check("7", "完了後は scroll リスナーが残らない", h.win.listenerCount("scroll"), 0);
 });
 
 // --- 構造ガード（巻き戻し・順序の退行検出） ---
