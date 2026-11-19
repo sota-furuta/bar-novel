@@ -183,6 +183,15 @@ const CRITICAL = [
     label: "track.js の _date.js import",
     reason: "同上",
   },
+  {
+    file: "script.js",
+    // 確定ボタンの生成行にしか現れない形（class 属性）で見る。
+    // querySelector 側は ".external-open-confirm" の形で、こちらには
+    // 一致しないため、ボタン行ごと消える巻き戻しを検知できる
+    pattern: 'class="external-open-confirm"',
+    label: "外部リンクモーダルの確定ボタン（external-open-confirm）",
+    reason: "FORBIDDEN の「新しいタブで開く」は旧文言への巻き戻しは検知できるが、ボタン行ごと消える巻き戻しは検知できない。確定ボタン自体の存続を CRITICAL でも見ることで、文言退行と行消失の両方をカバーする",
+  },
 ];
 
 // ファイル自体が消えてはいけないもの（中身ではなく存在を確認する）
