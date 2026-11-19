@@ -17,7 +17,11 @@ const scrollToY = (y) => window.scrollTo({ top: y, behavior: prefersReducedMotio
 // callback を1回だけ実行する。スクロールが発生しない場合でも実行されるよう、
 // 登録時点から最初のタイマーをかける（保険）。戻り値は取り消し関数で、呼ぶと
 // リスナーとタイマーを解除して callback は実行されない（何度呼んでもよい）。
-const onScrollSettled = (callback, delay = 250) => {
+// スクロール停止判定の待ち時間（最後のスクロールからこの時間止まったら「止まった」とみなす）。
+// チューニングするときはこの1か所だけを変更する。
+const SCROLL_SETTLED_DELAY = 250;
+
+const onScrollSettled = (callback, delay = SCROLL_SETTLED_DELAY) => {
   let timer = null;
   let active = true;
   const cleanup = () => {
