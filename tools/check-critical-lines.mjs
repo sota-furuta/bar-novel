@@ -220,7 +220,7 @@ const CRITICAL_FILES = [
 
 // 残っていたら（戻ってきたら）退行と分かる旧形
 // patternRegex は空白の有無などの表記ゆれを吸収するためのもの。
-// _date.js の内部 export 復活検知（下の3件）は patternRegex で、
+// _date.js の内部 export 検知（下の5件）は patternRegex で、
 // 宣言形（export function／export const 等）と再 export 形
 // （export { daysWithOffset } のように末尾へ足す形）の両方と、
 // 空白ゆれ（余分な空白・改行・タブ、export{...} の詰め形）を拾う。
@@ -229,6 +229,18 @@ const CRITICAL_FILES = [
 // なお正規のラッパー（export function jstDays の本体が内部ヘルパーを
 // 呼ぶ形）は、export の直後に内部名が宣言名として来ず、本体の { } も
 // export 直後ではないため、以下の正規表現には一致しない（誤検知しない）。
+
+// _date.js の内部名（内部ヘルパー／内部定数）の export を検知する
+// 正規表現を、名前を引数に取って生成する小さな生成式。
+// 5件とも名前以外は同一のため、正規表現のコピーを並べずこの1か所に
+// 寄せる（1件だけ直し忘れて検知網に名前ごとの差が出るのを防ぎ、
+// 追加・修正が1か所で済むようにする。2026-11-19、改善提案台帳の
+// 採用を受けて生成式化）。名前は識別子（英字・数字・アンダースコア）
+// のみを想定し、そのまま埋め込む。
+const internalExportPattern = (name) =>
+  new RegExp(
+    `export\\s*(?:\\{[^}]*\\b${name}\\b[^}]*\\}|(?:async\\s+)?(?:function|const|let|var|class)\\s*\\*?\\s*${name}\\b)`,
+  );
 const FORBIDDEN = [
   {
     file: "script.js",
@@ -244,33 +256,33 @@ const FORBIDDEN = [
   },
   {
     file: "functions/api/_date.js",
-    patternRegex: /export\s*(?:\{[^}]*\bdaysWithOffset\b[^}]*\}|(?:async\s+)?(?:function|const|let|var|class)\s*\*?\s*daysWithOffset\b)/,
+    patternRegex: internalExportPattern("daysWithOffset"),
     label: "_date.js の内部ヘルパー daysWithOffset の export 復活",
     reason: "公開export最小化（2026-11-19）で内部化したもの。CRITICAL は残すべき3 export（jstDays／utcDays／jstToday）の存続を見るだけで、絞った公開面の復活は検知できないため、禁止側でも見る。完全文字列では末尾に export { ... } を足す形の公開がすり抜けるため、宣言形と再 export 形の両方を拾う patternRegex にした。戻っていたら巻き戻し",
   },
   {
     file: "functions/api/_date.js",
-    patternRegex: /export\s*(?:\{[^}]*\btodayWithOffset\b[^}]*\}|(?:async\s+)?(?:function|const|let|var|class)\s*\*?\s*todayWithOffset\b)/,
+    patternRegex: internalExportPattern("todayWithOffset"),
     label: "_date.js の内部ヘルパー todayWithOffset の export 復活",
     reason: "同上（公開export最小化で内部化したもの。宣言形と再 export 形の両方を拾う patternRegex）",
   },
   {
     file: "functions/api/_date.js",
-    patternRegex: /export\s*(?:\{[^}]*\bJST_OFFSET_MS\b[^}]*\}|(?:async\s+)?(?:function|const|let|var|class)\s*\*?\s*JST_OFFSET_MS\b)/,
+    patternRegex: internalExportPattern("JST_OFFSET_MS"),
     label: "_date.js の内部定数 JST_OFFSET_MS の export 復活",
     reason: "同上（公開export最小化で内部化したもの。宣言形と再 export 形の両方を拾う patternRegex）",
   },
   {
     file: "functions/api/_date.js",
-    pattern: "export const DAY_MS",
+    patternRegex: internalExportPattern("DAY_MS"),
     label: "_date.js の内部定数 DAY_MS の export",
-    reason: "DAY_MS も _date.js の内部実装（86400秒刻みの基礎定数）。一度も公開されていないため復活ではないが、公開されればラッパー（jstDays／utcDays）を迂回した日付生成の余地になる。禁止側に置くコストは小さく、内部／公開の境界をファイル単位で明示するため予防として見る",
+    reason: "DAY_MS も _date.js の内部実装（86400秒刻みの基礎定数）。一度も公開されていないため復活ではないが、公開されればラッパー（jstDays／utcDays）を迂回した日付生成の余地になる。禁止側に置くコストは小さく、内部／公開の境界をファイル単位で明示するため予防として見る。他の内部名と同じく、宣言形と再 export 形の両方を拾う patternRegex（生成式）で見る",
   },
   {
     file: "functions/api/_date.js",
-    pattern: "export function formatUtcDate",
+    patternRegex: internalExportPattern("formatUtcDate"),
     label: "_date.js の内部ヘルパー formatUtcDate の export",
-    reason: "formatUtcDate も _date.js の内部実装（UTC getter での整形）。一度も公開されていないため復活ではないが、公開されればラッパーを迂回した整形の余地になる。DAY_MS と同じく、内部／公開の境界をファイル単位で明示するため予防として見る",
+    reason: "formatUtcDate も _date.js の内部実装（UTC getter での整形）。一度も公開されていないため復活ではないが、公開されればラッパーを迂回した整形の余地になる。DAY_MS と同じく、内部／公開の境界をファイル単位で明示するため予防として見る。他の内部名と同じく、宣言形と再 export 形の両方を拾う patternRegex（生成式）で見る",
   },
 ];
 
