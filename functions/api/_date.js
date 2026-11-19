@@ -6,8 +6,11 @@
 // という同じ生成ロジックを別々に持っていた。日付境界は不具合の温床なので、
 // 生成ロジックはこの1か所に寄せる（2026-11-19、改善提案台帳の採用を受けて共通化）。
 // 境界ケースの確認は tools/check-date-boundaries.mjs でモック時刻により固定確認できる。
+// 公開する export は、利用側が実際に使う jstDays／utcDays／jstToday のみに絞る。
+// daysWithOffset／todayWithOffset／JST_OFFSET_MS は内部実装として公開しない
+// （ラッパーを迂回した呼び出しとオフセット指定ミスの余地を戻さないため。2026-11-19、改善提案台帳の採用を受けて最小化）。
 const DAY_MS = 86400 * 1000;
-export const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
+const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
 // Date を UTC getter で YYYY-MM-DD に整形する。
 function formatUtcDate(t) {
@@ -18,7 +21,7 @@ function formatUtcDate(t) {
 
 // オフセット（ミリ秒）を加えた「今日」から n 日分を、古い順に返す。
 // 基準時刻は1回だけ取る（日付の途中で現在時刻が進んでも、並びが崩れないように）。
-export function daysWithOffset(n, offsetMs) {
+function daysWithOffset(n, offsetMs) {
   const days = [];
   const base = Date.now() + offsetMs;
   for (let i = n - 1; i >= 0; i--) {
@@ -28,7 +31,7 @@ export function daysWithOffset(n, offsetMs) {
 }
 
 // オフセット（ミリ秒）を加えた「今日」を YYYY-MM-DD で返す。
-export function todayWithOffset(offsetMs) {
+function todayWithOffset(offsetMs) {
   return formatUtcDate(new Date(Date.now() + offsetMs));
 }
 
