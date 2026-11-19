@@ -50,6 +50,10 @@ const onScrollSettled = (callback, delay = SCROLL_SETTLED_DELAY) => {
   return cancel;
 };
 
+// スクロールスパイ共通の帯域定義（画面の上端から35%〜45%の帯を現在地の判定に使う）。
+// 目次ハイライトとヘッダーナビの両スパイで共用し、帯域の調整はここ1か所だけを直す
+const SPY_ROOT_MARGIN = "-35% 0px -55% 0px";
+
 // スクロールスパイ共通ヘルパー: 帯域内にある要素を Set で保持し、
 // 文書順（orderedEls の並び順）で最後のものを現在地として返す。
 // 目次ハイライトとヘッダーナビの両スパイで共用する（entries の届く順には依存しない）
@@ -285,7 +289,7 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
         if (holdGi !== null) return;
         applyFromVisible();
       },
-      { rootMargin: "-35% 0px -55% 0px" }
+      { rootMargin: SPY_ROOT_MARGIN }
     );
     catEls.forEach((cat) => tocSpy.observe(cat));
     // 固定の解除を先送りする処理は scheduleHoldRelease 側の共通ヘルパーが担う
@@ -624,6 +628,6 @@ if (hamburger && hamburgerMenu) {
   const spy = new IntersectionObserver((entries) => {
     visibleSections.update(entries);
     applyFromVisible();
-  }, { rootMargin: "-35% 0px -55% 0px" });
+  }, { rootMargin: SPY_ROOT_MARGIN });
   sections.forEach((s) => spy.observe(s));
 })();
