@@ -495,7 +495,7 @@ if (hamburger && hamburgerMenu) {
     '<p class="external-open-message" id="externalOpenMessage"></p>' +
     '<div class="external-open-actions">' +
     '<button type="button" class="external-open-cancel">キャンセル</button>' +
-    '<button type="button" class="external-open-confirm">新しいタブで開く</button>' +
+    '<button type="button" class="external-open-confirm">開く</button>' +
     "</div></div>";
   document.body.appendChild(modal);
 
