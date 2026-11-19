@@ -603,13 +603,18 @@ if (hamburger && hamburgerMenu) {
   }, true);
 })();
 
-// ヘッダーナビ: 表示中のセクションを現在地として示す
+// ヘッダーナビとハンバーガーメニュー: 表示中のセクションを現在地として示す
+// 両ナビは別々の nav ランドマークで、現在地は各ナビに1つずつ付ける。
+// モバイル（820px未満）ではヘッダーナビが display:none で読み上げ対象からも外れ、
+// ハンバーガーメニューを閉じている間は hidden で同様に外れるため、
+// 実際に使えるナビ側でだけ現在地が読み上げられる。デスクトップで両方開いても
+// ランドマークごとに1つずつなので、aria-current の重複とはみなさない。
 (function () {
-  const links = document.querySelectorAll('.header-nav a[href^="#"]');
+  const links = document.querySelectorAll('.header-nav a[href^="#"], .hamburger-menu a[href^="#"]');
   if (!links.length || !("IntersectionObserver" in window)) return;
-  const byId = {};
-  links.forEach((a) => { byId[a.getAttribute("href").slice(1)] = a; });
-  const sections = ["concept", "menu", "gallery", "info", "faq", "access"]
+  // top はハンバーガーメニューにだけあるリンク。対象に含めることで、
+  // ヒーロー表示中は Top が現在地になり、ヘッダーナビ側の古い現在地も消える
+  const sections = ["top", "concept", "menu", "gallery", "info", "faq", "access"]
     .map((id) => document.getElementById(id))
     .filter(Boolean);
   // 目次ハイライトと同じ共通ヘルパーで帯域内にあるセクションを保持し、
@@ -619,7 +624,7 @@ if (hamburger && hamburgerMenu) {
     const current = visibleSections.last();
     if (!current) return;
     links.forEach((a) => {
-      const isCurrent = a === byId[current.id];
+      const isCurrent = a.getAttribute("href") === "#" + current.id;
       a.classList.toggle("is-current", isCurrent);
       if (isCurrent) a.setAttribute("aria-current", "true");
       else a.removeAttribute("aria-current");
