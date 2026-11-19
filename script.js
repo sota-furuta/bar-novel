@@ -12,6 +12,69 @@ onScroll();
 const prefersReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const scrollToY = (y) => window.scrollTo({ top: y, behavior: prefersReducedMotion() ? "auto" : "smooth" });
 
+// 「スクロールが止まったら実行する」共通ヘルパー（デバウンスの一元化）。
+// scroll のたびにタイマーを先送りし、最後のスクロールから delay ミリ秒止まったら
+// callback を1回だけ実行する。スクロールが発生しない場合でも実行されるよう、
+// 登録時点から最初のタイマーをかける（保険）。戻り値は取り消し関数で、呼ぶと
+// リスナーとタイマーを解除して callback は実行されない（何度呼んでもよい）。
+// cancel を呼んでも呼び出し側の保持変数は自動で null にならない（null 化は呼び出し側の責務）。
+// スクロール停止判定の待ち時間（最後のスクロールからこの時間止まったら「止まった」とみなす）。
+// チューニングするときはこの1か所だけを変更する。
+const SCROLL_SETTLED_DELAY = 250;
+
+const onScrollSettled = (callback, delay = SCROLL_SETTLED_DELAY) => {
+  let timer = null;
+  let active = true;
+  const cleanup = () => {
+    window.removeEventListener("scroll", postpone);
+    if (timer) clearTimeout(timer);
+    timer = null;
+  };
+  const finish = () => {
+    if (!active) return;
+    active = false;
+    cleanup();
+    callback();
+  };
+  const postpone = () => {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(finish, delay);
+  };
+  const cancel = () => {
+    if (!active) return;
+    active = false;
+    cleanup();
+  };
+  window.addEventListener("scroll", postpone, { passive: true });
+  timer = setTimeout(finish, delay);
+  return cancel;
+};
+
+// スクロールスパイ共通の帯域定義（画面の上端から35%〜45%の帯を現在地の判定に使う）。
+// 目次ハイライトとヘッダーナビの両スパイで共用し、帯域の調整はここ1か所だけを直す
+const SPY_ROOT_MARGIN = "-35% 0px -55% 0px";
+
+// スクロールスパイ共通ヘルパー: 帯域内にある要素を Set で保持し、
+// 文書順（orderedEls の並び順）で最後のものを現在地として返す。
+// 目次ハイライトとヘッダーナビの両スパイで共用する（entries の届く順には依存しない）
+const createVisibleTracker = (orderedEls) => {
+  const visible = new Set();
+  return {
+    update(entries) {
+      entries.forEach((e) => {
+        if (e.isIntersecting) visible.add(e.target);
+        else visible.delete(e.target);
+      });
+    },
+    // 帯域内に要素が無ければ null、あれば文書順で最後の要素を返す
+    last() {
+      if (!visible.size) return null;
+      const ordered = [...visible].sort((a, b) => orderedEls.indexOf(a) - orderedEls.indexOf(b));
+      return ordered[ordered.length - 1];
+    },
+  };
+};
+
 // メニュー: DRINK / FOOD タブ切り替え
 const tabs = document.querySelectorAll(".menu-tab");
 const panels = document.querySelectorAll(".menu-panel");
@@ -50,6 +113,7 @@ tabs.forEach((tab) => {
 });
 
 // ドリンク一覧: 価格や銘柄の変更は、ここの数字を直すだけでOK（ギャラリーとメニューの両方に自動で反映される）
+// chip は目次チップの短縮表示名（見出しは cat の正式名称のまま）。カテゴリを追加・改名するときは、chip の付け忘れ・消し忘れに注意（例：Canadian and Irish → chip: "Canadian/Irish"）
 const DRINK_LISTS = {
   cocktails: [
     { cat: "Gin base", items: [["ギムレット", 900], ["ネグローニ", 900], ["マティーニ", 950], ["ジントニック", 750], ["ニンジャタートル", 800]] },
@@ -68,6 +132,7 @@ const DRINK_LISTS = {
     { cat: "Japanese", items: [["オールド", 750]] },
     { cat: "Smoky", items: [["アードベック10年", 900], ["アードベック5年", 900], ["ラフロイグ10年", 1200]] },
   ],
+  // spirits: 品数が増えたら目次の要否を再検討すること（判断と理由は利用側の目次条件の横のコメント参照）
   spirits: [
     { cat: "Gin", items: [["ボンベイサファイヤ", 850], ["タンカレーNo.10", 900]] },
     { cat: "Vodka", items: [["ズブロッカ", 800]] },
@@ -84,8 +149,8 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
   const catEls = [];
   const idxBtns = [];
   let idxEl = null;
-  // 目次ハイライトの現在地表示
-  const visibleCats = new Set();
+  // 目次ハイライトの現在地表示（共通ヘルパーで帯域内の見出しを保持する）
+  const visibleCats = createVisibleTracker(catEls);
   const setCurrent = (gi) => {
     idxBtns.forEach((b, bi) => {
       const current = bi === gi;
@@ -95,9 +160,9 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
     });
   };
   const applyFromVisible = () => {
-    if (visibleCats.size) {
-      const ordered = [...visibleCats].sort((a, b) => catEls.indexOf(a) - catEls.indexOf(b));
-      const gi = catEls.indexOf(ordered[ordered.length - 1]);
+    const lastCat = visibleCats.last();
+    if (lastCat) {
+      const gi = catEls.indexOf(lastCat);
       if (gi >= 0) { setCurrent(gi); return; }
     }
     // 帯域にどの見出しも入っていない間は、帯域（rootMargin -35% の上端）の直上に
@@ -113,10 +178,10 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
   };
   // チップタップ直後のハイライト固定：スクロール完了までObserverの更新を無視する
   let holdGi = null;
-  let holdTimer = null;
+  let cancelHoldRelease = null;
   // 開いた直後の初期ハイライト（スクロール完了待ち）の保留を取り消すための受け口。
   // チップをタップしたら保留を取り消し、タップ先のハイライトを初期ハイライトで
-  // 上書きしないようにする（保留側の finish が固定解除より後に発火しうるため、
+  // 上書きしないようにする（保留側の実行が固定解除より後に来うるため、
   // holdGi の状態チェックでは防げない）
   let pendingInitial = null;
   // タップした見出しの着地位置（.drink-cat の scroll-margin-top の計算値を直接読む）
@@ -134,9 +199,12 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
     const bEl = document.getElementById("closureBanner");
     return (h ? h.offsetHeight : 68) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0) + tabsH + headH;
   };
+  // 固定の解除は共通ヘルパー onScrollSettled に寄せる（スクロール中はヘルパー側が
+  // タイマーを先送りし続けるため、scroll イベントから個別に再予約する必要はない）
   const scheduleHoldRelease = () => {
-    if (holdTimer) clearTimeout(holdTimer);
-    holdTimer = setTimeout(() => {
+    if (cancelHoldRelease) cancelHoldRelease();
+    cancelHoldRelease = onScrollSettled(() => {
+      cancelHoldRelease = null;
       if (holdGi === null) return;
       const gi = holdGi;
       holdGi = null;
@@ -150,7 +218,7 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
         // preventScroll でフォーカス自体による余計なスクロールを起こさない
         if (catEls[gi]) catEls[gi].focus({ preventScroll: true });
       }
-    }, 250);
+    });
   };
   if (["cocktails", "whiskey"].includes(box.dataset.menuList) && box.closest(".drink-detail") && groups.length > 3) { // スピリッツは6品のみで一覧が短いため目次を付けない（意図的に除外）
     // 目次チップの上に小さな案内ラベルを付ける（チップの役割を初めて見る人にも伝える）
@@ -216,21 +284,16 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
   if (idxEl && idxBtns.length && "IntersectionObserver" in window) {
     const tocSpy = new IntersectionObserver(
       (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) visibleCats.add(e.target);
-          else visibleCats.delete(e.target);
-        });
+        visibleCats.update(entries);
         // タップ直後の固定中は、帯域に入った次の見出しで上書きしない
         if (holdGi !== null) return;
         applyFromVisible();
       },
-      { rootMargin: "-35% 0px -55% 0px" }
+      { rootMargin: SPY_ROOT_MARGIN }
     );
     catEls.forEach((cat) => tocSpy.observe(cat));
-    // スクロール中は固定の解除を先送りし、止まってから解除する
-    window.addEventListener("scroll", () => {
-      if (holdGi !== null) scheduleHoldRelease();
-    }, { passive: true });
+    // 固定の解除を先送りする処理は scheduleHoldRelease 側の共通ヘルパーが担う
+    // （ヘルパーが scroll を監視してタイマーを先送りするため、ここでの個別登録は不要）
   }
   // 一覧を開いた直後に、表示中のカテゴリを初期ハイライトする
   const detailEl = box.closest(".drink-detail");
@@ -246,32 +309,17 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
       // 前回の保留が残っていたら取り消す（保留は常に1つだけにする）
       if (pendingInitial) pendingInitial();
       // 初期ハイライトは固定待ち（60ms）ではなく、開いた直後の自動スクロール
-      // （makeExclusive 側の scrollToY）が完了してから行う。スクロール中は
-      // タイマーを先送りし、止まってから実行する（チップの固定解除と同じ方式）。
-      // スクロールが発生しない場合（既に着地位置にいる／reduced-motion で即時
-      // 移動した場合）でも実行されるよう、最初のタイマー自体が保険になる。
+      // （makeExclusive 側の scrollToY）が完了してから行う。共通ヘルパー
+      // onScrollSettled がスクロール中はタイマーを先送りし、止まってから実行する
+      // （チップの固定解除と同じヘルパー）。スクロールが発生しない場合（既に着地
+      // 位置にいる／reduced-motion で即時移動した場合）でも、ヘルパーの最初の
+      // タイマーが保険になって実行される。
       // 途中で閉じた場合は highlightOnOpen 側の open チェックで何もしない。
-      let timer = null;
-      const finish = () => {
-        window.removeEventListener("scroll", onScroll);
-        if (timer) clearTimeout(timer);
-        timer = null;
+      // pendingInitial にはヘルパーの取り消し関数が入る（チップタップ時に呼ぶ受け口）
+      pendingInitial = onScrollSettled(() => {
         pendingInitial = null;
         highlightOnOpen();
-      };
-      const onScroll = () => {
-        if (timer) clearTimeout(timer);
-        timer = setTimeout(finish, 250);
-      };
-      // チップタップ時などに保留を取り消すための受け口
-      pendingInitial = () => {
-        window.removeEventListener("scroll", onScroll);
-        if (timer) clearTimeout(timer);
-        timer = null;
-        pendingInitial = null;
-      };
-      window.addEventListener("scroll", onScroll, { passive: true });
-      timer = setTimeout(finish, 250);
+      });
     });
   }
 });
@@ -555,30 +603,36 @@ if (hamburger && hamburgerMenu) {
   }, true);
 })();
 
-// ヘッダーナビ: 表示中のセクションを現在地として示す
+// ヘッダーナビとハンバーガーメニュー: 表示中のセクションを現在地として示す
+// 両ナビは別々の nav ランドマークで、現在地は各ナビに1つずつ付ける。
+// モバイル（820px未満）ではヘッダーナビが display:none で読み上げ対象からも外れ、
+// ハンバーガーメニューを閉じている間は hidden で同様に外れるため、
+// 実際に使えるナビ側でだけ現在地が読み上げられる。デスクトップで両方開いても
+// ランドマークごとに1つずつなので、aria-current の重複とはみなさない。
 (function () {
-  const links = document.querySelectorAll('.header-nav a[href^="#"]');
+  const links = document.querySelectorAll('.header-nav a[href^="#"], .hamburger-menu a[href^="#"]');
   if (!links.length || !("IntersectionObserver" in window)) return;
-  const byId = {};
-  links.forEach((a) => { byId[a.getAttribute("href").slice(1)] = a; });
-  const sections = ["concept", "menu", "gallery", "info", "faq", "access"]
+  // top はハンバーガーメニューにだけあるリンク。対象に含めることで、
+  // ヒーロー表示中は Top が現在地になり、ヘッダーナビ側の古い現在地も消える
+  const sections = ["top", "concept", "menu", "gallery", "info", "faq", "access"]
     .map((id) => document.getElementById(id))
     .filter(Boolean);
-  // 目次ハイライトと同じ方式: 帯域内にあるセクションを集合で保持し、
+  // 目次ハイライトと同じ共通ヘルパーで帯域内にあるセクションを保持し、
   // 文書順で最後のものを現在地とする（entries の届く順には依存しない）
-  const visibleSections = new Set();
+  const visibleSections = createVisibleTracker(sections);
   const applyFromVisible = () => {
-    if (!visibleSections.size) return;
-    const ordered = [...visibleSections].sort((a, b) => sections.indexOf(a) - sections.indexOf(b));
-    const current = ordered[ordered.length - 1];
-    links.forEach((a) => a.classList.toggle("is-current", a === byId[current.id]));
+    const current = visibleSections.last();
+    if (!current) return;
+    links.forEach((a) => {
+      const isCurrent = a.getAttribute("href") === "#" + current.id;
+      a.classList.toggle("is-current", isCurrent);
+      if (isCurrent) a.setAttribute("aria-current", "true");
+      else a.removeAttribute("aria-current");
+    });
   };
   const spy = new IntersectionObserver((entries) => {
-    entries.forEach((e) => {
-      if (e.isIntersecting) visibleSections.add(e.target);
-      else visibleSections.delete(e.target);
-    });
+    visibleSections.update(entries);
     applyFromVisible();
-  }, { rootMargin: "-35% 0px -55% 0px" });
+  }, { rootMargin: SPY_ROOT_MARGIN });
   sections.forEach((s) => spy.observe(s));
 })();

@@ -711,6 +711,13 @@ main > .section:first-child {
   color: var(--copper-soft);
 }
 
+/* 現在地（ヘッダーナビの .is-current と同じ銅色。左の帯でホバーと区別する） */
+.hamburger-menu a.is-current {
+  color: #ffb35c;
+  background: rgba(208, 138, 74, 0.16);
+  box-shadow: inset 3px 0 0 #ffb35c;
+}
+
 .hamburger-menu .hamburger-insta {
   margin-top: 6px;
   border-top: 1px solid #5a3a1d;

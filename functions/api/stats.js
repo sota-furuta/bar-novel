@@ -4,35 +4,14 @@
 // 日付の基準: taps は日本時間（JST）で記録する一方、RUM の date は UTC 基準。
 // そのため analytics は UTC の日付で取得・集計し、画面側で基準を注記する
 // （JST の日付のまま取得すると、日別の帰属が9時間分ずれるため）。
+// 日付生成は共通ヘルパー（_date.js）に寄せている。JST と UTC でオフセットだけが違う。
+import { jstDays, utcDays } from "./_date.js";
+
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: { "Content-Type": "application/json" },
   });
-}
-
-function jstDays(n) {
-  const days = [];
-  const base = Date.now() + 9 * 60 * 60 * 1000;
-  for (let i = n - 1; i >= 0; i--) {
-    const t = new Date(base - i * 86400 * 1000);
-    const m = String(t.getUTCMonth() + 1).padStart(2, "0");
-    const d = String(t.getUTCDate()).padStart(2, "0");
-    days.push(`${t.getUTCFullYear()}-${m}-${d}`);
-  }
-  return days;
-}
-
-function utcDays(n) {
-  const days = [];
-  const base = Date.now();
-  for (let i = n - 1; i >= 0; i--) {
-    const t = new Date(base - i * 86400 * 1000);
-    const m = String(t.getUTCMonth() + 1).padStart(2, "0");
-    const d = String(t.getUTCDate()).padStart(2, "0");
-    days.push(`${t.getUTCFullYear()}-${m}-${d}`);
-  }
-  return days;
 }
 
 async function runRumQuery(env, start, end, extraFilter) {
