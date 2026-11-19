@@ -208,6 +208,24 @@ const FORBIDDEN = [
     label: "初期ハイライトの 60ms 固定待ち",
     reason: "スクロール完了待ち（onScrollSettled）へ置き換え済み。戻っていたら巻き戻し",
   },
+  {
+    file: "functions/api/_date.js",
+    pattern: "export function daysWithOffset",
+    label: "_date.js の内部ヘルパー daysWithOffset の export 復活",
+    reason: "公開export最小化（2026-11-19）で内部化したもの。CRITICAL は残すべき3 export（jstDays／utcDays／jstToday）の存続を見るだけで、絞った公開面の復活は検知できないため、禁止側でも見る。戻っていたら巻き戻し",
+  },
+  {
+    file: "functions/api/_date.js",
+    pattern: "export function todayWithOffset",
+    label: "_date.js の内部ヘルパー todayWithOffset の export 復活",
+    reason: "同上（公開export最小化で内部化したもの）",
+  },
+  {
+    file: "functions/api/_date.js",
+    pattern: "export const JST_OFFSET_MS",
+    label: "_date.js の内部定数 JST_OFFSET_MS の export 復活",
+    reason: "同上（公開export最小化で内部化したもの）",
+  },
 ];
 
 const forMain = process.argv.includes("--for-main");
