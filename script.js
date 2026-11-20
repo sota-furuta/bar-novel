@@ -50,7 +50,6 @@ const onScrollSettled = (callback, delay = SCROLL_SETTLED_DELAY) => {
   return cancel;
 };
 
-
 // 初期ハイライト専用の「スクロールが止まったら実行する」処理。
 // scrollend イベントに対応するブラウザでは scrollend を主経路にし、
 // スクロールが止まった瞬間に実行する。未対応ブラウザでは共通ヘルパー
