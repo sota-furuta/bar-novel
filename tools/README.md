@@ -7,9 +7,9 @@ BAR NOVEL の検証用スタブテストと巻き戻し検知スクリプトの�
 | スクリプト | 対象 | 再実行するタイミング |
 |---|---|---|
 | check-initial-highlight.mjs | 目次チップの初期ハイライト（保留・取り消しの流れ） | script.js の初期ハイライト（highlightOnOpen / pendingInitial）や目次チップの click ハンドラ、スクロール停止判定の仕組みを触ったとき |
-| check-header-spy.mjs | ヘッダーナビ／ハンバーガーメニューの現在地表示（is-current・aria-current） | script.js のヘッダースパイ（末尾の IIFE）や共通ヘルパー、index.html のナビにリンクを増減したとき |
-| check-date-boundaries.mjs | 日付の境界（JST 9:00 の前後・月末・年末・うるう年） | functions/api/_date.js や stats.js を触ったとき |
-| check-critical-lines.mjs | 消えてはいけない行の存続（CRITICAL）と禁止パターン（FORBIDDEN） | 検証ブランチへの push 前・本番反映前に、巻き戻しの有無を確認するとき（`--for-main` を付けると main 側のファイルで確認する） |
+| check-header-spy.mjs | ヘッダーナビ／ハンバーガーメニューの現在地表示（is-current・aria-current） | script.js のヘッダースパイ（末尾の IIFE）や共通ヘルパー、index.html のナビにリンクを増減したとき・index.html に新しいセクションを追加したとき |
+| check-date-boundaries.mjs | 日付の境界（JST 9:00 の前後・月末・年末・うるう年） | functions/api/stats.js または track.js の日付生成・集計範囲を触ったとき（日付生成は functions/api/_date.js の共通ヘルパーに寄せてある） |
+| check-critical-lines.mjs | 消えてはいけない行の存続（CRITICAL）と禁止パターン（FORBIDDEN） | verification へ push した後（リモートの最新を新しく取得したフォルダで実行する。手元の古いフォルダでは巻き戻しを見逃す）・本番反映前 |
 
 実行例：
 
@@ -19,3 +19,9 @@ node tools/check-header-spy.mjs
 node tools/check-date-boundaries.mjs
 node tools/check-critical-lines.mjs
 ```
+
+本番（main）側で check-critical-lines.mjs を実行したい場合は、tools/ は
+verification 専用のため main の取得フォルダにはスクリプト自体がない。検証側から
+このファイルだけを main 取得フォルダの tools/ へ一時コピーしてから
+`node tools/check-critical-lines.mjs --for-main` で実行すること。検証フォルダで
+そのまま `--for-main` を付けても verification 側しか見ない。

@@ -279,7 +279,9 @@ runCase("構造: スパイの対象と方式", () => {
   check("構造", "sections の先頭に top が含まれる", spyIife.includes('["top", "concept", "menu", "gallery", "info", "faq", "access"]'), true);
   // byId マップの再導入だけを拾う。コメント中の "byId 方式" といった
   // 文字列だけの出現では落ちないよう、コードらしい出現に絞る。
-  const byIdCodePattern = /(?:const|let|var)\s+byId\b|\bbyId\s*(?:\[|\.|=)/;
+  // ハーネス自身が byIdMap という識別子を使っているため、再導入時の
+  // 名前が byIdMap の場合も拾えるよう (?:Map)? を付ける。
+  const byIdCodePattern = /(?:const|let|var)\s+byId(?:Map)?\b|\bbyId(?:Map)?\s*(?:\[|\.|=)/;
   check("構造", "byId 方式へ戻っていない", byIdCodePattern.test(spyIife), false);
   check("構造", "現在地の判定は href の一致で全リンクを走査する", spyIife.includes('a.getAttribute("href") === "#" + current.id'), true);
   const h = makeHarness();
