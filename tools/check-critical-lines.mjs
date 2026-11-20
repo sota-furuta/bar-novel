@@ -97,9 +97,9 @@ const CRITICAL = [
   },
   {
     file: "script.js",
-    pattern: "pendingInitial = onScrollSettled(",
+    pattern: "pendingInitial = onScrollEndOrSettled(",
     label: "初期ハイライトのスクロール完了待ち",
-    reason: "60ms 固定待ちから置き換えた仕組みそのもの。1回巻き戻って復旧した",
+    reason: "60ms 固定待ちから置き換えた仕組みそのもの。1回巻き戻って復旧した。scrollend 主経路化（2026-11-20）で onScrollSettled 直呼びから onScrollEndOrSettled 経由へ変わったため、パターンも追随する",
   },
   {
     file: "script.js",

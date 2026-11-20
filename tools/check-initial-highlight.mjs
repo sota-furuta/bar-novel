@@ -1,7 +1,9 @@
 // 初期ハイライトの保留・取り消しの確認スクリプト（BAR NOVEL ドリンク目次）
 //
 // 一覧を開いた直後の初期ハイライトは、自動スクロールが止まってから
-// 先頭のチップを点ける仕組みになっている（250msデバウンス＋scroll リスナー）。
+// 先頭のチップを点ける仕組みになっている（scrollend 対応ブラウザでは scrollend が主経路、
+// 未対応ブラウザでは SCROLL_SETTLED_DELAY のデバウンス＋scroll リスナーがフォールバック。
+// 対応ブラウザでもスクロールが無い場合はデバウンスが保険）。
 // その保留中に目次チップをタップした場合は、保留を取り消して
 // タップ先のハイライトを維持しなければならない。
 //
@@ -26,10 +28,11 @@
 //
 // 方式:
 // テスト用の複製ロジックは持たない。script.js のソースから
-// 共通ヘルパー onScrollSettled（スクロールが止まったら実行する仕組みで、
-// 初期ハイライトの保留はこのヘルパーの取り消し関数が受け口になる）と
-// highlightOnOpen の定義、toggle ハンドラ・チップ click ハンドラの
-// 登録コードそのものを取り出して、スタブ環境で実行する。
+// 共通ヘルパー onScrollSettled（スクロールが止まったら実行する仕組み）と
+// 初期ハイライト専用の onScrollEndOrSettled（scrollend 主経路＋デバウンスの
+// フォールバック／保険で、初期ハイライトの保留はこの関数の取り消し関数が
+// 受け口になる）と highlightOnOpen の定義、toggle ハンドラ・
+// チップ click ハンドラの登録コードそのものを取り出して、スタブ環境で実行する。
 // スタブ環境は、フェイクタイマー（手動時計）と、登録順どおりに
 // リスナーを呼ぶフェイク window（scroll）だけを用意し、
 // setCurrent の呼び出し列でハイライトの遷移を判定する。
@@ -94,6 +97,7 @@ if (settledDelayStart < 0) {
 }
 const settledDelayCode = source.slice(settledDelayStart, settledDelayStart + settledDelayMarker.length);
 const settledCode = extractFrom(source, "const onScrollSettled = (callback, delay = SCROLL_SETTLED_DELAY) => {", "onScrollSettled");
+const scrollEndCode = extractFrom(source, "const onScrollEndOrSettled = (callback) => {", "onScrollEndOrSettled");
 const highlightCode = extractFrom(source, "const highlightOnOpen = () => {", "highlightOnOpen");
 const toggleCode = extractFrom(source, 'detailEl.addEventListener("toggle", () => {', "初期ハイライトの toggle ハンドラ");
 const chipCode = extractFrom(source, 'b.addEventListener("click", () => {\n        if (!catEls[gi]) return;', "目次チップの click ハンドラ");
@@ -157,9 +161,12 @@ function makeWindow() {
   };
 }
 
-function makeHarness(tappedGi = 2) {
+function makeHarness(tappedGi = 2, { scrollEndSupported = false } = {}) {
   const clock = makeClock();
   const win = makeWindow();
+  // scrollend 対応ブラウザの再現: "onscrollend" in window が true になるよう、
+  // プロパティだけを用意する（実際の発火は dispatch("scrollend") で行う）
+  if (scrollEndSupported) win.onscrollend = null;
   const detailEl = {
     open: false,
     handlers: {},
@@ -193,6 +200,7 @@ function makeHarness(tappedGi = 2) {
     const scheduleHoldRelease = () => { calls.holdRelease++; };
     ${settledDelayCode}
     ${settledCode}
+    ${scrollEndCode}
     ${highlightCode}
     ${toggleCode}
     ${chipCode}
@@ -363,6 +371,56 @@ runCase("7. 閉じたまま保険タイマーが発火した後に開き直す�
   check("7", "完了後は scroll リスナーが残らない", h.win.listenerCount("scroll"), 0);
 });
 
+
+runCase("8. scrollend対応→停止で scrollend が発火（SCROLL_SETTLED_DELAY を待たず先頭、二重発火なし）", () => {
+  const h = makeHarness(2, { scrollEndSupported: true });
+  h.detailEl.open = true;
+  h.detailEl.fireToggle();
+  check("8", "scrollend リスナーが登録される", h.win.listenerCount("scrollend"), 1);
+  check("8", "保険のデバウンス側 scroll リスナーも登録される", h.win.listenerCount("scroll"), 1);
+  h.clock.advance(100);
+  h.win.dispatch("scroll");
+  h.clock.advance(50);
+  check("8", "scrollend 前はまだ点かない", h.api.calls.history, []);
+  h.win.dispatch("scrollend");
+  check("8", "scrollend で即時に先頭が点く（SCROLL_SETTLED_DELAY 未満）", h.api.calls.history, [0]);
+  check("8", "完了後は保留が消える", h.api.getPending(), null);
+  check("8", "scrollend リスナーが残らない", h.win.listenerCount("scrollend"), 0);
+  check("8", "scroll リスナーが残らない", h.win.listenerCount("scroll"), 0);
+  check("8", "タイマーが残らない", h.clock.pendingCount(), 0);
+  h.clock.advance(1000);
+  h.win.dispatch("scrollend");
+  check("8", "時間が経っても二重発火しない", h.api.calls.history, [0]);
+});
+
+runCase("9. scrollend対応→保留中にチップタップ（scrollend ごと取り消し）", () => {
+  const h = makeHarness(2, { scrollEndSupported: true });
+  h.detailEl.open = true;
+  h.detailEl.fireToggle();
+  h.clock.advance(100);
+  h.b.click();
+  check("9", "タップで scrollend リスナーが外れる", h.win.listenerCount("scrollend"), 0);
+  check("9", "タップで scroll リスナーが外れる", h.win.listenerCount("scroll"), 0);
+  check("9", "タップでタイマーが消える", h.clock.pendingCount(), 0);
+  check("9", "タップ先が点く", h.api.calls.history, [2]);
+  h.win.dispatch("scrollend");
+  h.clock.advance(1000);
+  check("9", "scrollend が来ても先頭で上書きされない", h.api.calls.history, [2]);
+  check("9", "現在地はタップ先のまま", h.api.calls.current, 2);
+});
+
+runCase("10. scrollend対応→スクロールなし（保険のデバウンスで先頭）", () => {
+  const h = makeHarness(2, { scrollEndSupported: true });
+  h.detailEl.open = true;
+  h.detailEl.fireToggle();
+  h.clock.advance(249);
+  check("10", "SCROLL_SETTLED_DELAY 未満ではまだ点かない", h.api.calls.history, []);
+  h.clock.advance(1);
+  check("10", "scrollend が無くても SCROLL_SETTLED_DELAY で先頭が点く", h.api.calls.history, [0]);
+  check("10", "scrollend リスナーが残らない", h.win.listenerCount("scrollend"), 0);
+  check("10", "タイマーが残らない", h.clock.pendingCount(), 0);
+});
+
 // --- 構造ガード（巻き戻し・順序の退行検出） ---
 
 runCase("構造: 60ms固定待ちへ巻き戻っていない", () => {
@@ -370,7 +428,11 @@ runCase("構造: 60ms固定待ちへ巻き戻っていない", () => {
   check("構造", "onScrollSettled のデフォルト遅延は名前付き定数 SCROLL_SETTLED_DELAY", settledCode.includes("delay = SCROLL_SETTLED_DELAY"), true);
   check("構造", "SCROLL_SETTLED_DELAY は250ms", source.includes("const SCROLL_SETTLED_DELAY = 250;"), true);
   check("構造", "ヘルパーのタイマーは登録時＋先送りで2か所", settledCode.split("setTimeout(finish, delay)").length - 1, 2);
-  check("構造", "toggle 側は保留を onScrollSettled で作る", toggleCode.includes("pendingInitial = onScrollSettled("), true);
+  check("構造", "toggle 側は保留を onScrollEndOrSettled で作る", toggleCode.includes("pendingInitial = onScrollEndOrSettled("), true);
+  check("構造", "onScrollEndOrSettled は scrollend 対応を判定する", scrollEndCode.includes('"onscrollend" in window'), true);
+  check("構造", "onScrollEndOrSettled は未対応時に onScrollSettled へフォールバックする", scrollEndCode.includes("return onScrollSettled(callback)"), true);
+  check("構造", "onScrollEndOrSettled は保険のデバウンスを並走させる", scrollEndCode.includes("cancelDebounce = onScrollSettled(finish)"), true);
+  check("構造", "onScrollEndOrSettled は scrollend リスナーを登録する", scrollEndCode.includes('addEventListener("scrollend", finish)'), true);
 });
 
 runCase("構造: チップ側の取り消しは setCurrent より前に呼ばれる", () => {

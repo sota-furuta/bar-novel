@@ -277,7 +277,10 @@ runCase("6. access が帯域内（末尾セクションでも両ナビに付く�
 runCase("構造: スパイの対象と方式", () => {
   check("構造", "セレクタが両ナビ対象の完全な文字列と一致する（フッター等への拡大を検出）", spyIife.includes(`document.querySelectorAll('${EXPECTED_SELECTOR}')`), true);
   check("構造", "sections の先頭に top が含まれる", spyIife.includes('["top", "concept", "menu", "gallery", "info", "faq", "access"]'), true);
-  check("構造", "byId 方式へ戻っていない", spyIife.includes("byId"), false);
+  // byId マップの再導入だけを拾う。コメント中の "byId 方式" といった
+  // 文字列だけの出現では落ちないよう、コードらしい出現に絞る。
+  const byIdCodePattern = /(?:const|let|var)\s+byId\b|\bbyId\s*(?:\[|\.|=)/;
+  check("構造", "byId 方式へ戻っていない", byIdCodePattern.test(spyIife), false);
   check("構造", "現在地の判定は href の一致で全リンクを走査する", spyIife.includes('a.getAttribute("href") === "#" + current.id'), true);
   const h = makeHarness();
   check("構造", "帯域定義 rootMargin は目次側と共通の値", h.api.instances[0].opts.rootMargin, "-35% 0px -55% 0px");
