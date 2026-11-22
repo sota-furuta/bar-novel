@@ -25,3 +25,5 @@ verification 専用のため main の取得フォルダにはスクリプト自�
 このファイルだけを main 取得フォルダの tools/ へ一時コピーしてから
 `node tools/check-critical-lines.mjs --for-main` で実行すること。検証フォルダで
 そのまま `--for-main` を付けても verification 側しか見ない。
+
+新しいスタブテストを追加したら、この README の表にも1行追加すること。
