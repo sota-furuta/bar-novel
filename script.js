@@ -480,6 +480,25 @@ if (hamburger && hamburgerMenu) {
   hamburgerMenu.querySelectorAll("a").forEach((a) => {
     a.addEventListener("click", () => setMenu(false));
   });
+  // メニューを触っている間だけ、後ろのページのスクロールを止める。
+  // メニューがその方向へスクロールできる間はメニュー側が動き、
+  // 端まで来たら指の動きを止めてページへ伝えない（ページ側を触ればページがスクロールする）
+  let menuTouchY = null;
+  hamburgerMenu.addEventListener("touchstart", (e) => {
+    menuTouchY = e.touches[0].clientY;
+  }, { passive: true });
+  hamburgerMenu.addEventListener("touchmove", (e) => {
+    if (menuTouchY === null) return;
+    const y = e.touches[0].clientY;
+    const dy = y - menuTouchY;
+    menuTouchY = y;
+    const maxScroll = hamburgerMenu.scrollHeight - hamburgerMenu.clientHeight;
+    const canScroll = (dy < 0 && hamburgerMenu.scrollTop < maxScroll) || (dy > 0 && hamburgerMenu.scrollTop > 0);
+    if (!canScroll) e.preventDefault();
+  }, { passive: false });
+  const endMenuTouch = () => { menuTouchY = null; };
+  hamburgerMenu.addEventListener("touchend", endMenuTouch);
+  hamburgerMenu.addEventListener("touchcancel", endMenuTouch);
   document.addEventListener("click", (e) => {
     if (!hamburgerMenu.hidden && !e.target.closest(".site-header")) setMenu(false);
   });
