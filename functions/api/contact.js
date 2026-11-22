@@ -3,6 +3,7 @@
 // POST   /api/contact { password, action: "status", id, status } -> 状態変更（open/done）
 // GET    /api/contact (Header: X-Admin-Password) -> { contacts: [...] }
 // DELETE /api/contact { password, id } -> 削除
+import { checkLock, recordFailure, recordSuccess, lockedResponse, LOCK_MINUTES } from "./_auth-guard.js";
 const KEY = "contacts";
 const CATEGORIES = ["機能の要望", "不具合の報告", "質問", "その他"];
 
@@ -30,9 +31,14 @@ export async function onRequestPost({ request, env }) {
   } catch {
     return Response.json({ ok: false, error: "bad_json" }, { status: 400 });
   }
+  const lock = await checkLock(env, request);
+  if (lock.locked) return lockedResponse(lock.retryAfterMinutes);
   if (!authorized(env, body.password)) {
+    const r = await recordFailure(env, request, "/api/contact");
+    if (r.lockedNow) return lockedResponse(LOCK_MINUTES);
     return Response.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
+  await recordSuccess(env, request, "/api/contact", false);
   // 状態変更
   if (body.action === "status") {
     const id = String(body.id || "");
@@ -68,9 +74,14 @@ export async function onRequestGet({ request, env }) {
   if (!env.NEWS_KV) {
     return Response.json({ contacts: [] }, { headers: { "Cache-Control": "no-store" } });
   }
+  const lock = await checkLock(env, request);
+  if (lock.locked) return lockedResponse(lock.retryAfterMinutes);
   if (!authorized(env, request.headers.get("X-Admin-Password") || "")) {
+    const r = await recordFailure(env, request, "/api/contact");
+    if (r.lockedNow) return lockedResponse(LOCK_MINUTES);
     return Response.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
+  await recordSuccess(env, request, "/api/contact", false);
   const contacts = await readList(env);
   return Response.json({ contacts }, { headers: { "Cache-Control": "no-store" } });
 }
@@ -85,9 +96,14 @@ export async function onRequestDelete({ request, env }) {
   } catch {
     return Response.json({ ok: false, error: "bad_json" }, { status: 400 });
   }
+  const lock = await checkLock(env, request);
+  if (lock.locked) return lockedResponse(lock.retryAfterMinutes);
   if (!authorized(env, body.password)) {
+    const r = await recordFailure(env, request, "/api/contact");
+    if (r.lockedNow) return lockedResponse(LOCK_MINUTES);
     return Response.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
+  await recordSuccess(env, request, "/api/contact", false);
   const id = String(body.id || "");
   const list = (await readList(env)).filter((c) => c.id !== id);
   await env.NEWS_KV.put(KEY, JSON.stringify(list));

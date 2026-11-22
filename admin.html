@@ -818,7 +818,7 @@
         body: JSON.stringify({ password: pw })
       });
       const data = await res.json().catch(() => ({ ok: false }));
-      return !!data.ok;
+      return data;
     }
 
     document.getElementById("login").addEventListener("click", async (ev) => {
@@ -828,10 +828,14 @@
       gateStatusEl.textContent = "確認中…";
       gateStatusEl.className = "";
       try {
-        if (await tryLogin(pw)) {
+        const loginData = await tryLogin(pw);
+        if (loginData.ok) {
           password = pw;
           sessionStorage.setItem("barnovel_pw", pw);
           showEditor();
+        } else if (loginData.locked) {
+          gateStatusEl.textContent = "試行回数が上限に達しました。あと約" + (loginData.retryAfterMinutes || 15) + "分たってからお試しください。";
+          gateStatusEl.className = "err";
         } else {
           gateStatusEl.textContent = "パスワードが違います。";
           gateStatusEl.className = "err";
@@ -896,7 +900,7 @@
 
     // 同じタブで開き直したときは、パスワードが合えばそのまま編集画面へ
     if (password) {
-      tryLogin(password).then(ok => { if (ok) showEditor(); else sessionStorage.removeItem("barnovel_pw"); });
+      tryLogin(password).then(data => { if (data && data.ok) showEditor(); else sessionStorage.removeItem("barnovel_pw"); });
     }
   </script>
 </body>
