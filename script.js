@@ -50,6 +50,36 @@ const onScrollSettled = (callback, delay = SCROLL_SETTLED_DELAY) => {
   return cancel;
 };
 
+// 初期ハイライト専用の「スクロールが止まったら実行する」処理。
+// scrollend イベントに対応するブラウザでは scrollend を主経路にし、
+// スクロールが止まった瞬間に実行する。未対応ブラウザでは共通ヘルパー
+// onScrollSettled のデバウンス（SCROLL_SETTLED_DELAY）にフォールバックする。
+// 対応ブラウザでも、スクロールが一切発生しない場合（既に着地位置にいる等）は
+// scrollend が発火しないため、保険としてデバウンス側も並走させ、
+// 先に来た方で1回だけ実行してもう一方を取り消す。
+// 戻り値は onScrollSettled と同じ取り消し関数（何度呼んでもよい）。
+const onScrollEndOrSettled = (callback) => {
+  if (!("onscrollend" in window)) return onScrollSettled(callback);
+  let done = false;
+  let cancelDebounce = null;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    window.removeEventListener("scrollend", finish);
+    if (cancelDebounce) cancelDebounce();
+    callback();
+  };
+  const cancel = () => {
+    if (done) return;
+    done = true;
+    window.removeEventListener("scrollend", finish);
+    if (cancelDebounce) cancelDebounce();
+  };
+  window.addEventListener("scrollend", finish);
+  cancelDebounce = onScrollSettled(finish);
+  return cancel;
+};
+
 // スクロールスパイ共通の帯域定義（画面の上端から35%〜45%の帯を現在地の判定に使う）。
 // 目次ハイライトとヘッダーナビの両スパイで共用し、帯域の調整はここ1か所だけを直す
 const SPY_ROOT_MARGIN = "-35% 0px -55% 0px";
@@ -309,14 +339,15 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
       // 前回の保留が残っていたら取り消す（保留は常に1つだけにする）
       if (pendingInitial) pendingInitial();
       // 初期ハイライトは固定待ち（60ms）ではなく、開いた直後の自動スクロール
-      // （makeExclusive 側の scrollToY）が完了してから行う。共通ヘルパー
-      // onScrollSettled がスクロール中はタイマーを先送りし、止まってから実行する
-      // （チップの固定解除と同じヘルパー）。スクロールが発生しない場合（既に着地
-      // 位置にいる／reduced-motion で即時移動した場合）でも、ヘルパーの最初の
-      // タイマーが保険になって実行される。
+      // （makeExclusive 側の scrollToY）が完了してから行う。初期ハイライト専用の
+      // onScrollEndOrSettled が完了を待ち、scrollend 対応ブラウザでは
+      // scrollend で即時に、未対応ブラウザでは共通ヘルパー onScrollSettled の
+      // デバウンスで実行する。スクロールが発生しない場合（既に着地位置にいる／
+      // reduced-motion で即時移動した場合）でも、デバウンス側の最初のタイマーが
+      // 保険になって実行される。
       // 途中で閉じた場合は highlightOnOpen 側の open チェックで何もしない。
-      // pendingInitial にはヘルパーの取り消し関数が入る（チップタップ時に呼ぶ受け口）
-      pendingInitial = onScrollSettled(() => {
+      // pendingInitial には取り消し関数が入る（チップタップ時に呼ぶ受け口）
+      pendingInitial = onScrollEndOrSettled(() => {
         pendingInitial = null;
         highlightOnOpen();
       });
