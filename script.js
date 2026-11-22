@@ -466,6 +466,7 @@ if (hamburger && hamburgerMenu) {
   window.addEventListener("resize", setHeaderH);
   const fmt = (c) => {
     const dt = new Date(c.date + "T00:00:00+09:00");
+    if (isNaN(dt.getTime())) return null;
     const w = "日月火水木金土"[dt.getDay()];
     return `${dt.getMonth() + 1}月${dt.getDate()}日（${w}）は臨時休業です${c.note ? "（" + c.note + "）" : ""}`;
   };
@@ -475,7 +476,10 @@ if (hamburger && hamburgerMenu) {
   ])
     .then(([news, noticesData]) => {
       const items = [];
-      ((news && news.closures) || []).slice(0, 2).forEach((c) => items.push(fmt(c)));
+      ((news && news.closures) || []).slice(0, 2).forEach((c) => {
+        const t = fmt(c);
+        if (t) items.push(t);
+      });
       ((noticesData && noticesData.notices) || []).forEach((n) => items.push(n.text));
       if (!items.length) return;
       banner.textContent = "【お知らせ】" + items.slice(0, 3).join("／");

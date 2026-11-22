@@ -635,8 +635,8 @@ main > .section:first-child {
   justify-content: center;
   align-items: center;
   gap: 6px;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   padding: 10px;
   background: transparent;
   border: 1px solid var(--copper);
