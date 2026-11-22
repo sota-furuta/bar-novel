@@ -55,12 +55,18 @@ if (!scriptJs.includes(ANCHOR)) {
 
 const GUARD_NG_LABEL = "NG byId 方式へ戻っていない";
 
+// 各スニペットは、パターンの分岐（宣言／参照・代入）のうち1つだけに
+// ヒットする形にする。複数分岐に同時にヒットする形だと、分岐が1つ
+// 欠ける弱体化（例: 宣言分岐だけへの削減）を検出できずにすり抜けるため
+// （2026-11-22、別担当レビューの指摘を受けて分離）。
+// 参照・代入は呼ばれないアロー関数の中に置くことで、宣言分岐に
+// ヒットさせず、実行されても無害にしている。
 const DETECT_CASES = [
-  ["const byId の宣言", "  const byId = {};"],
-  ["const byIdMap の宣言", "  const byIdMap = {};"],
-  ["byId[ ] での参照", "  const byId = {}; void byId[\"top\"];"],
-  ["byId. での参照", "  const byId = {}; void byId.top;"],
-  ["byId への代入", "  let byId; byId = {};"],
+  ["let byId の宣言のみ", "  let byId;"],
+  ["let byIdMap の宣言のみ", "  let byIdMap;"],
+  ["byId[ ] での参照のみ", "  const _probeBracket = () => byId[\"top\"];"],
+  ["byId. での参照のみ", "  const _probeDot = () => byId.top;"],
+  ["byId への代入のみ", "  const _probeAssign = () => { byId = {}; };"],
 ];
 const NO_DETECT_CASES = [
   ["コメント中の byId 方式", "  // byId 方式に戻さない"],
