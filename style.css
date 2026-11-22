@@ -673,6 +673,9 @@ main > .section:first-child {
   top: calc(100% + 8px);
   right: 14px;
   min-width: 210px;
+  max-height: calc(100dvh - 96px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: rgba(14, 10, 7, 0.97);
   border: 1px solid #5a3a1d;
   border-radius: 14px;
