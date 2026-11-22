@@ -473,6 +473,9 @@ if (hamburger && hamburgerMenu) {
     hamburger.classList.toggle("is-open", open);
     hamburger.setAttribute("aria-expanded", open ? "true" : "false");
     hamburgerMenu.hidden = !open;
+    // 開いている間は後ろのページをスクロールさせない（メニュー内はスクロールできる）
+    document.documentElement.style.overflow = open ? "hidden" : "";
+    document.body.style.overflow = open ? "hidden" : "";
   };
   hamburger.addEventListener("click", () => {
     setMenu(hamburgerMenu.hidden);
