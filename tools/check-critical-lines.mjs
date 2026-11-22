@@ -216,6 +216,11 @@ const CRITICAL_FILES = [
     label: "ヘッダースパイのスタブテスト",
     reason: "ヘッダー／ハンバーガーの現在地表示の退行を機械検出する手段そのもの。消えると検知できない",
   },
+  {
+    file: "tools/check-forbidden-detection.mjs",
+    label: "FORBIDDEN 検知の自己テスト",
+    reason: "FORBIDDEN（特に生成式による内部 export 検知5件）が壊れても、クリーンなツリーではこのスクリプト自体は全 PASS のまま気づけない。検知定義そのものを変異形で確認する手段の存在を固定する",
+  },
 ];
 
 // 残っていたら（戻ってきたら）退行と分かる旧形
