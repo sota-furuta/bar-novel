@@ -85,6 +85,32 @@ const onScrollEndOrSettled = (callback) => {
 // 目次ハイライトとヘッダーナビの両スパイで共用し、帯域の調整はここ1か所だけを直す
 const SPY_ROOT_MARGIN = "-35% 0px -55% 0px";
 
+// フォールバック側（帯域の集合が空のときに見出し位置から割り出す経路）で使う
+// 帯域上端の比率。SPY_ROOT_MARGIN の -35% と必ず揃えること
+const SPY_BAND_TOP_RATIO = 0.35;
+
+// 固定表示の高さの合計（着地位置の計算で共用する）。
+// ヘッダー＋お知らせ帯（表示中のみ）。デフォルトはどちらも 0 で揃える
+const headerBannerHeight = () => {
+  const header = document.querySelector(".site-header");
+  const bEl = document.getElementById("closureBanner");
+  return (header ? header.offsetHeight : 0) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0);
+};
+// ヘッダー＋お知らせ帯＋メニュータブ＋余白10px（タブ切替・一覧の開閉・閉じた後の
+// 戻り位置で使う共通オフセット）
+const stickyOffset = () => {
+  const tabsEl = document.querySelector(".menu-tabs");
+  return headerBannerHeight() + (tabsEl ? tabsEl.offsetHeight : 0) + 10;
+};
+
+// 外部リンクの分類（モーダルのサービス名表示とCTA計測で共用する）。
+// 戻り値は計測の種別名（"instagram" | "map" | null）
+const classifyExternalUrl = (href) => {
+  if (href.indexOf("instagram.com") !== -1) return "instagram";
+  if (href.indexOf("maps.app.goo.gl") !== -1 || href.indexOf("google.com/maps") !== -1 || href.indexOf("maps.google") !== -1) return "map";
+  return null;
+};
+
 // スクロールスパイ共通ヘルパー: 帯域内にある要素を Set で保持し、
 // 文書順（orderedEls の並び順）で最後のものを現在地として返す。
 // 目次ハイライトとヘッダーナビの両スパイで共用する（entries の届く順には依存しない）
@@ -130,10 +156,7 @@ tabs.forEach((tab) => {
       if (panel) {
         const panelTopY = panel.getBoundingClientRect().top + window.scrollY;
         const panelBottomY = panelTopY + panel.offsetHeight;
-        const header = document.querySelector(".site-header");
-        const bEl = document.getElementById("closureBanner");
-        const tabsEl = document.querySelector(".menu-tabs");
-        const topOffset = (header ? header.offsetHeight : 0) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0) + (tabsEl ? tabsEl.offsetHeight : 0) + 10;
+        const topOffset = stickyOffset();
         const minY = panelTopY - topOffset;
         const maxY = panelBottomY - window.innerHeight * 0.85;
         if (y > maxY) y = Math.max(minY, maxY);
@@ -200,7 +223,7 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
     // ある直近の見出しを現在地とする。直上に見出しが無い（先頭より上を見ている）場合は
     // 先頭のカテゴリを現在地とする（デフォルトは先頭）。
     // 閉じている一覧の見出しはレイアウトが無いので数えない
-    const bandTop = window.innerHeight * 0.35;
+    const bandTop = window.innerHeight * SPY_BAND_TOP_RATIO;
     let gi = -1;
     catEls.forEach((cat, i) => {
       if (cat.getClientRects().length && cat.getBoundingClientRect().top < bandTop) gi = i;
@@ -226,9 +249,7 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
     const root = window.getComputedStyle(document.documentElement);
     const tabsH = parseFloat(root.getPropertyValue("--tabs-h")) || 76;
     const headH = parseFloat(root.getPropertyValue("--heading-h")) || 52;
-    const h = document.querySelector(".site-header");
-    const bEl = document.getElementById("closureBanner");
-    return (h ? h.offsetHeight : 68) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0) + tabsH + headH;
+    return headerBannerHeight() + tabsH + headH;
   };
   // 固定の解除は共通ヘルパー onScrollSettled に寄せる（スクロール中はヘルパー側が
   // タイマーを先送りし続けるため、scroll イベントから個別に再予約する必要はない）
@@ -358,10 +379,7 @@ document.querySelectorAll("[data-menu-list]").forEach((box) => {
 // 一覧を閉じたら、概要のカテゴリ位置まで戻る
 function scrollToCategory(detail) {
   const li = detail.closest("li") || detail;
-  const header = document.querySelector(".site-header");
-  const bEl = document.getElementById("closureBanner");
-  const tabsEl = document.querySelector(".menu-tabs");
-          const offset = (header ? header.offsetHeight : 0) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0) + (tabsEl ? tabsEl.offsetHeight : 0) + 10;
+  const offset = stickyOffset();
   const y = li.getBoundingClientRect().top + window.scrollY - offset;
   scrollToY(y);
 }
@@ -384,10 +402,7 @@ function makeExclusive(selector, scrollOnOpen) {
       if (scrollOnOpen) {
         const target = item.closest("li") || item;
         setTimeout(() => {
-          const header = document.querySelector(".site-header");
-          const bEl = document.getElementById("closureBanner");
-          const tabsEl = document.querySelector(".menu-tabs");
-          const offset = (header ? header.offsetHeight : 0) + (bEl && !bEl.hidden ? bEl.offsetHeight : 0) + (tabsEl ? tabsEl.offsetHeight : 0) + 10;
+          const offset = stickyOffset();
           const y = target.getBoundingClientRect().top + window.scrollY - offset;
           scrollToY(y);
         }, 0);
@@ -544,8 +559,9 @@ if (hamburger && hamburgerMenu) {
   let lastFocused = null;
 
   const serviceName = (link) => {
-    if (link.href.includes("instagram.com")) return "Instagram";
-    if (link.href.includes("maps.app.goo.gl") || link.href.includes("google.com/maps")) return "Googleマップ";
+    const kind = classifyExternalUrl(link.href);
+    if (kind === "instagram") return "Instagram";
+    if (kind === "map") return "Googleマップ";
     return link.textContent.trim();
   };
 
@@ -606,9 +622,7 @@ if (hamburger && hamburgerMenu) {
   const classify = (a) => {
     const href = a.getAttribute("href") || "";
     if (href.indexOf("tel:") === 0) return "tel";
-    if (href.indexOf("instagram.com") !== -1) return "instagram";
-    if (href.indexOf("maps.app.goo.gl") !== -1 || href.indexOf("google.com/maps") !== -1 || href.indexOf("maps.google") !== -1) return "map";
-    return null;
+    return classifyExternalUrl(href);
   };
   document.querySelectorAll("a[href]").forEach((a) => {
     const type = classify(a);
