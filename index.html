@@ -39,7 +39,7 @@
       "https://bar-novel.pages.dev/images/cocktail-red.jpg"
     ],
     "telephone": "070-3861-1472",
-    "priceRange": "¥500〜¥1,000",
+    "priceRange": "¥500〜¥1,200",
     "paymentAccepted": "Cash, Credit Card, Visa, Mastercard, JCB, American Express, QR Code",
     "address": {
       "@type": "PostalAddress",
@@ -48,7 +48,7 @@
       "addressLocality": "伊勢原市",
       "streetAddress": "桜台1-1-25 アーバンヒルズ2F"
     },
-    "geo": { "@type": "GeoCoordinates", "latitude": 35.3997, "longitude": 139.3148 },
+    "geo": { "@type": "GeoCoordinates", "latitude": 35.395042, "longitude": 139.3126023 },
     "openingHoursSpecification": {
       "@type": "OpeningHoursSpecification",
       "dayOfWeek": ["Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
@@ -61,7 +61,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Noto+Serif+JP:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261119idx2">
+  <link rel="stylesheet" href="style.css?v=20261122m1">
 </head>
 <body>
 
@@ -134,11 +134,11 @@
     <h2 class="section-title">メニュー</h2>
 
     <div class="menu-tabs" role="tablist" aria-label="メニュー切り替え">
-      <button class="menu-tab is-active" role="tab" aria-selected="true" data-tab="drink">DRINK</button>
-      <button class="menu-tab" role="tab" aria-selected="false" data-tab="food">FOOD</button>
+      <button class="menu-tab is-active" role="tab" id="tab-drink" aria-selected="true" aria-controls="panel-drink" data-tab="drink">DRINK</button>
+      <button class="menu-tab" role="tab" id="tab-food" aria-selected="false" aria-controls="panel-food" tabindex="-1" data-tab="food">FOOD</button>
     </div>
 
-    <div class="menu-panel is-active" data-panel="drink">
+    <div class="menu-panel is-active" id="panel-drink" role="tabpanel" aria-labelledby="tab-drink" data-panel="drink">
       <ul class="menu-list">
         <li>
           <div class="menu-head"><span class="menu-name">カクテル</span><span class="menu-dots"></span><span class="menu-price" data-menu-min="cocktails">¥750〜</span></div>
@@ -185,7 +185,7 @@
       </ul>
     </div>
 
-    <div class="menu-panel" data-panel="food" hidden>
+    <div class="menu-panel" id="panel-food" role="tabpanel" aria-labelledby="tab-food" data-panel="food" hidden>
       <ul class="menu-list">
         <li>
           <div class="menu-head"><span class="menu-name">ソーセージ盛り合わせ</span><span class="menu-dots"></span><span class="menu-price">¥1,000</span></div>
@@ -333,6 +333,8 @@
   <footer class="site-footer">
     <p class="footer-logo">BAR NOVEL</p>
     <nav class="footer-nav" aria-label="フッターナビゲーション">
+      <a href="#top">Top</a>
+      <a href="#concept">Concept</a>
       <a href="#menu">Menu</a>
       <a href="#gallery">Gallery</a>
       <a href="#info">Info</a>
@@ -350,7 +352,7 @@
     <a href="https://www.instagram.com/isehara.bar.cocktail.novel" target="_blank" rel="noopener">予約・Instagram</a>
   </nav>
 
-  <script src="script.js?v=20261122idx1"></script>
+  <script src="script.js?v=20261122m1"></script>
   <!-- Cloudflare Web Analytics --><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "d460ca30c93f48bea59892b03e4ffef6"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>

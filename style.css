@@ -544,8 +544,10 @@ main > .section:first-child {
 
 .footer-nav {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 24px;
+  row-gap: 10px;
   margin-bottom: 16px;
 }
 
@@ -635,8 +637,8 @@ main > .section:first-child {
   justify-content: center;
   align-items: center;
   gap: 6px;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   padding: 10px;
   background: transparent;
   border: 1px solid var(--copper);
@@ -1172,7 +1174,7 @@ main > .section:first-child {
 }
 
 .external-open-actions button {
-  min-height: 46px;
+  min-height: 48px;
   border-radius: 10px;
   font: inherit;
   font-weight: 700;
