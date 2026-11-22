@@ -476,10 +476,12 @@ if (hamburger && hamburgerMenu) {
   ])
     .then(([news, noticesData]) => {
       const items = [];
-      ((news && news.closures) || []).slice(0, 2).forEach((c) => {
+      const closureItems = [];
+      ((news && news.closures) || []).forEach((c) => {
         const t = fmt(c);
-        if (t) items.push(t);
+        if (t) closureItems.push(t);
       });
+      closureItems.slice(0, 2).forEach((t) => items.push(t));
       ((noticesData && noticesData.notices) || []).forEach((n) => items.push(n.text));
       if (!items.length) return;
       banner.textContent = "【お知らせ】" + items.slice(0, 3).join("／");
