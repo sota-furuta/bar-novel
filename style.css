@@ -544,8 +544,10 @@ main > .section:first-child {
 
 .footer-nav {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   gap: 24px;
+  row-gap: 10px;
   margin-bottom: 16px;
 }
 
