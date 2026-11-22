@@ -265,9 +265,9 @@ runCase("1. 開く→タップなし→スクロールなし（保険タイマ�
   check("1", "保留が登録される", typeof h.api.getPending(), "function");
   check("1", "scroll リスナーが登録される", h.win.listenerCount("scroll"), 1);
   h.clock.advance(249);
-  check("1", "250ms未満ではまだ点かない", h.api.calls.history, []);
+  check("1", "SCROLL_SETTLED_DELAY 未満ではまだ点かない", h.api.calls.history, []);
   h.clock.advance(1);
-  check("1", "250msで先頭が点く", h.api.calls.history, [0]);
+  check("1", "SCROLL_SETTLED_DELAY で先頭が点く", h.api.calls.history, [0]);
   check("1", "完了後は保留が消える", h.api.getPending(), null);
   check("1", "完了後は scroll リスナーが残らない", h.win.listenerCount("scroll"), 0);
   check("1", "タイマーが残らない", h.clock.pendingCount(), 0);
@@ -282,9 +282,9 @@ runCase("2. 開く→スクロール継続（止まってから先頭）", () =>
   h.clock.advance(100);
   h.win.dispatch("scroll");
   h.clock.advance(249);
-  check("2", "最後のスクロールから250ms未満では点かない", h.api.calls.history, []);
+  check("2", "最後のスクロールから SCROLL_SETTLED_DELAY 未満では点かない", h.api.calls.history, []);
   h.clock.advance(1);
-  check("2", "スクロールが止まって250msで先頭が点く", h.api.calls.history, [0]);
+  check("2", "スクロールが止まって SCROLL_SETTLED_DELAY で先頭が点く", h.api.calls.history, [0]);
   check("2", "後片付けが済んでいる", h.win.listenerCount("scroll"), 0);
 });
 
@@ -364,7 +364,7 @@ runCase("7. 閉じたまま保険タイマーが発火した後に開き直す�
   check("7", "開き直しで新しい保留が登録される", typeof h.api.getPending(), "function");
   check("7", "開き直し後の scroll リスナーは1つだけ", h.win.listenerCount("scroll"), 1);
   h.clock.advance(249);
-  check("7", "開き直し後250ms未満ではまだ点かない", h.api.calls.history, []);
+  check("7", "開き直し後 SCROLL_SETTLED_DELAY 未満ではまだ点かない", h.api.calls.history, []);
   h.clock.advance(1);
   check("7", "開き直し後は先頭が1回だけ点く", h.api.calls.history, [0]);
   check("7", "完了後は保留が消える", h.api.getPending(), null);
