@@ -56,6 +56,9 @@
 // sections への top の含有、byId 方式へ戻っていないこと、帯域定義
 // （rootMargin の値と、IntersectionObserver の opts のキー集合）、
 // index.html 側の前提（#top はハンバーガーにだけある）も確認する。
+// byId ガードが失敗したときは、一致した箇所を含む行（コード片）も
+// あわせて出力し、何が再導入されたかをその場で切り分けられるようにする
+// （2026-11-22、改善提案台帳の採用を受けて追加）。
 // opts はキー集合ごと固定する: rootMargin の値だけを見ていると、threshold 等の
 // キーが追加されて帯域の挙動が静かに変わっても検出できない。キー集合ごと
 // （現行は rootMargin のみ）固定し、キーの追加・削除のどちらも帯域定義の
@@ -282,7 +285,19 @@ runCase("構造: スパイの対象と方式", () => {
   // ハーネス自身が byIdMap という識別子を使っているため、再導入時の
   // 名前が byIdMap の場合も拾えるよう (?:Map)? を付ける。
   const byIdCodePattern = /(?:const|let|var)\s+byId(?:Map)?\b|\bbyId(?:Map)?\s*(?:\[|\.|=)/;
-  check("構造", "byId 方式へ戻っていない", byIdCodePattern.test(spyIife), false);
+  const byIdMatch = spyIife.match(byIdCodePattern);
+  check("構造", "byId 方式へ戻っていない", byIdMatch !== null, false);
+  if (byIdMatch) {
+    // 失敗時は、一致した箇所を含む行そのものをその場に出す。NG の
+    // expected/actual だけでは「何が再導入されたか」を IIFE 内から
+    // 探し直す必要があり、切り分けに手間がかかるため
+    // （2026-11-22、改善提案台帳の採用を受けて追加）。
+    const lineStart = spyIife.lastIndexOf("\n", byIdMatch.index) + 1;
+    const lineEndRaw = spyIife.indexOf("\n", byIdMatch.index);
+    const matchedLine = spyIife.slice(lineStart, lineEndRaw < 0 ? undefined : lineEndRaw).trim();
+    const snippet = matchedLine.length > 120 ? `${matchedLine.slice(0, 120)}…` : matchedLine;
+    console.log(`  一致したコード片: ${snippet}`);
+  }
   check("構造", "現在地の判定は href の一致で全リンクを走査する", spyIife.includes('a.getAttribute("href") === "#" + current.id'), true);
   const h = makeHarness();
   check("構造", "帯域定義 rootMargin は目次側と共通の値", h.api.instances[0].opts.rootMargin, "-35% 0px -55% 0px");
