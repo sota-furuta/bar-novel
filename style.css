@@ -1174,7 +1174,7 @@ main > .section:first-child {
 }
 
 .external-open-actions button {
-  min-height: 46px;
+  min-height: 48px;
   border-radius: 10px;
   font: inherit;
   font-weight: 700;

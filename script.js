@@ -143,6 +143,7 @@ tabs.forEach((tab) => {
     tabs.forEach((t) => {
       t.classList.toggle("is-active", t === tab);
       t.setAttribute("aria-selected", t === tab ? "true" : "false");
+      t.tabIndex = t === tab ? 0 : -1;
     });
     panels.forEach((p) => {
       const active = p.dataset.panel === tab.dataset.tab;
@@ -163,6 +164,21 @@ tabs.forEach((tab) => {
       }
       window.scrollTo({ top: y, behavior: "auto" });
     }
+  });
+  // タブのキーボード操作（WAI-ARIA のタブパターン）: 左右キーで移動して即切り替え、
+  // Home / End で先頭・末尾へ。切り替え自体はクリックと同じ経路に寄せる
+  tab.addEventListener("keydown", (e) => {
+    const list = [...tabs];
+    const cur = list.indexOf(tab);
+    let idx = null;
+    if (e.key === "ArrowRight") idx = (cur + 1) % list.length;
+    else if (e.key === "ArrowLeft") idx = (cur - 1 + list.length) % list.length;
+    else if (e.key === "Home") idx = 0;
+    else if (e.key === "End") idx = list.length - 1;
+    if (idx === null) return;
+    e.preventDefault();
+    list[idx].focus();
+    list[idx].click();
   });
 });
 
