@@ -1,7 +1,7 @@
 // BAR NOVEL お知らせ（臨時休業）API
 // GET  /api/news -> { closures: [{date, note}] }（今日以降のみ）
 // POST /api/news { password, closures: [{date, note}] } -> 保存
-import { checkLock, recordFailure, recordSuccess, lockedResponse, LOCK_MINUTES } from "./_auth-guard.js";
+import { checkLock, recordFailure, lockedResponse, LOCK_MINUTES } from "./_auth-guard.js";
 function todayJST() {
   return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Tokyo" });
 }
@@ -41,7 +41,6 @@ export async function onRequestPost({ request, env }) {
     if (r.lockedNow) return lockedResponse(LOCK_MINUTES);
     return Response.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
-  await recordSuccess(env, request, "/api/news", false);
   const list = Array.isArray(body.closures)
     ? body.closures
         .filter((c) => c && /^\d{4}-\d{2}-\d{2}$/.test(c.date || ""))

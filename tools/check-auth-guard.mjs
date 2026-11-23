@@ -102,5 +102,16 @@ for (let i = 1; i <= 4; i++) {
   check("成功でカウント消去（4+成功+4でも401止まり）", last.status === 401);
 }
 
+// 10) 他APIの成功ではカウントは消えない（消去はログイン成功時だけ）:
+//     authで4回失敗 → newsへ正しいパスワードで保存（成功）→ authで1回失敗 = 通算5回でロック
+{
+  const ip4 = "203.0.113.77";
+  for (let i = 0; i < 4; i++) await authPost({ request: req(ip4, { password: "x" }), env });
+  const saved = await newsPost({ request: req(ip4, { password: "secret", closures: [] }), env });
+  check("news保存は成功する", saved.status === 200);
+  const fifth = await authPost({ request: req(ip4, { password: "x" }), env });
+  check("他API成功後も通算5回でロック", fifth.status === 429);
+}
+
 console.log(failures === 0 ? "\n全ケース合格" : `\n${failures} 件失敗`);
 process.exit(failures === 0 ? 0 : 1);

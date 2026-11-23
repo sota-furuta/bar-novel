@@ -3,7 +3,7 @@
 // POST   /api/contact { password, action: "status", id, status } -> 状態変更（open/done）
 // GET    /api/contact (Header: X-Admin-Password) -> { contacts: [...] }
 // DELETE /api/contact { password, id } -> 削除
-import { checkLock, recordFailure, recordSuccess, lockedResponse, LOCK_MINUTES } from "./_auth-guard.js";
+import { checkLock, recordFailure, lockedResponse, LOCK_MINUTES } from "./_auth-guard.js";
 const KEY = "contacts";
 const CATEGORIES = ["機能の要望", "不具合の報告", "質問", "その他"];
 
@@ -38,7 +38,6 @@ export async function onRequestPost({ request, env }) {
     if (r.lockedNow) return lockedResponse(LOCK_MINUTES);
     return Response.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
-  await recordSuccess(env, request, "/api/contact", false);
   // 状態変更
   if (body.action === "status") {
     const id = String(body.id || "");
@@ -81,7 +80,6 @@ export async function onRequestGet({ request, env }) {
     if (r.lockedNow) return lockedResponse(LOCK_MINUTES);
     return Response.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
-  await recordSuccess(env, request, "/api/contact", false);
   const contacts = await readList(env);
   return Response.json({ contacts }, { headers: { "Cache-Control": "no-store" } });
 }
@@ -103,7 +101,6 @@ export async function onRequestDelete({ request, env }) {
     if (r.lockedNow) return lockedResponse(LOCK_MINUTES);
     return Response.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
-  await recordSuccess(env, request, "/api/contact", false);
   const id = String(body.id || "");
   const list = (await readList(env)).filter((c) => c.id !== id);
   await env.NEWS_KV.put(KEY, JSON.stringify(list));

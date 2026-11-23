@@ -95,7 +95,10 @@ export async function recordFailure(env, request, endpoint) {
   }
 }
 
-// 成功したら失敗カウントを消す。ログイン（/api/auth）のときだけ成功もログに残す
+// 成功したら失敗カウントを消す。呼ぶのはログイン（/api/auth）だけにする:
+// 他の管理APIの成功でも消すと、同じ出口IPを共有する攻撃側の失敗が
+// オーナーの通常操作で繰り返しリセットされ、ロックに届きにくくなるため。
+// ログイン（/api/auth）のときだけ成功もログに残す
 export async function recordSuccess(env, request, endpoint, logSuccess) {
   if (!env.NEWS_KV) return;
   const ip = clientIp(request);

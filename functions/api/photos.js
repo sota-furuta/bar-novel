@@ -3,7 +3,7 @@
 // POST   /api/photos (multipart: password, caption, file) -> 写真を保存
 // DELETE /api/photos { password, id } -> 写真を削除
 // 画像本体は KV の "photo:<id>" に保存し、/api/photo/<id> で配信する
-import { checkLock, recordFailure, recordSuccess, lockedResponse, LOCK_MINUTES } from "./_auth-guard.js";
+import { checkLock, recordFailure, lockedResponse, LOCK_MINUTES } from "./_auth-guard.js";
 const INDEX_KEY = "photos:index";
 const MAX_BYTES = 8 * 1024 * 1024;
 
@@ -42,7 +42,6 @@ export async function onRequestPost({ request, env }) {
     if (r.lockedNow) return lockedResponse(LOCK_MINUTES);
     return Response.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
-  await recordSuccess(env, request, "/api/photos", false);
   const file = form.get("file");
   if (!file || typeof file === "string") {
     return Response.json({ ok: false, error: "no_file" }, { status: 400 });
@@ -83,7 +82,6 @@ export async function onRequestDelete({ request, env }) {
     if (r.lockedNow) return lockedResponse(LOCK_MINUTES);
     return Response.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
-  await recordSuccess(env, request, "/api/photos", false);
   const id = String(body.id || "");
   if (!id) {
     return Response.json({ ok: false, error: "no_id" }, { status: 400 });
