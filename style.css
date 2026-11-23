@@ -673,7 +673,9 @@ main > .section:first-child {
   top: calc(100% + 8px);
   right: 14px;
   min-width: 210px;
-  max-height: calc(100dvh - 96px);
+  /* 上はヘッダー分（96px）、下は下部固定バーの分（88px）を空ける。
+     バーと同じ z-index のため、メニューの下端がバーに重なると隠れて押せなくなる */
+  max-height: calc(100dvh - 96px - 88px);
   overflow-y: auto;
   overscroll-behavior: contain;
   background: rgba(14, 10, 7, 0.97);
