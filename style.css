@@ -673,7 +673,9 @@ main > .section:first-child {
   top: calc(100% + 8px);
   right: 14px;
   min-width: 210px;
-  max-height: calc(100dvh - 96px);
+  /* 上はヘッダー分（96px）、下は下部固定バーの分（88px）を空ける。
+     バーと同じ z-index のため、メニューの下端がバーに重なると隠れて押せなくなる */
+  max-height: calc(100dvh - 96px - 88px);
   overflow-y: auto;
   overscroll-behavior: contain;
   background: rgba(14, 10, 7, 0.97);
@@ -723,12 +725,17 @@ main > .section:first-child {
   box-shadow: inset 3px 0 0 #ffb35c;
 }
 
+/* 予約の2経路（電話・Instagram）は同じ見た目にそろえる。
+   区切り線と上の余白だけ先頭の電話側に付ける */
+.hamburger-menu .hamburger-call,
 .hamburger-menu .hamburger-insta {
-  margin-top: 6px;
-  border-top: 1px solid #5a3a1d;
-  border-radius: 0 0 9px 9px;
   color: var(--copper-soft);
   font-weight: 500;
+}
+
+.hamburger-menu .hamburger-call {
+  margin-top: 6px;
+  border-top: 1px solid #5a3a1d;
 }
 
 /* Instagram アカウント名のはみ出し対策 */
