@@ -6,6 +6,7 @@
 // （JST の日付のまま取得すると、日別の帰属が9時間分ずれるため）。
 // 日付生成は共通ヘルパー（_date.js）に寄せている。JST と UTC でオフセットだけが違う。
 import { jstDays, utcDays } from "./_date.js";
+import { checkLock, recordFailure, lockedResponse, LOCK_MINUTES } from "./_auth-guard.js";
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -94,8 +95,14 @@ async function fetchAnalytics(env, start, end) {
 
 export async function onRequestGet(context) {
   const { request, env } = context;
+  const lock = await checkLock(env, request);
+  if (lock.locked) return lockedResponse(lock.retryAfterMinutes);
   const pw = request.headers.get("X-Admin-Password");
-  if (!env.ADMIN_PASSWORD || pw !== env.ADMIN_PASSWORD) return json({ error: "unauthorized" }, 401);
+  if (!env.ADMIN_PASSWORD || pw !== env.ADMIN_PASSWORD) {
+    const r = await recordFailure(env, request, "/api/stats");
+    if (r.lockedNow) return lockedResponse(LOCK_MINUTES);
+    return json({ error: "unauthorized" }, 401);
+  }
   if (!env.NEWS_KV) return json({ error: "kv_not_bound" }, 503);
 
   const days = jstDays(30);

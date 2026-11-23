@@ -3,6 +3,7 @@
 // POST   /api/photos (multipart: password, caption, file) -> 写真を保存
 // DELETE /api/photos { password, id } -> 写真を削除
 // 画像本体は KV の "photo:<id>" に保存し、/api/photo/<id> で配信する
+import { checkLock, recordFailure, lockedResponse, LOCK_MINUTES } from "./_auth-guard.js";
 const INDEX_KEY = "photos:index";
 const MAX_BYTES = 8 * 1024 * 1024;
 
@@ -34,7 +35,11 @@ export async function onRequestPost({ request, env }) {
   } catch {
     return Response.json({ ok: false, error: "bad_form" }, { status: 400 });
   }
+  const lock = await checkLock(env, request);
+  if (lock.locked) return lockedResponse(lock.retryAfterMinutes);
   if (!env.ADMIN_PASSWORD || form.get("password") !== env.ADMIN_PASSWORD) {
+    const r = await recordFailure(env, request, "/api/photos");
+    if (r.lockedNow) return lockedResponse(LOCK_MINUTES);
     return Response.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
   const file = form.get("file");
@@ -70,7 +75,11 @@ export async function onRequestDelete({ request, env }) {
   } catch {
     return Response.json({ ok: false, error: "bad_json" }, { status: 400 });
   }
+  const lock = await checkLock(env, request);
+  if (lock.locked) return lockedResponse(lock.retryAfterMinutes);
   if (!env.ADMIN_PASSWORD || body.password !== env.ADMIN_PASSWORD) {
+    const r = await recordFailure(env, request, "/api/photos");
+    if (r.lockedNow) return lockedResponse(LOCK_MINUTES);
     return Response.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
   const id = String(body.id || "");
