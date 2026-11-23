@@ -731,6 +731,13 @@ main > .section:first-child {
   text-align: center;
 }
 
+/* ホバー時も塗りつぶしを保つ（.hamburger-menu a:hover より詳細度を上げる） */
+.hamburger-menu a.hamburger-call:hover,
+.hamburger-menu a.hamburger-call:active {
+  background: var(--copper);
+  color: #0c1210;
+}
+
 .hamburger-menu .hamburger-insta {
   margin-top: 6px;
   border-top: 1px solid #5a3a1d;
