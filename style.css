@@ -723,6 +723,14 @@ main > .section:first-child {
   box-shadow: inset 3px 0 0 #ffb35c;
 }
 
+.hamburger-menu .hamburger-call {
+  margin-top: 6px;
+  background: var(--copper-active);
+  color: #0c1210;
+  font-weight: 700;
+  text-align: center;
+}
+
 .hamburger-menu .hamburger-insta {
   margin-top: 6px;
   border-top: 1px solid #5a3a1d;
