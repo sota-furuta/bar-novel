@@ -725,27 +725,21 @@ main > .section:first-child {
   box-shadow: inset 3px 0 0 #ffb35c;
 }
 
-.hamburger-menu .hamburger-call {
-  margin-top: 6px;
-  background: var(--copper-active);
-  color: #0c1210;
-  font-weight: 700;
-  text-align: center;
+/* 予約の2経路（電話・Instagram）は同じ見た目にそろえる。
+   区切り線と上の余白は先頭の電話側に付け、Instagram は末尾の角丸だけ持つ */
+.hamburger-menu .hamburger-call,
+.hamburger-menu .hamburger-insta {
+  color: var(--copper-soft);
+  font-weight: 500;
 }
 
-/* ホバー時も塗りつぶしを保つ（.hamburger-menu a:hover より詳細度を上げる） */
-.hamburger-menu a.hamburger-call:hover,
-.hamburger-menu a.hamburger-call:active {
-  background: var(--copper);
-  color: #0c1210;
+.hamburger-menu .hamburger-call {
+  margin-top: 6px;
+  border-top: 1px solid #5a3a1d;
 }
 
 .hamburger-menu .hamburger-insta {
-  margin-top: 6px;
-  border-top: 1px solid #5a3a1d;
   border-radius: 0 0 9px 9px;
-  color: var(--copper-soft);
-  font-weight: 500;
 }
 
 /* Instagram アカウント名のはみ出し対策 */
