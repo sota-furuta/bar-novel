@@ -5,6 +5,7 @@
 // あわせて窓（15分）と残り時間表示の境界ケース（ケース11〜13）も固定する:
 // 窓は「15分未満」の失敗だけを数え、残り時間は分単位で切り上げ（最小1分）、
 // ロック期限ちょうどでは解除される。境界は Date.now を固定して ms 単位で検証する。
+// ケース14では、ロック中の試行がロックを延長せず失敗カウントも増えないことも固定する。
 // 実行: node tools/check-auth-guard.mjs
 import { onRequestPost as authPost } from "../functions/api/auth.js";
 import { onRequestPost as newsPost } from "../functions/api/news.js";
@@ -204,6 +205,43 @@ for (let i = 1; i <= 4; i++) {
   } finally {
     Date.now = realNow;
   }
+}
+
+// 14) ロック中の試行はロックを延長せず、失敗カウントも増えない:
+//     ロックしたIPで auth／news へ正解・不正解を繰り返し試しても、
+//     authguard の状態（lockedUntil と fails）が変わらないことを固定する。
+//     checkLock が recordFailure より先に返る順序が入れ替わると、
+//     ロック中の試行が fails を積み増し、5回で再ロックされて
+//     lockedUntil が伸びる（締め出しの自己延長）ため、その退行を検出する。
+//     試行は不正解5回＋正解2回にする。不正解5回は、万一 recordFailure が
+//     呼ばれていても再ロックに届く回数で、延長を確実に検出するため。
+{
+  const ip5 = "203.0.113.55";
+  const key5 = "authguard:" + ip5;
+  for (let i = 0; i < 5; i++) await authPost({ request: req(ip5, { password: "x" }), env });
+  const before = JSON.parse(kv.map.get(key5));
+  check("ロック直後は失敗カウントが空", Array.isArray(before.fails) && before.fails.length === 0);
+  check("ロック直後はロック期限が未来", before.lockedUntil > Date.now());
+  const closuresBefore = kv.map.get("closures");
+  const attempts = [
+    () => authPost({ request: req(ip5, { password: "x" }), env }),
+    () => authPost({ request: req(ip5, { password: "secret" }), env }),
+    () => newsPost({ request: req(ip5, { password: "x", closures: [] }), env }),
+    () => newsPost({ request: req(ip5, { password: "secret", closures: [{ date: "2099-01-01", note: "locked" }] }), env }),
+    () => authPost({ request: req(ip5, { password: "x" }), env }),
+    () => newsPost({ request: req(ip5, { password: "x", closures: [] }), env }),
+    () => authPost({ request: req(ip5, { password: "x" }), env }),
+  ];
+  let all429 = true;
+  for (const attempt of attempts) {
+    const res = await attempt();
+    if (res.status !== 429) all429 = false;
+  }
+  check("ロック中の試行は全て429（auth／news・正解／不正解）", all429);
+  const after = JSON.parse(kv.map.get(key5));
+  check("ロック中の試行でロック期限が延長されない", after.lockedUntil === before.lockedUntil);
+  check("ロック中の試行で失敗カウントが増えない", Array.isArray(after.fails) && after.fails.length === before.fails.length && JSON.stringify(after.fails) === JSON.stringify(before.fails));
+  check("ロック中のnews保存でclosuresが書き換わらない", kv.map.get("closures") === closuresBefore);
 }
 
 console.log(failures === 0 ? "\n全ケース合格" : `\n${failures} 件失敗`);
