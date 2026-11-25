@@ -55,7 +55,9 @@
 //    その後の開き直しでは取り消すべき保留が無い（pendingInitial は null）
 //    分岐を通り、新しい保留だけが発火して先頭が1回だけ点く
 // あわせて構造ガードとして、60ms固定待ちへの巻き戻しと、
-// チップ側の取り消し呼び出しの順序（setCurrent より前）も確認する。
+// チップ側の取り消し呼び出しの順序（setCurrent より前）と、
+// check ラベルへの数値＋ms 形式の直書き（定数の具体値を固定する
+// ラベル1件だけを例外とする）も確認する。
 
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -433,6 +435,23 @@ runCase("構造: 60ms固定待ちへ巻き戻っていない", () => {
   check("構造", "onScrollEndOrSettled は未対応時に onScrollSettled へフォールバックする", scrollEndCode.includes("return onScrollSettled(callback)"), true);
   check("構造", "onScrollEndOrSettled は保険のデバウンスを並走させる", scrollEndCode.includes("cancelDebounce = onScrollSettled(finish)"), true);
   check("構造", "onScrollEndOrSettled は scrollend リスナーを登録する", scrollEndCode.includes('addEventListener("scrollend", finish)'), true);
+});
+
+runCase("構造: check ラベルに数値＋ms 形式の直書きが無い", () => {
+  // このスクリプト自身のソースから check(...) の第2引数（ラベル）だけを抽出し、
+  // 数値＋ms 形式の直書きが紛れていないかを確認する。
+  // ケース1・2・7のラベルは SCROLL_SETTLED_DELAY 表記へ統一済みで、
+  // 直書きが別のケースで再発しても、このガードが無いと検出できないため。
+  const selfSource = readFileSync(fileURLToPath(import.meta.url), "utf8");
+  const labels = [...selfSource.matchAll(/check\("[^"]*",\s*"([^"]*)"/g)].map((m) => m[1]);
+  // 例外は1件だけ: 定数 SCROLL_SETTLED_DELAY の具体値を固定する構造ガードのラベル。
+  // ラベル全体がこの文字列と完全一致する場合だけ例外とし、他のラベルに紛れた直書きは検出する。
+  const allowedLabel = "SCROLL_SETTLED_DELAY は250ms";
+  const hardcoded = labels.filter((label) => /\d+\s*ms/.test(label) && label !== allowedLabel);
+  check("構造", "ラベルが抽出できている", labels.length > 0, true);
+  check("構造", "例外ラベルが実際に存在する", labels.includes(allowedLabel), true);
+  check("構造", "検出パターンがサンプルの直書きに一致する", /\d+\s*ms/.test("サンプル 123ms"), true);
+  check("構造", "check ラベルに数値＋ms 形式の直書きが無い（例外ラベルを除く）", hardcoded, []);
 });
 
 runCase("構造: チップ側の取り消しは setCurrent より前に呼ばれる", () => {
