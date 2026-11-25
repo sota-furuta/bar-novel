@@ -10,6 +10,7 @@
 //
 // - functions/api/stats.js または functions/api/track.js の日付生成・集計範囲を触ったとき
 // - 「日付の基準（JST／UTC）を変える」変更をレビューするとき
+// - script.js の臨時休業帯の fmt（日付整形と不正日付のガード）を触ったとき
 //
 //
 // node tools/check-date-boundaries.mjs
@@ -27,9 +28,16 @@
 // 3. 月末・月初（30日ウィンドウの先頭日と、短い月をまたぐ連続性）
 // 4. 年末・年始（年をまたぐウィンドウ）
 // 5. うるう年（2月29日を含む／含まない年の違い）
+// 6. 臨時休業帯の fmt ガード（script.js の fmt。不正な日付は null になり、その項目は帯に出ない）
+//    防御的ガードは将来のリファクタで静かに消えやすいため、ケースで固定する
+//    （2026-11-25、改善提案台帳の採用を受けて追加。第1弾の別担当レビューから）。
+//    fmt の定義そのものを script.js から取り出して実行し、複製ロジックは持たない。
+//    項目が落ちる側は、収集部の「if (t) closureItems.push(t);」が script.js に
+//    残っていることの構造ガードと、取り出した fmt を使った収集の再現で確認する。
 // あわせて全ケース共通で、30日分の長さ・書式（YYYY-MM-DD）・重複なし・
 // 1日ずつ連続していること、jstDays の末尾と jstToday が一致することも確認する。
 
+import { readFileSync } from "node:fs";
 import { dirname, join} from "node:path";
 import { fileURLToPath, pathToFileURL} from "node:url";
 
@@ -141,6 +149,64 @@ runCase("うるう年の3月1日（2月29日を含むウィンドウ）", jstMs(
 runCase("年またぎウィンドウ（1月15日の先頭は前年12月17日）", jstMs(2026, 1, 15, 12, 0, 0), ({ jst, utc}) => [
 ["jst first", jst[0], "2025-12-17"],
 ["utc first", utc[0], "2025-12-17"],
+]);
+
+// --- 臨時休業帯の fmt ガード（script.js） ---
+// fmt は端末のタイムゾーンで曜日・日を取り出すため、実行環境で結果が割れないよう
+// この節の実行前にタイムゾーンを Asia/Tokyo へ固定する（帯の利用者は日本国内が前提）。
+process.env.TZ = "Asia/Tokyo";
+const scriptSource = readFileSync(join(root, "script.js"), "utf8");
+function extractFmt(sourceText) {
+const marker = "const fmt = (c) => {";
+const start = sourceText.indexOf(marker);
+if (start < 0) {
+throw new Error("script.js: fmt が見つかりません（実装が変わった場合はこのスクリプトも更新してください）");
+}
+const braceStart = sourceText.indexOf("{", start);
+let depth = 0;
+for (let i = braceStart; i < sourceText.length; i++) {
+if (sourceText[i] === "{") depth++;
+else if (sourceText[i] === "}") {
+depth--;
+if (depth === 0) return sourceText.slice(start, i + 1) + ";";
+}
+}
+throw new Error("script.js: fmt の終端が見つかりません");
+}
+const fmt = new Function(`${extractFmt(scriptSource)} return fmt;`)();
+
+function runFmtCase(name, expectations) {
+const before = failures;
+for (const [label, actual, expected] of expectations) {
+check(name, label, actual, expected);
+}
+console.log(`${failures === before? "PASS": "FAIL"} ${name}`);
+}
+
+runFmtCase("fmt: 有効な日付は整形される", [
+["plain", fmt({ date: "2026-11-25" }), "11月25日（水）は臨時休業です"],
+["with note", fmt({ date: "2026-11-22", note: "貸切" }), "11月22日（日）は臨時休業です（貸切）"],
+["leap day", fmt({ date: "2024-02-29" }), "2月29日（木）は臨時休業です"],
+]);
+
+runFmtCase("fmt: 不正な日付は null になる", [
+["not a date", fmt({ date: "not-a-date" }), null],
+["empty string", fmt({ date: "" }), null],
+["month 13", fmt({ date: "2026-13-01" }), null],
+["date missing", fmt({}), null],
+["date null", fmt({ date: null }), null],
+]);
+
+runFmtCase("fmt: 不正な日付の項目は収集から落ち、有効な項目だけが残る", [
+["collection guard in script.js", scriptSource.includes("if (t) closureItems.push(t);"), true],
+["collected items", (() => {
+const closureItems = [];
+[{ date: "not-a-date" }, { date: "2026-11-25" }, { date: "" }, { date: "2026-11-22", note: "貸切" }].forEach((c) => {
+const t = fmt(c);
+if (t) closureItems.push(t);
+});
+return closureItems;
+})(), ["11月25日（水）は臨時休業です", "11月22日（日）は臨時休業です（貸切）"]],
 ]);
 
 if (failures > 0) {
