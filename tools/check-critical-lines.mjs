@@ -221,6 +221,11 @@ const CRITICAL_FILES = [
     label: "FORBIDDEN 検知の自己テスト",
     reason: "FORBIDDEN（特に生成式による内部 export 検知5件）が壊れても、クリーンなツリーではこのスクリプト自体は全 PASS のまま気づけない。検知定義そのものを変異形で確認する手段の存在を固定する",
   },
+  {
+    file: "tools/check-byid-guard-sensitivity.mjs",
+    label: "byId ガードの感度確認スクリプト",
+    reason: "byId ガードがコードらしい再導入では落ち、コメントだけでは落ちないという感度の退行を機械検出する手段そのもの。消えると検知できない",
+  },
 ];
 
 // 残っていたら（戻ってきたら）退行と分かる旧形
