@@ -54,7 +54,7 @@ const onScrollSettled = (callback, delay = SCROLL_SETTLED_DELAY) => {
 // scrollend イベントに対応するブラウザでは scrollend を主経路にし、
 // スクロールが止まった瞬間に実行する。未対応ブラウザでは共通ヘルパー
 // onScrollSettled のデバウンス（SCROLL_SETTLED_DELAY）にフォールバックする。
-// 対応状況の目安（2026-11-22確認）：Chrome／Edge は114以降、Firefox は109以降、Safari は26.2以降。
+// 対応状況の目安（2026-11-22確認）：Chrome／Edge は114以降、Firefox は109以降、Safari は26.2以降（MDN／Baseline で確認）。
 // 対応ブラウザでも、スクロールが一切発生しない場合（既に着地位置にいる等）は
 // scrollend が発火しないため、保険としてデバウンス側も並走させ、
 // 先に来た方で1回だけ実行してもう一方を取り消す。
