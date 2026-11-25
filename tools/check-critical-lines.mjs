@@ -51,7 +51,7 @@
 //   対応する項目をこのリストからも外す（残したままだと正当な
 //   変更が毎回失敗扱いになる）。
 
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -191,6 +191,12 @@ const CRITICAL = [
     pattern: 'class="external-open-confirm"',
     label: "外部リンクモーダルの確定ボタン（external-open-confirm）",
     reason: "FORBIDDEN の「新しいタブで開く」は旧文言への巻き戻しは検知できるが、ボタン行ごと消える巻き戻しは検知できない。確定ボタン自体の存続を CRITICAL でも見ることで、文言退行と行消失の両方をカバーする",
+  },
+  {
+    file: "functions/api/auth.js",
+    pattern: 'await recordSuccess(env, request, "/api/auth", true);',
+    label: "ログイン成功時の recordSuccess 呼び出し（auth.js）",
+    reason: "試行制限の成功時消去はログイン（/api/auth）だけが行う決まり。auth.js 側の呼び出し自体が消えると成功しても失敗カウントが残り続けるため、存続を CRITICAL で見る。呼び出し箇所が auth.js 以外へ広がっていないかは、下の構造ガード（recordSuccess の呼び出し箇所の限定）で別途見る",
   },
 ];
 
@@ -349,6 +355,47 @@ for (const item of FORBIDDEN) {
     console.log(`     理由: ${item.reason}`);
   } else {
     console.log(`PASS ${item.label}（禁止パターンなし）`);
+  }
+}
+
+// --- 構造ガード: recordSuccess の呼び出しは auth.js のみ ---
+// 試行制限（_auth-guard.js）の recordSuccess は、成功時にそのIPの失敗
+// カウントを消す。他の管理APIの成功でも呼ぶと、同じ出口IPを共有する
+// 攻撃側の失敗がオーナーの通常操作で繰り返しリセットされ、ロックに
+// 届きにくくなるため、呼ぶのはログイン（functions/api/auth.js）だけに
+// 限定している（_auth-guard.js の recordSuccess のコメント参照）。
+// この限定は check-auth-guard.mjs のケース（他API成功後も通算5回で
+// ロック）で振る舞い面からは固定されているが、将来ほかのAPIへ成功時
+// 消去を足す変更が入ると静かに元へ戻ってしまう。そこで構造面でも、
+// functions/api 配下の全 .js ファイルを走査し、recordSuccess への
+// 言及（import・呼び出し・再export等、形を問わない）が auth.js と
+// 定義元の _auth-guard.js 以外に現れたら FAIL にする。ファイル単位の
+// FORBIDDEN と違い、走査方式なら将来追加される新しいAPIファイルも
+// 自動で対象になる（2026-11-26、改善提案台帳の採用を受けて追加）。
+// なおコメント内での言及も FAIL になる（保守的に倒す）。限定の
+// 説明をコメントに書くときは、関数名ではなく「成功時消去」のように
+// 言い換えること（_auth-guard.js 自身のコメントもその形にしてある）。
+{
+  const apiDir = join(root, "functions/api");
+  const allowed = new Set(["functions/api/auth.js", "functions/api/_auth-guard.js"]);
+  const offenders = [];
+  const walk = (dir, prefix) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) walk(join(dir, entry.name), rel);
+      else if (entry.isFile() && entry.name.endsWith(".js")) {
+        const source = readFileSync(join(dir, entry.name), "utf8");
+        if (/\brecordSuccess\b/.test(source) && !allowed.has(rel)) offenders.push(rel);
+      }
+    }
+  };
+  if (existsSync(apiDir)) walk(apiDir, "functions/api");
+  if (offenders.length > 0) {
+    failures++;
+    console.log(`FAIL recordSuccess の呼び出し箇所の限定: auth.js 以外で recordSuccess への言及があります (${offenders.join(", ")})`);
+    console.log("     理由: 成功時の失敗カウント消去はログイン（/api/auth）だけが行う。他の管理APIで消すと、同じ出口IPを共有する攻撃側の失敗がオーナーの通常操作でリセットされ、試行制限のロックに届きにくくなる");
+  } else {
+    console.log("PASS recordSuccess の呼び出し箇所の限定（auth.js のみ）");
   }
 }
 
