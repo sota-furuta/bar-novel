@@ -2,6 +2,9 @@
 // 偽の KV と Request で /api/auth と /api/news のハンドラを直接呼び、
 // 「数える→ロック→ロック中は正解でも429→期限切れで復帰→成功で消去」と
 // 「別APIの失敗も同じロックに効く」「KVなしでは従来どおり」を確認する。
+// あわせて窓（15分）と残り時間表示の境界ケース（ケース11〜13）も固定する:
+// 窓は「15分未満」の失敗だけを数え、残り時間は分単位で切り上げ（最小1分）、
+// ロック期限ちょうどでは解除される。境界は Date.now を固定して ms 単位で検証する。
 // 実行: node tools/check-auth-guard.mjs
 import { onRequestPost as authPost } from "../functions/api/auth.js";
 import { onRequestPost as newsPost } from "../functions/api/news.js";
@@ -111,6 +114,96 @@ for (let i = 1; i <= 4; i++) {
   check("news保存は成功する", saved.status === 200);
   const fifth = await authPost({ request: req(ip4, { password: "x" }), env });
   check("他API成功後も通算5回でロック", fifth.status === 429);
+}
+
+// 11) 窓の境界: 15分ちょうど経過した失敗は窓から落ちる（数えない）
+//     Date.now を固定し、境界を ms 単位で厳密に固定する
+{
+  const WINDOW_MS = 15 * 60 * 1000;
+  const T = 1700000000000;
+  const realNow = Date.now;
+  Date.now = () => T;
+  try {
+    // 11a) ちょうど15分前の失敗1件＋新しい失敗3件がある状態で1回失敗:
+    //      境界の1件が落ちるため合計4件止まりで、ロックせず401
+    const ipA = "203.0.113.201";
+    const keyA = "authguard:" + ipA;
+    kv.map.set(keyA, JSON.stringify({
+      fails: [T - WINDOW_MS, T - 60000, T - 60000, T - 60000],
+      lockedUntil: 0,
+    }));
+    const resA = await authPost({ request: req(ipA, { password: "x" }), env });
+    check("窓境界: 15分ちょうどの失敗は落ちて401止まり", resA.status === 401);
+    const stA = JSON.parse(kv.map.get(keyA));
+    check("窓境界: 境界の失敗が状態からも消えている", stA.fails.length === 4 && !stA.fails.includes(T - WINDOW_MS));
+
+    // 11b) 15分より1msだけ新しい失敗は窓に残る:
+    //      既存4件＋今回1件＝5件でロックし429
+    const ipB = "203.0.113.202";
+    const keyB = "authguard:" + ipB;
+    kv.map.set(keyB, JSON.stringify({
+      fails: [T - WINDOW_MS + 1, T - 60000, T - 60000, T - 60000],
+      lockedUntil: 0,
+    }));
+    const resB = await authPost({ request: req(ipB, { password: "x" }), env });
+    check("窓境界: 15分未満（1ms内側）の失敗は残って5件で429", resB.status === 429);
+  } finally {
+    Date.now = realNow;
+  }
+}
+
+// 12) 残り時間（retryAfterMinutes）の切り上げ表示の境界
+//     切り上げ: 端数は次の分へ。最小は1分。ちょうどの分はそのまま
+{
+  const T = 1700000000000;
+  const realNow = Date.now;
+  Date.now = () => T;
+  try {
+    async function lockedAttempt(ip, lockedUntil) {
+      kv.map.set("authguard:" + ip, JSON.stringify({ fails: [], lockedUntil }));
+      const res = await authPost({ request: req(ip, { password: "secret" }), env });
+      return { status: res.status, data: await res.json() };
+    }
+    const cases = [
+      ["残り15分ちょうどは15分", 15 * 60000, 15],
+      ["残り14分30秒は切り上げて15分", 14 * 60000 + 30000, 15],
+      ["残り14分ちょうどは14分", 14 * 60000, 14],
+      ["残り14分1msは切り上げて15分", 14 * 60000 + 1, 15],
+      ["残り30秒は切り上げて1分", 30000, 1],
+      ["残り1msでも最小1分", 1, 1],
+    ];
+    let n = 0;
+    for (const [name, remainMs, expect] of cases) {
+      n++;
+      const r = await lockedAttempt("203.0.113." + (210 + n), T + remainMs);
+      check("残り時間: " + name, r.status === 429 && r.data.retryAfterMinutes === expect);
+    }
+  } finally {
+    Date.now = realNow;
+  }
+}
+
+// 13) ロック期限の境界: 期限ちょうど（lockedUntil == now）では解除され、
+//     期限の1ms前ではまだロック中
+{
+  const T = 1700000000000;
+  const realNow = Date.now;
+  Date.now = () => T;
+  try {
+    const ipJust = "203.0.113.220";
+    kv.map.set("authguard:" + ipJust, JSON.stringify({ fails: [], lockedUntil: T + 1 }));
+    const still = await authPost({ request: req(ipJust, { password: "secret" }), env });
+    check("期限境界: 期限1ms前はまだ429", still.status === 429);
+
+    const ipExact = "203.0.113.221";
+    const keyExact = "authguard:" + ipExact;
+    kv.map.set(keyExact, JSON.stringify({ fails: [], lockedUntil: T }));
+    const res = await authPost({ request: req(ipExact, { password: "secret" }), env });
+    check("期限境界: 期限ちょうどで解除され成功", res.status === 200);
+    check("期限境界: 解除後の成功で状態が消える", !kv.map.has(keyExact));
+  } finally {
+    Date.now = realNow;
+  }
 }
 
 console.log(failures === 0 ? "\n全ケース合格" : `\n${failures} 件失敗`);
