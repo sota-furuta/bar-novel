@@ -2,6 +2,7 @@
 // GET    /api/photos -> { photos: [{id, caption, createdAt}] }（投稿順）
 // POST   /api/photos (multipart: password, caption, file) -> 写真を保存
 // DELETE /api/photos { password, id } -> 写真を削除
+// PATCH  /api/photos { password, id, caption } -> キャプションを変更
 // 画像本体は KV の "photo:<id>" に保存し、/api/photo/<id> で配信する
 import { checkLock, recordFailure, lockedResponse, LOCK_MINUTES } from "./_auth-guard.js";
 const INDEX_KEY = "photos:index";
@@ -88,6 +89,41 @@ export async function onRequestDelete({ request, env }) {
   }
   await env.NEWS_KV.delete("photo:" + id);
   const index = (await readIndex(env)).filter((p) => p.id !== id);
+  await env.NEWS_KV.put(INDEX_KEY, JSON.stringify(index));
+  return Response.json({ ok: true });
+}
+
+export async function onRequestPatch({ request, env }) {
+  if (!env.NEWS_KV) {
+    return Response.json({ ok: false, error: "kv_not_bound" }, { status: 503 });
+  }
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ ok: false, error: "bad_json" }, { status: 400 });
+  }
+  const lock = await checkLock(env, request);
+  if (lock.locked) return lockedResponse(lock.retryAfterMinutes);
+  if (!env.ADMIN_PASSWORD || body.password !== env.ADMIN_PASSWORD) {
+    const r = await recordFailure(env, request, "/api/photos");
+    if (r.lockedNow) return lockedResponse(LOCK_MINUTES);
+    return Response.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+  const id = String(body.id || "");
+  if (!id) {
+    return Response.json({ ok: false, error: "no_id" }, { status: 400 });
+  }
+  const caption = String(body.caption || "").trim().slice(0, 40);
+  if (!caption) {
+    return Response.json({ ok: false, error: "caption_required" }, { status: 400 });
+  }
+  const index = await readIndex(env);
+  const item = index.find((p) => p.id === id);
+  if (!item) {
+    return Response.json({ ok: false, error: "not_found" }, { status: 404 });
+  }
+  item.caption = caption;
   await env.NEWS_KV.put(INDEX_KEY, JSON.stringify(index));
   return Response.json({ ok: true });
 }

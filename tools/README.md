@@ -14,6 +14,7 @@ BAR NOVEL の検証用スタブテストと巻き戻し検知スクリプトの�
 | check-critical-lines.mjs | 消えてはいけない行の存続（CRITICAL）と禁止パターン（FORBIDDEN）、recordSuccess の呼び出しは auth.js のみという構造ガード（functions/api 配下を走査） | verification へ push した後（リモートの最新を新しく取得したフォルダで実行する。手元の古いフォルダでは巻き戻しを見逃す）・本番反映前・functions/api 配下へ管理APIを増減したとき |
 | check-forbidden-detection.mjs | FORBIDDEN 検知そのものの自己テスト（生成式による内部 export 検知5件などが、変異形を検知でき正当な形を誤検知しないこと） | check-critical-lines.mjs の FORBIDDEN や _date.js の公開／内部の境界を触ったとき・check-critical-lines.mjs へ push する前 |
 | check-auth-guard.mjs | /admin ログイン試行制限のガード（IP単位の失敗カウント・15分ロック・全管理APIへの適用） | functions/api/_auth-guard.js や管理APIのパスワード照合を触ったとき |
+| check-photos-caption.mjs | 写真のキャプション変更 API（PATCH /api/photos）の認証・バリデーション・索引更新 | functions/api/photos.js のキャプション変更を触ったとき |
 | check-geo-consistency.mjs | JSON-LD の geo と地図埋め込み iframe の ll パラメータの一致 | index.html の JSON-LD や地図 iframe の座標を触ったとき |
 | smoke-browser.mjs | 実ブラウザのスモークテスト（着地・確認モーダル・ハンバーガーメニュー。全17チェック） | 着地・モーダル・ハンバーガーまわりの script.js や index.html・style.css を触ったとき。Playwright＋Chromium が要る（下記参照） |
 
@@ -27,6 +28,7 @@ node tools/check-date-boundaries.mjs
 node tools/check-critical-lines.mjs
 node tools/check-forbidden-detection.mjs
 node tools/check-auth-guard.mjs
+node tools/check-photos-caption.mjs
 node tools/check-geo-consistency.mjs
 node tools/smoke-browser.mjs
 ```

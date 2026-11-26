@@ -62,6 +62,7 @@
       border: 1px solid #e7e5e4; border-radius: 10px; padding: 8px; }
     .photo-item img { width: 72px; height: 54px; object-fit: cover; border-radius: 8px; flex: 0 0 auto; }
     .photo-item span { flex: 1; font-size: 0.9rem; color: #292524; overflow: hidden; }
+    .photo-item input[type="text"] { flex: 1; min-width: 0; }
     .photo-item button, .contact-actions button { min-height: 40px; padding: 8px 12px; font-size: 0.9rem; }
     .contact-item { background: #ffffff; border: 1px solid #d6d3d1; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
     .contact-item.done { opacity: 0.6; }
@@ -484,7 +485,46 @@
             if (data.ok) { loadPhotos(); }
             else { photoStatusEl.textContent = "削除できませんでした。"; photoStatusEl.className = "err"; }
           });
-          div.appendChild(img); div.appendChild(span); div.appendChild(btn);
+          const editBtn = document.createElement("button");
+          editBtn.type = "button";
+          editBtn.textContent = "編集";
+          editBtn.addEventListener("click", () => {
+            div.innerHTML = "";
+            div.appendChild(img);
+            const input = document.createElement("input");
+            input.type = "text";
+            input.maxLength = 40;
+            input.value = p.caption || "";
+            const saveBtn = document.createElement("button");
+            saveBtn.type = "button";
+            saveBtn.textContent = "保存";
+            saveBtn.addEventListener("click", async () => {
+              const res = await fetch("/api/photos", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ password, id: p.id, caption: input.value })
+              });
+              const data = await res.json().catch(() => ({ ok: false }));
+              if (data.ok) {
+                photoStatusEl.textContent = "キャプションを変更しました。";
+                photoStatusEl.className = "ok";
+                loadPhotos();
+              } else if (data.error === "caption_required") {
+                photoStatusEl.textContent = "キャプションを入力してください。";
+                photoStatusEl.className = "err";
+              } else {
+                photoStatusEl.textContent = "変更できませんでした。";
+                photoStatusEl.className = "err";
+              }
+            });
+            const cancelBtn = document.createElement("button");
+            cancelBtn.type = "button";
+            cancelBtn.textContent = "キャンセル";
+            cancelBtn.addEventListener("click", () => loadPhotos());
+            div.appendChild(input); div.appendChild(saveBtn); div.appendChild(cancelBtn);
+            input.focus();
+          });
+          div.appendChild(img); div.appendChild(span); div.appendChild(editBtn); div.appendChild(btn);
           photoListEl.appendChild(div);
         });
         if (!photoListEl.children.length) {
