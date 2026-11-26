@@ -1,3 +1,4 @@
+# キャッシュ方針: script/style はバージョン印つき前提で1日、画像は7日
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin

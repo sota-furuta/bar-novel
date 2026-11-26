@@ -9,6 +9,10 @@
 // その変異テスト自体をこのスクリプトに固定する
 // （2026-11-22、改善提案台帳の採用を受けて追加）。
 //
+// 「コメントだけでは落ちない」が成り立つのは、素の言及（"byId 方式" のような
+// 文字列）だけである。コメント内でも「// const byId = {}」のようなコードらしい
+// 表記は検出対象になる（2026-11-26、改善提案台帳の採用を受けて明記）。
+//
 // 再実行するタイミング:
 // - tools/check-header-spy.mjs の byIdCodePattern や、ガードの対象範囲
 //   （spyIife の取り出し方）を触ったとき
@@ -47,13 +51,23 @@ const scriptJs = readFileSync(join(root, "script.js"), "utf8");
 
 // 注入位置の目印: ヘッダースパイ IIFE の最初の行。この行の直前は IIFE の
 // 内側なので、ここへ注入したコードはガードの検査対象（spyIife）に含まれる。
-const ANCHOR = "  const links = document.querySelectorAll('.header-nav a[href^=\"#\"], .hamburger-menu a[href^=\"#\"]');";
+// 取り出し範囲（spyIife）が先頭側から狭まる変更を検出するため、
+// IIFE 先頭（"(function () {" の直後）へ注入するケースもあり、その場合は
+// runHeaderSpyWithMutation の insertIndex で注入位置を指定する
+// （2026-11-26、改善提案台帳の採用を受けて追加）。
+const ANCHOR = "  const links = document.querySelectorAll('.header-nav a[href^=\"#\"], .hamburger-menu a[href^=\"#\"], .footer-nav a[href^=\"#\"]');";
 if (!scriptJs.includes(ANCHOR)) {
   console.log("NG 注入位置の目印（const links の行）が script.js に見つかりません。実装の変更に合わせてこのスクリプトの目印も更新してください。");
   process.exit(1);
 }
 
 const GUARD_NG_LABEL = "NG byId 方式へ戻っていない";
+
+// IIFE 先頭の位置（"(function () {" の直後）。const links の行より前で、
+// 取り出し範囲が先頭側から狭まるとここへ注入したコードは検査対象から外れる。
+const SPY_IIFE_OPEN = "(function () {";
+const spyIifeStart = scriptJs.lastIndexOf(SPY_IIFE_OPEN, scriptJs.indexOf(ANCHOR));
+const IIFE_HEAD_INDEX = spyIifeStart + SPY_IIFE_OPEN.length;
 
 // 各スニペットは、パターンの分岐（宣言／参照・代入）のうち1つだけに
 // ヒットする形にする。複数分岐に同時にヒットする形だと、分岐が1つ
@@ -64,9 +78,22 @@ const GUARD_NG_LABEL = "NG byId 方式へ戻っていない";
 const DETECT_CASES = [
   ["let byId の宣言のみ", "  let byId;"],
   ["let byIdMap の宣言のみ", "  let byIdMap;"],
+  // const は初期化なし宣言が書けないため、宣言分岐だけに当たるよう
+  // 「= {}」との間へコメントを挟んで代入分岐に当たらない形にする
+  // （2026-11-26、改善提案台帳の採用を受けて追加）。
+  ["const byId の宣言のみ", "  const byId /* 宣言だけに当てる */ = {};"],
+  ["const byIdMap の宣言のみ", "  const byIdMap /* 宣言だけに当てる */ = {};"],
+  ["var byId の宣言のみ", "  var byId /* 宣言だけに当てる */ = {};"],
+  ["var byIdMap の宣言のみ", "  var byIdMap /* 宣言だけに当てる */ = {};"],
   ["byId[ ] での参照のみ", "  const _probeBracket = () => byId[\"top\"];"],
   ["byId. での参照のみ", "  const _probeDot = () => byId.top;"],
   ["byId への代入のみ", "  const _probeAssign = () => { byId = {}; };"],
+  ["byIdMap[ ] での参照のみ", "  const _probeMapBracket = () => byIdMap[\"top\"];"],
+  ["byIdMap. での参照のみ", "  const _probeMapDot = () => byIdMap.top;"],
+  ["byIdMap への代入のみ", "  const _probeMapAssign = () => { byIdMap = {}; };"],
+  // 取り出し範囲が先頭側から狭まる変更を検出するケース。IIFE 先頭へ注入し、
+  // insertIndex で注入位置を指定する（2026-11-26、改善提案台帳の採用を受けて追加）。
+  ["範囲. IIFE 先頭の byId 参照のみ", "  const _probeRange = () => byId.top;", IIFE_HEAD_INDEX],
 ];
 const NO_DETECT_CASES = [
   ["コメント中の byId 方式", "  // byId 方式に戻さない"],
@@ -94,12 +121,13 @@ function runCase(name, fn) {
 }
 
 // 変異入りの複製を作り、その中での check-header-spy.mjs の実行結果を返す。
-function runHeaderSpyWithMutation(snippet) {
+// insertIndex を指定した場合はその位置へ注入し、省略時は ANCHOR（const links の行）の直前に注入する。
+function runHeaderSpyWithMutation(snippet, insertIndex = scriptJs.indexOf(ANCHOR)) {
   const dir = mkdtempSync(join(tmpdir(), "byid-guard-"));
   try {
     cpSync(join(root, "index.html"), join(dir, "index.html"));
     cpSync(join(root, "tools", "check-header-spy.mjs"), join(dir, "tools", "check-header-spy.mjs"), { recursive: true });
-    const mutated = snippet == null ? scriptJs : scriptJs.replace(ANCHOR, `${snippet}\n${ANCHOR}`);
+    const mutated = snippet == null ? scriptJs : scriptJs.slice(0, insertIndex) + `${snippet}\n` + scriptJs.slice(insertIndex);
     if (snippet != null && mutated === scriptJs) throw new Error("変異を注入できませんでした");
     writeFileSync(join(dir, "script.js"), mutated);
     const r = spawnSync(process.execPath, [join(dir, "tools", "check-header-spy.mjs")], { encoding: "utf8" });
@@ -115,9 +143,9 @@ runCase("0. ベースライン（変異なしでは全ケース合格する）",
   check("0", "終了コード", r.status, 0);
 });
 
-DETECT_CASES.forEach(([label, snippet], i) => {
+DETECT_CASES.forEach(([label, snippet, insertIndex], i) => {
   runCase(`${i + 1}. 検出する: ${label}`, () => {
-    const r = runHeaderSpyWithMutation(snippet);
+    const r = runHeaderSpyWithMutation(snippet, insertIndex);
     check(`${i + 1}`, "終了コードが 0 でない", r.status !== 0, true);
     check(`${i + 1}`, "ガードの NG 行が出力される", r.stdout.includes(GUARD_NG_LABEL), true);
   });

@@ -559,6 +559,12 @@ main > .section:first-child {
   text-transform: uppercase;
 }
 
+/* 現在地（ヘッダーナビの .is-current と同系統。#ffb35c＋下線） */
+.footer-nav a.is-current {
+  color: #ffb35c;
+  text-decoration: underline;
+}
+
 .footer-note {
   margin: 0;
   font-size: 0.78rem;
@@ -586,7 +592,7 @@ main > .section:first-child {
   color: var(--text);
   text-decoration: none;
   font-size: 0.82rem;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.02em;
   white-space: nowrap;
 }
 
@@ -602,6 +608,12 @@ main > .section:first-child {
 @media (min-width: 820px) {
   .bottom-bar {
     display: none;
+  }
+
+  /* PC では下部固定バーが表示されないため、メニューの高さ上限から
+     バー分（88px）を差し引かない */
+  .hamburger-menu {
+    max-height: calc(100dvh - 96px);
   }
 
   .site-footer {
@@ -674,7 +686,9 @@ main > .section:first-child {
   right: 14px;
   min-width: 210px;
   /* 上はヘッダー分（96px）、下は下部固定バーの分（88px）を空ける。
-     バーと同じ z-index のため、メニューの下端がバーに重なると隠れて押せなくなる */
+     バーと同じ z-index のため、メニューの下端がバーに重なると隠れて押せなくなる。
+     88px の内訳：バー本体 約54px（padding 14px×2＋文字の行 約25px＋罫線1px）
+     ＋セーフエリア最大 約34px。 */
   max-height: calc(100dvh - 96px - 88px);
   overflow-y: auto;
   overscroll-behavior: contain;

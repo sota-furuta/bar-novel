@@ -32,8 +32,12 @@
 //    防御的ガードは将来のリファクタで静かに消えやすいため、ケースで固定する
 //    （2026-11-25、改善提案台帳の採用を受けて追加。第1弾の別担当レビューから）。
 //    fmt の定義そのものを script.js から取り出して実行し、複製ロジックは持たない。
-//    項目が落ちる側は、収集部の「if (t) closureItems.push(t);」が script.js に
-//    残っていることの構造ガードと、取り出した fmt を使った収集の再現で確認する。
+//    項目が落ちる側は、収集部の「if (t) closureItems.push(t);」が closures 収集ブロック内
+//    （const closureItems = []; から closureItems.slice(0, 2) まで）に残っていることの
+//    構造ガードと、取り出した fmt を使った収集の再現で確認する。
+//    注：fmt の取り出しは波括弧の単純カウントのため、文字列・コメント内の不釣り合いな
+//    括弧には弱い。将来 fmt 内に「}」を含む文字列等が入ると抽出がずれる
+//    （2026-11-26、改善提案台帳の採用を受けて追加）。
 // あわせて全ケース共通で、30日分の長さ・書式（YYYY-MM-DD）・重複なし・
 // 1日ずつ連続していること、jstDays の末尾と jstToday が一致することも確認する。
 
@@ -197,8 +201,19 @@ runFmtCase("fmt: 不正な日付は null になる", [
 ["date null", fmt({ date: null }), null],
 ]);
 
+// closures 収集ブロック（const closureItems = []; から closureItems.slice(0, 2) まで）
+// の範囲を取り出す。ファイル内のどこかに文字列があるだけの判定だと、ガード行が
+// コメントアウトされて残った場合にすり抜けるため、ブロック内にあることを見る
+// （2026-11-26、改善提案台帳の採用を受けて変更）。
+function closureCollectionBlock(sourceText) {
+const start = sourceText.indexOf("const closureItems = [];");
+const end = sourceText.indexOf("closureItems.slice(0, 2)", start);
+if (start < 0 || end < 0) return null;
+return sourceText.slice(start, end);
+}
+
 runFmtCase("fmt: 不正な日付の項目は収集から落ち、有効な項目だけが残る", [
-["collection guard in script.js", scriptSource.includes("if (t) closureItems.push(t);"), true],
+["collection guard in script.js", (() => { const block = closureCollectionBlock(scriptSource); return block !== null && block.includes("if (t) closureItems.push(t);"); })(), true],
 ["collected items", (() => {
 const closureItems = [];
 [{ date: "not-a-date" }, { date: "2026-11-25" }, { date: "" }, { date: "2026-11-22", note: "貸切" }].forEach((c) => {

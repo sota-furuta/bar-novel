@@ -198,6 +198,17 @@ const CRITICAL = [
     label: "ログイン成功時の recordSuccess 呼び出し（auth.js）",
     reason: "試行制限の成功時消去はログイン（/api/auth）だけが行う決まり。auth.js 側の呼び出し自体が消えると成功しても失敗カウントが残り続けるため、存続を CRITICAL で見る。呼び出し箇所が auth.js 以外へ広がっていないかは、下の構造ガード（recordSuccess の呼び出し箇所の限定）で別途見る",
   },
+  {
+    file: "tools/check-critical-lines.mjs",
+    // 手順行そのものを CRITICAL で見る。pattern を1つの文字列で書くと、
+    // この項目自身の pattern リテラルが対象ファイル内に現れて自己参照し、
+    // 手順行が消えても検知できなくなるため、2片に割って連結する形にする。
+    // 連結後の文字列は、手順コメント行にしか現れない
+    // （2026-11-26、改善提案台帳の採用を受けて追加）。
+    pattern: "内部名を追加するときは FORBIDDEN 側にも" + "1件足すこと",
+    label: "内部名追加の手順コメント（internalExportPattern 直前）",
+    reason: "手順行はコメントのため CRITICAL_FILES の存在チェックでは守れず、並行 push で静かに消えても検知できない。内部名追加の手順自体が消えると、FORBIDDEN 側への追加忘れが起きやすくなる",
+  },
 ];
 
 // ファイル自体が消えてはいけないもの（中身ではなく存在を確認する）
@@ -253,6 +264,7 @@ const CRITICAL_FILES = [
 // 追加・修正が1か所で済むようにする。2026-11-19、改善提案台帳の
 // 採用を受けて生成式化）。名前は識別子（英字・数字・アンダースコア）
 // のみを想定し、そのまま埋め込む。
+// 内部名を追加するときは FORBIDDEN 側にも1件足すこと（内部名追加の手順）。
 const internalExportPattern = (name) =>
   new RegExp(
     `export\\s*(?:\\{[^}]*\\b${name}\\b[^}]*\\}|(?:async\\s+)?(?:function|const|let|var|class)\\s*\\*?\\s*${name}\\b)`,

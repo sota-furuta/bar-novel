@@ -1,27 +1,27 @@
-// ヘッダースパイの確認スクリプト（BAR NOVEL ヘッダーナビ／ハンバーガーメニュー）
+// ヘッダースパイの確認スクリプト（BAR NOVEL ヘッダーナビ／ハンバーガーメニュー／フッターナビ）
 //
-// ヘッダーナビとハンバーガーメニューは、同じ href（#menu 等）を持つリンクが
-// 2つずつ存在する構成になっている。かつての byId 方式（href からリンクを
+// ヘッダーナビとハンバーガーメニューとフッターナビは、同じ href（#menu 等）を持つリンクが
+// 3つずつ存在する構成になっている。かつての byId 方式（href からリンクを
 // 1つだけ引く方式）では、片方のナビにしか現在地（is-current／aria-current）が
 // 付かないという、重複リンク特有の退行が起きうる。
 // 目次チップ側にはスタブテスト（tools/check-initial-highlight.mjs 等）があるが、
-// ヘッダー／ハンバーガー側には機械検証がなく、ナビが増えるたびに同じ見落としが
+// ヘッダー／ハンバーガー／フッター側には機械検証がなく、ナビが増えるたびに同じ見落としが
 // 再発し得るため、このスクリプトで最低限のケースを固定する
 // （2026-11-19、改善提案台帳の採用を受けて追加）。
 //
 // 再実行するタイミング:
 // - script.js のヘッダースパイ（末尾の IIFE）や共通ヘルパー
 //   createVisibleTracker を触ったとき
-// - index.html のナビ（.header-nav／.hamburger-menu）にリンクを増減したとき
+// - index.html のナビ（.header-nav／.hamburger-menu／.footer-nav）にリンクを増減したとき
 //   ※ ナビを意図的に変えた場合は、ハーネス定数 HEADER_HREFS／
-//   HAMBURGER_HREFS も合わせて更新すること。このテストが落ちる
+//   HAMBURGER_HREFS／FOOTER_HREFS も合わせて更新すること。このテストが落ちる
 //   典型場面は正当なナビ増減時であり、定数を追随させるべき場面か
 //   どうかをその場で判断できるようにするため
 //   （2026-11-19、改善提案台帳の採用を受けて追加）。
 // - index.html に新しいセクションを追加したとき（ナビへのリンク追加を
 //   伴う場合を含む）
 //   ※ リンクだけの変更とセクション新設とでは追随先が違う。リンクだけの
-//   変更では HEADER_HREFS／HAMBURGER_HREFS の更新で足りるが、新しい
+//   変更では HEADER_HREFS／HAMBURGER_HREFS／FOOTER_HREFS の更新で足りるが、新しい
 //   セクションを追加した場合は、それらに加えてハーネスの SECTION_IDS と、
 //   構造ガードで固定しているセクション列リテラル（script.js のヘッダー
 //   スパイ IIFE 内のセクション列と、その照合文字列）も、新セクションを
@@ -43,19 +43,19 @@
 // その場合は実装の変更に合わせて、このスクリプトの対象定義も更新すること。
 //
 // 確認ケース:
-// 1. menu が帯域内: 両ナビの #menu にだけ is-current と aria-current が付く
-// 2. concept が帯域内: 同 href の重複リンク両方に付く（byId 方式の退行検出）
-// 3. top が帯域内: ハンバーガーの #top だけが付き、ヘッダー側は外れる
-//    （直前に付いていた #menu の現在地も両ナビから消える）
+// 1. menu が帯域内: 3ナビの #menu にだけ is-current と aria-current が付く
+// 2. concept が帯域内: 同 href の重複リンク3つに付く（byId 方式の退行検出）
+// 3. top が帯域内: ハンバーガーとフッターの #top だけが付き、ヘッダー側は外れる
+//    （直前に付いていた #menu の現在地も3ナビから消える）
 // 4. 複数セクションが帯域内: entries の届く順ではなく文書順で最後が選ばれる
 // 5. 帯域が空: 現在地は据え置きになる（既存仕様の固定）
-// 6. access が帯域内: 両ナビの #access に付く（末尾セクションでも外れない）
-// あわせて構造ガードとして、両ナビを対象にするセレクタ（包含チェックでは
-// なく完全一致で固定する。フッターナビ等への対象拡大＝現在地表示の意図しない
+// 6. access が帯域内: 3ナビの #access に付く（末尾セクションでも外れない）
+// あわせて構造ガードとして、3ナビを対象にするセレクタ（包含チェックでは
+// なく完全一致で固定する。対象の拡大・縮小＝現在地表示の意図しない
 // 波及を機械検出するため。2026-11-19、改善提案台帳の採用を受けて変更）、
 // sections への top の含有、byId 方式へ戻っていないこと、帯域定義
 // （rootMargin の値と、IntersectionObserver の opts のキー集合）、
-// index.html 側の前提（#top はハンバーガーにだけある）も確認する。
+// index.html 側の前提（#top はハンバーガーとフッターにだけある）も確認する。
 // byId ガードが失敗したときは、一致した箇所を含む行（コード片）も
 // あわせて出力し、何が再導入されたかをその場で切り分けられるようにする
 // （2026-11-22、改善提案台帳の採用を受けて追加）。
@@ -64,8 +64,8 @@
 // （現行は rootMargin のみ）固定し、キーの追加・削除のどちらも帯域定義の
 // 巻き戻しとして同じガードで拾う
 // （2026-11-19、改善提案台帳の採用を受けて追加）。
-// さらに、index.html の両ナビの href 全集合（文書順の並びを含む）と
-// ハーネス定数（HEADER_HREFS／HAMBURGER_HREFS）の突き合わせも行う
+// さらに、index.html の3ナビの href 全集合（文書順の並びを含む）と
+// ハーネス定数（HEADER_HREFS／HAMBURGER_HREFS／FOOTER_HREFS）の突き合わせも行う
 // （2026-11-19、改善提案台帳の採用を受けて追加）。ナビの増減こそが
 // この退行の再発トリガーで、#top／#menu のみのサンプル確認では
 // #faq 等の片ナビ欠落を取りこぼすため、全件を突き合わせる。
@@ -124,10 +124,11 @@ const spyIife = extractFrom(source.slice(spyStart), "(function () {", "ヘッダ
 // スパイ対象セレクタの期待値。script.js 側の対象がこの文字列から少しでも
 // 変わったら（フッターナビ等の追加・順序や表記の変更を含む）失敗させるため、
 // 包含チェックではなく完全一致で固定する。
-const EXPECTED_SELECTOR = '.header-nav a[href^="#"], .hamburger-menu a[href^="#"]';
+const EXPECTED_SELECTOR = '.header-nav a[href^="#"], .hamburger-menu a[href^="#"], .footer-nav a[href^="#"]';
 const SECTION_IDS = ["top", "concept", "menu", "gallery", "info", "faq", "access"];
 const HEADER_HREFS = ["#concept", "#menu", "#gallery", "#info", "#faq", "#access"];
 const HAMBURGER_HREFS = ["#top", ...HEADER_HREFS];
+const FOOTER_HREFS = ["#top", ...HEADER_HREFS];
 
 function makeLink(nav, href) {
   const classes = new Set();
@@ -162,6 +163,7 @@ function makeHarness() {
   const links = [
     ...HEADER_HREFS.map((h) => makeLink("header", h)),
     ...HAMBURGER_HREFS.map((h) => makeLink("hamburger", h)),
+    ...FOOTER_HREFS.map((h) => makeLink("footer", h)),
   ];
   const documentStub = {
     querySelectorAll(selector) {
@@ -223,30 +225,30 @@ function runCase(name, fn) {
 
 // --- ケース ---
 
-runCase("1. menu が帯域内（両ナビの #menu にだけ付く）", () => {
+runCase("1. menu が帯域内（3ナビの #menu にだけ付く）", () => {
   const h = makeHarness();
   h.api.fire([{ target: h.byIdMap.menu, isIntersecting: true }]);
-  check("1", "is-current は両ナビの #menu だけ", currents(h.links), ["header #menu", "hamburger #menu"]);
-  check("1", "aria-current は両ナビの #menu だけ", ariaCurrents(h.links), ["header #menu", "hamburger #menu"]);
+  check("1", "is-current は3ナビの #menu だけ", currents(h.links), ["header #menu", "hamburger #menu", "footer #menu"]);
+  check("1", "aria-current は3ナビの #menu だけ", ariaCurrents(h.links), ["header #menu", "hamburger #menu", "footer #menu"]);
 });
 
-runCase("2. concept が帯域内（同 href の重複リンク両方に付く）", () => {
+runCase("2. concept が帯域内（同 href の重複リンク3つに付く）", () => {
   const h = makeHarness();
   h.api.fire([{ target: h.byIdMap.concept, isIntersecting: true }]);
-  check("2", "is-current は両ナビの #concept", currents(h.links), ["header #concept", "hamburger #concept"]);
-  check("2", "aria-current は両ナビの #concept", ariaCurrents(h.links), ["header #concept", "hamburger #concept"]);
+  check("2", "is-current は3ナビの #concept", currents(h.links), ["header #concept", "hamburger #concept", "footer #concept"]);
+  check("2", "aria-current は3ナビの #concept", ariaCurrents(h.links), ["header #concept", "hamburger #concept", "footer #concept"]);
 });
 
-runCase("3. top が帯域内（ハンバーガーだけが付き、ヘッダー側は外れる）", () => {
+runCase("3. top が帯域内（ハンバーガーとフッターだけが付き、ヘッダー側は外れる）", () => {
   const h = makeHarness();
   h.api.fire([{ target: h.byIdMap.menu, isIntersecting: true }]);
-  check("3", "前提: 先に #menu が両ナビに付く", currents(h.links), ["header #menu", "hamburger #menu"]);
+  check("3", "前提: 先に #menu が3ナビに付く", currents(h.links), ["header #menu", "hamburger #menu", "footer #menu"]);
   h.api.fire([
     { target: h.byIdMap.menu, isIntersecting: false },
     { target: h.byIdMap.top, isIntersecting: true },
   ]);
-  check("3", "is-current はハンバーガーの #top だけ", currents(h.links), ["hamburger #top"]);
-  check("3", "aria-current はハンバーガーの #top だけ", ariaCurrents(h.links), ["hamburger #top"]);
+  check("3", "is-current はハンバーガーとフッターの #top だけ", currents(h.links), ["hamburger #top", "footer #top"]);
+  check("3", "aria-current はハンバーガーとフッターの #top だけ", ariaCurrents(h.links), ["hamburger #top", "footer #top"]);
   check("3", "ヘッダー側には現在地が1つも残らない", currents(h.links.filter((a) => a.nav === "header")), []);
 });
 
@@ -257,29 +259,37 @@ runCase("4. 複数セクションが帯域内（文書順で最後、entries の
     { target: h.byIdMap.info, isIntersecting: true },
     { target: h.byIdMap.gallery, isIntersecting: true },
   ]);
-  check("4", "文書順で後の info が両ナビで現在地", currents(h.links), ["header #info", "hamburger #info"]);
-  check("4", "aria-current も info だけ", ariaCurrents(h.links), ["header #info", "hamburger #info"]);
+  check("4", "文書順で後の info が3ナビで現在地", currents(h.links), ["header #info", "hamburger #info", "footer #info"]);
+  check("4", "aria-current も info だけ", ariaCurrents(h.links), ["header #info", "hamburger #info", "footer #info"]);
 });
 
 runCase("5. 帯域が空（現在地は据え置き）", () => {
   const h = makeHarness();
   h.api.fire([{ target: h.byIdMap.concept, isIntersecting: true }]);
   h.api.fire([{ target: h.byIdMap.concept, isIntersecting: false }]);
-  check("5", "帯域が空でも直前の現在地が残る（既存仕様）", currents(h.links), ["header #concept", "hamburger #concept"]);
+  check("5", "帯域が空でも直前の現在地が残る（既存仕様）", currents(h.links), ["header #concept", "hamburger #concept", "footer #concept"]);
 });
 
-runCase("6. access が帯域内（末尾セクションでも両ナビに付く）", () => {
+runCase("6. access が帯域内（末尾セクションでも3ナビに付く）", () => {
   const h = makeHarness();
   h.api.fire([{ target: h.byIdMap.access, isIntersecting: true }]);
-  check("6", "is-current は両ナビの #access", currents(h.links), ["header #access", "hamburger #access"]);
-  check("6", "aria-current は両ナビの #access", ariaCurrents(h.links), ["header #access", "hamburger #access"]);
+  check("6", "is-current は3ナビの #access", currents(h.links), ["header #access", "hamburger #access", "footer #access"]);
+  check("6", "aria-current は3ナビの #access", ariaCurrents(h.links), ["header #access", "hamburger #access", "footer #access"]);
 });
 
 // --- 構造ガード（方式の巻き戻し・前提の崩れの検出） ---
 
 runCase("構造: スパイの対象と方式", () => {
-  check("構造", "セレクタが両ナビ対象の完全な文字列と一致する（フッター等への拡大を検出）", spyIife.includes(`document.querySelectorAll('${EXPECTED_SELECTOR}')`), true);
-  check("構造", "sections の先頭に top が含まれる", spyIife.includes('["top", "concept", "menu", "gallery", "info", "faq", "access"]'), true);
+  // セレクタとセクション列は、真偽だけでなく実際の文字列そのものを
+  // 判定に渡す。expected/actual が true/false だけだと、セレクタが
+  // どう変わったかは別途ソース確認が必要になるため
+  // （2026-11-26、改善提案台帳の採用を受けて追加）。
+  const selectorMatch = spyIife.match(/document\.querySelectorAll\('([^']+)'\)/);
+  const actualSelector = selectorMatch ? selectorMatch[1] : "(見つかりません)";
+  check("構造", "セレクタが3ナビ対象の完全な文字列と一致する（対象の拡大・縮小を検出）", actualSelector, EXPECTED_SELECTOR);
+  const sectionsMatch = spyIife.match(/\[\s*"top"(?:\s*,\s*"[^"]+")*\s*\]/);
+  const actualSections = sectionsMatch ? sectionsMatch[0] : "(見つかりません)";
+  check("構造", "sections の列が7セクションを文書順どおりに含む", actualSections, '["top", "concept", "menu", "gallery", "info", "faq", "access"]');
   // byId マップの再導入だけを拾う。コメント中の "byId 方式" といった
   // 文字列だけの出現では落ちないよう、コードらしい出現に絞る。
   // ハーネス自身が byIdMap という識別子を使っているため、再導入時の
@@ -296,7 +306,12 @@ runCase("構造: スパイの対象と方式", () => {
     const lineEndRaw = spyIife.indexOf("\n", byIdMatch.index);
     const matchedLine = spyIife.slice(lineStart, lineEndRaw < 0 ? undefined : lineEndRaw).trim();
     const snippet = matchedLine.length > 120 ? `${matchedLine.slice(0, 120)}…` : matchedLine;
-    console.log(`  一致したコード片: ${snippet}`);
+    // spyIife は script.js の spyStart 以降を切り出したものなので、
+    // 行番号は script.js 全体での位置から数える。行番号があれば
+    // script.js 側の該当行へ即座に飛べる
+    // （2026-11-26、改善提案台帳の採用を受けて追加）。
+    const scriptJsLine = source.slice(0, spyStart + lineStart).split("\n").length;
+    console.log(`  一致したコード片（script.js ${scriptJsLine} 行目）: ${snippet}`);
   }
   check("構造", "現在地の判定は href の一致で全リンクを走査する", spyIife.includes('a.getAttribute("href") === "#" + current.id'), true);
   const h = makeHarness();
@@ -317,17 +332,20 @@ function navFragmentHrefs(className) {
   return [...block.matchAll(/href\s*=\s*(?:"([^"]+)"|'([^']+)')/g)].map((m) => m[1] ?? m[2]).filter((href) => href.startsWith("#"));
 }
 
-runCase("構造: index.html 側の前提（#top はハンバーガーにだけある）", () => {
+runCase("構造: index.html 側の前提（#top はハンバーガーとフッターにだけある）", () => {
   const headerHrefs = navFragmentHrefs("header-nav");
   const burgerHrefs = navFragmentHrefs("hamburger-menu");
+  const footerHrefs = navFragmentHrefs("footer-nav");
   check("構造", "ヘッダーナビに #top は無い", headerHrefs.includes("#top"), false);
   check("構造", "ハンバーガーに #top がある", burgerHrefs.includes("#top"), true);
+  check("構造", "フッターに #top がある", footerHrefs.includes("#top"), true);
   check("構造", "両ナビに #menu がある（重複リンクの前提）", headerHrefs.includes("#menu") && burgerHrefs.includes("#menu"), true);
 });
 
-runCase("構造: index.html 両ナビの href 全集合とハーネス定数の突き合わせ", () => {
+runCase("構造: index.html 3ナビの href 全集合とハーネス定数の突き合わせ", () => {
   check("構造", "ヘッダーナビの href 全集合（文書順）が HEADER_HREFS と一致する", navFragmentHrefs("header-nav"), HEADER_HREFS);
   check("構造", "ハンバーガーの href 全集合（文書順）が HAMBURGER_HREFS と一致する", navFragmentHrefs("hamburger-menu"), HAMBURGER_HREFS);
+  check("構造", "フッターの href 全集合（文書順）が FOOTER_HREFS と一致する", navFragmentHrefs("footer-nav"), FOOTER_HREFS);
 });
 
 if (failures > 0) {
