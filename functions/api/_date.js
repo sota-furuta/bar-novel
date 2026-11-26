@@ -9,6 +9,7 @@
 // 公開する export は、利用側が実際に使う jstDays／utcDays／jstToday のみに絞る。
 // daysWithOffset／todayWithOffset／JST_OFFSET_MS は内部実装として公開しない
 // （ラッパーを迂回した呼び出しとオフセット指定ミスの余地を戻さないため。2026-11-19、改善提案台帳の採用を受けて最小化）。
+// 内部名を増やすときは check-critical-lines.mjs の FORBIDDEN にも1件足すこと。
 const DAY_MS = 86400 * 1000;
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 

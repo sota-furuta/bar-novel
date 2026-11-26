@@ -526,6 +526,7 @@ if (hamburger && hamburgerMenu) {
   ])
     .then(([news, noticesData]) => {
       const items = [];
+      // 帯の優先順位: 臨時休業が最大2件を占め、お知らせは残り枠（全体で最大3件）のみ入る
       const closureItems = [];
       ((news && news.closures) || []).forEach((c) => {
         const t = fmt(c);
@@ -697,9 +698,9 @@ if (hamburger && hamburgerMenu) {
 // 実際に使えるナビ側でだけ現在地が読み上げられる。デスクトップで両方開いても
 // ランドマークごとに1つずつなので、aria-current の重複とはみなさない。
 (function () {
-  const links = document.querySelectorAll('.header-nav a[href^="#"], .hamburger-menu a[href^="#"]');
+  const links = document.querySelectorAll('.header-nav a[href^="#"], .hamburger-menu a[href^="#"], .footer-nav a[href^="#"]');
   if (!links.length || !("IntersectionObserver" in window)) return;
-  // top はハンバーガーメニューにだけあるリンク。対象に含めることで、
+  // top はハンバーガーメニューとフッターナビにだけあるリンク。対象に含めることで、
   // ヒーロー表示中は Top が現在地になり、ヘッダーナビ側の古い現在地も消える
   const sections = ["top", "concept", "menu", "gallery", "info", "faq", "access"]
     .map((id) => document.getElementById(id))

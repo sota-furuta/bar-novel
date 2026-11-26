@@ -559,6 +559,17 @@ main > .section:first-child {
   text-transform: uppercase;
 }
 
+/* 現在地（ヘッダーナビの .is-current と同系統。#ffb35c＋下線） */
+/* フッターの現在地表示は PC幅のみ。スマホではフッターが見えている時点で
+   ページ最下部（Access）にいることがほとんどで、常に Access を指して
+   しまうため出さない（2026-11-26 ユーザー指示） */
+@media (min-width: 820px) {
+  .footer-nav a.is-current {
+    color: #ffb35c;
+    text-decoration: underline;
+  }
+}
+
 .footer-note {
   margin: 0;
   font-size: 0.78rem;
@@ -586,7 +597,7 @@ main > .section:first-child {
   color: var(--text);
   text-decoration: none;
   font-size: 0.82rem;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.02em;
   white-space: nowrap;
 }
 
@@ -674,7 +685,9 @@ main > .section:first-child {
   right: 14px;
   min-width: 210px;
   /* 上はヘッダー分（96px）、下は下部固定バーの分（88px）を空ける。
-     バーと同じ z-index のため、メニューの下端がバーに重なると隠れて押せなくなる */
+     バーと同じ z-index のため、メニューの下端がバーに重なると隠れて押せなくなる。
+     88px の内訳：バー本体 約54px（padding 14px×2＋文字の行 約25px＋罫線1px）
+     ＋セーフエリア最大 約34px。 */
   max-height: calc(100dvh - 96px - 88px);
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -684,6 +697,15 @@ main > .section:first-child {
   padding: 10px;
   box-shadow: 0 18px 40px rgba(30, 17, 5, 0.45);
   z-index: 60;
+}
+
+/* PC では下部固定バーが表示されないため、メニューの高さ上限から
+   バー分（88px）を差し引かない。基本ルールより後に置く必要がある
+   （メディアクエリは詳細度を上げないため） */
+@media (min-width: 820px) {
+  .hamburger-menu {
+    max-height: calc(100dvh - 96px);
+  }
 }
 
 .hamburger-menu:not([hidden]) {
