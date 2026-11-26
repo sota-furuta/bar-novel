@@ -560,9 +560,14 @@ main > .section:first-child {
 }
 
 /* 現在地（ヘッダーナビの .is-current と同系統。#ffb35c＋下線） */
-.footer-nav a.is-current {
-  color: #ffb35c;
-  text-decoration: underline;
+/* フッターの現在地表示は PC幅のみ。スマホではフッターが見えている時点で
+   ページ最下部（Access）にいることがほとんどで、常に Access を指して
+   しまうため出さない（2026-11-26 ユーザー指示） */
+@media (min-width: 820px) {
+  .footer-nav a.is-current {
+    color: #ffb35c;
+    text-decoration: underline;
+  }
 }
 
 .footer-note {
