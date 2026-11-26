@@ -116,6 +116,28 @@ const readIndex = async () => JSON.parse(await kv.get("photos:index"));
   check("KV が無ければ503", res.status === 503);
 }
 
+// 11) 試行制限：PATCH でも失敗を繰り返すとロックし、ロック中は正解でも 429
+{
+  const kv2 = fakeKV();
+  const env2 = { NEWS_KV: kv2, ADMIN_PASSWORD: "secret" };
+  await kv2.put("photos:index", JSON.stringify(seed));
+  const reqIp = (body) => new Request("https://example.test/api/photos", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", "CF-Connecting-IP": "198.51.100.23" },
+    body: JSON.stringify(body),
+  });
+  let last;
+  for (let i = 1; i <= 5; i++) {
+    last = await onRequestPatch({ request: reqIp({ password: "wrong" + i, id: "abc", caption: "文" }), env: env2 });
+  }
+  check("PATCH の失敗5回目でロック（429）", last.status === 429);
+  const res = await onRequestPatch({ request: reqIp({ password: "secret", id: "abc", caption: "文" }), env: env2 });
+  const data = await res.json();
+  check("ロック中は正しいパスワードでも429", res.status === 429 && data.locked === true);
+  const idx = JSON.parse(await kv2.get("photos:index"));
+  check("ロック中は索引が変わらない", idx[0].caption === "元の文");
+}
+
 if (failures > 0) {
   console.log(`\n結果: ${failures} 件の確認が失敗しました`);
   process.exit(1);
