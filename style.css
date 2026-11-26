@@ -610,12 +610,6 @@ main > .section:first-child {
     display: none;
   }
 
-  /* PC では下部固定バーが表示されないため、メニューの高さ上限から
-     バー分（88px）を差し引かない */
-  .hamburger-menu {
-    max-height: calc(100dvh - 96px);
-  }
-
   .site-footer {
     padding-bottom: 44px;
   }
@@ -698,6 +692,15 @@ main > .section:first-child {
   padding: 10px;
   box-shadow: 0 18px 40px rgba(30, 17, 5, 0.45);
   z-index: 60;
+}
+
+/* PC では下部固定バーが表示されないため、メニューの高さ上限から
+   バー分（88px）を差し引かない。基本ルールより後に置く必要がある
+   （メディアクエリは詳細度を上げないため） */
+@media (min-width: 820px) {
+  .hamburger-menu {
+    max-height: calc(100dvh - 96px);
+  }
 }
 
 .hamburger-menu:not([hidden]) {

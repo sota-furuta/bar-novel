@@ -213,7 +213,7 @@ return sourceText.slice(start, end);
 }
 
 runFmtCase("fmt: 不正な日付の項目は収集から落ち、有効な項目だけが残る", [
-["collection guard in script.js", (() => { const block = closureCollectionBlock(scriptSource); return block !== null && block.includes("if (t) closureItems.push(t);"); })(), true],
+["collection guard in script.js", (() => { const block = closureCollectionBlock(scriptSource); return block !== null && block.split("\n").filter((l) => !l.trim().startsWith("//")).join("\n").includes("if (t) closureItems.push(t);"); })(), true],
 ["collected items", (() => {
 const closureItems = [];
 [{ date: "not-a-date" }, { date: "2026-11-25" }, { date: "" }, { date: "2026-11-22", note: "貸切" }].forEach((c) => {
