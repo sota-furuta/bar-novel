@@ -517,6 +517,17 @@ if (hamburger && hamburgerMenu) {
   const fmt = (c) => {
     const dt = new Date(c.date + "T00:00:00+09:00");
     if (isNaN(dt.getTime())) return null;
+    // 存在しない日付（2026-02-30、2026-11-31 等）は Date が別日へ繰り上げて
+    // しまうため、年月日が実在するかを確認し、しなければ弾く（帯に誤った
+    // 日付を出さない。2026-11-26、改善提案台帳の採用を受けて追加）。
+    // 実在確認は UTC の年月日で行い、表示側のタイムゾーンには依存させない。
+    const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(c.date || "");
+    if (!parts) return null;
+    // 年 0〜99 は Date.UTC が 1900+年 と解釈するため、setUTCFullYear で組み立てる。
+    const cal = new Date(0);
+    cal.setUTCFullYear(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3]));
+    cal.setUTCHours(0, 0, 0, 0);
+    if (cal.getUTCFullYear() !== Number(parts[1]) || cal.getUTCMonth() + 1 !== Number(parts[2]) || cal.getUTCDate() !== Number(parts[3])) return null;
     const w = "日月火水木金土"[dt.getDay()];
     return `${dt.getMonth() + 1}月${dt.getDate()}日（${w}）は臨時休業です${c.note ? "（" + c.note + "）" : ""}`;
   };

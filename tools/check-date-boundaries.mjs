@@ -38,6 +38,10 @@
 //    注：fmt の取り出しは波括弧の単純カウントのため、文字列・コメント内の不釣り合いな
 //    括弧には弱い。将来 fmt 内に「}」を含む文字列等が入ると抽出がずれる
 //    （2026-11-26、改善提案台帳の採用を受けて追加）。
+// 7. 繰り上がり日付（2026-02-30、2026-11-31 等の存在しない日付）の扱い
+//    仕様は「fmt 側で弾く（null）」に決定（2026-11-26、改善提案台帳の採用）。
+//    Date は月末超過を別日へ繰り上げて表示してしまうため、誤った休業日を
+//    帯に出さない。うるう年で実在する 2024-02-29 はケース6の有効側で固定済み。
 // あわせて全ケース共通で、30日分の長さ・書式（YYYY-MM-DD）・重複なし・
 // 1日ずつ連続していること、jstDays の末尾と jstToday が一致することも確認する。
 
@@ -199,6 +203,32 @@ runFmtCase("fmt: 不正な日付は null になる", [
 ["month 13", fmt({ date: "2026-13-01" }), null],
 ["date missing", fmt({}), null],
 ["date null", fmt({ date: null }), null],
+]);
+
+runFmtCase("fmt: 繰り上がり日付（存在しない日付）は null になる", [
+["Feb 30", fmt({ date: "2026-02-30" }), null],
+["Nov 31", fmt({ date: "2026-11-31" }), null],
+["Feb 29 in non-leap year", fmt({ date: "2026-02-29" }), null],
+["Feb 30 in leap year", fmt({ date: "2024-02-30" }), null],
+["Apr 31", fmt({ date: "2026-04-31" }), null],
+["rollover with note also null", fmt({ date: "2026-02-30", note: "貸切" }), null],
+["Feb 29 in year 0099", fmt({ date: "0099-02-29" }), null],
+]);
+
+runFmtCase("fmt: 年 0〜99 の実在日付は整形される（Date.UTC の 1900+年 解釈に引きずられない）", [
+["leap day in year 0096", fmt({ date: "0096-02-29" }), "2月29日（水）は臨時休業です"],
+["plain in year 0099", fmt({ date: "0099-01-15" }), "1月15日（木）は臨時休業です"],
+]);
+
+runFmtCase("fmt: 繰り上がり日付の項目は収集から落ち、有効な月末日は残る", [
+["collected items", (() => {
+const closureItems = [];
+[{ date: "2026-02-30" }, { date: "2026-02-28" }, { date: "2026-11-31" }, { date: "2026-11-30" }].forEach((c) => {
+const t = fmt(c);
+if (t) closureItems.push(t);
+});
+return closureItems;
+})(), ["2月28日（土）は臨時休業です", "11月30日（月）は臨時休業です"]],
 ]);
 
 // closures 収集ブロック（const closureItems = []; から closureItems.slice(0, 2) まで）

@@ -10,7 +10,7 @@ BAR NOVEL の検証用スタブテストと巻き戻し検知スクリプトの�
 | check-initial-highlight.mjs | 目次チップの初期ハイライト（保留・取り消しの流れ） | script.js の初期ハイライト（highlightOnOpen / pendingInitial）や目次チップの click ハンドラ、スクロール停止判定の仕組みを触ったとき |
 | check-header-spy.mjs | ヘッダーナビ／ハンバーガーメニュー／フッターナビの現在地表示（is-current・aria-current） | script.js のヘッダースパイ（末尾の IIFE）や共通ヘルパー、index.html のナビにリンクを増減したとき・index.html に新しいセクションを追加したとき |
 | check-byid-guard-sensitivity.mjs | check-header-spy.mjs の byId ガードの感度（コードらしい再導入では落ち、コメントだけでは落ちないこと） | check-header-spy.mjs の byIdCodePattern やガードの対象範囲を触ったとき、script.js のヘッダースパイ IIFE の入口（const links の行）を触ったとき |
-| check-date-boundaries.mjs | 日付の境界（JST 9:00 の前後・月末・年末・うるう年）と臨時休業帯の fmt ガード（不正日付→null で項目が落ちる） | functions/api/stats.js または track.js の日付生成・集計範囲を触ったとき（日付生成は functions/api/_date.js の共通ヘルパーに寄せてある）、script.js の臨時休業帯の fmt を触ったとき |
+| check-date-boundaries.mjs | 日付の境界（JST 9:00 の前後・月末・年末・うるう年）と臨時休業帯の fmt ガード（不正日付・繰り上がり日付（存在しない日付）→null で項目が落ちる） | functions/api/stats.js または track.js の日付生成・集計範囲を触ったとき（日付生成は functions/api/_date.js の共通ヘルパーに寄せてある）、script.js の臨時休業帯の fmt を触ったとき |
 | check-critical-lines.mjs | 消えてはいけない行の存続（CRITICAL）と禁止パターン（FORBIDDEN）、recordSuccess の呼び出しは auth.js のみという構造ガード（functions/api 配下を走査） | verification へ push した後（リモートの最新を新しく取得したフォルダで実行する。手元の古いフォルダでは巻き戻しを見逃す）・本番反映前・functions/api 配下へ管理APIを増減したとき |
 | check-forbidden-detection.mjs | FORBIDDEN 検知そのものの自己テスト（生成式による内部 export 検知5件などが、変異形を検知でき正当な形を誤検知しないこと） | check-critical-lines.mjs の FORBIDDEN や _date.js の公開／内部の境界を触ったとき・check-critical-lines.mjs へ push する前 |
 | check-auth-guard.mjs | /admin ログイン試行制限のガード（IP単位の失敗カウント・15分ロック・全管理APIへの適用） | functions/api/_auth-guard.js や管理APIのパスワード照合を触ったとき |
