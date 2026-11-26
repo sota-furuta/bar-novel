@@ -1,4 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="12" fill="#1a130c"/>
-  <text x="32" y="45" font-family="Georgia, 'Times New Roman', serif" font-size="38" fill="#d08a4a" text-anchor="middle">N</text>
+  <rect width="64" height="64" rx="12" fill="#0c1210"/>
+  <text x="34.2" y="25" font-family="Georgia, 'Times New Roman', serif" font-size="12" letter-spacing="4.5" fill="#d08a4a" text-anchor="middle">BAR</text>
+  <line x1="20" y1="30.5" x2="44.5" y2="30.5" stroke="#d08a4a" stroke-width="1.3"/>
+  <text x="32.5" y="47.5" font-family="Georgia, 'Times New Roman', serif" font-size="15" letter-spacing="1" fill="#ece5d8" text-anchor="middle">NOVEL</text>
 </svg>
