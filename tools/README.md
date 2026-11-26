@@ -8,7 +8,7 @@ BAR NOVEL の検証用スタブテストと巻き戻し検知スクリプトの�
 | スクリプト | 対象 | 再実行するタイミング |
 |---|---|---|
 | check-initial-highlight.mjs | 目次チップの初期ハイライト（保留・取り消しの流れ） | script.js の初期ハイライト（highlightOnOpen / pendingInitial）や目次チップの click ハンドラ、スクロール停止判定の仕組みを触ったとき |
-| check-header-spy.mjs | ヘッダーナビ／ハンバーガーメニューの現在地表示（is-current・aria-current） | script.js のヘッダースパイ（末尾の IIFE）や共通ヘルパー、index.html のナビにリンクを増減したとき・index.html に新しいセクションを追加したとき |
+| check-header-spy.mjs | ヘッダーナビ／ハンバーガーメニュー／フッターナビの現在地表示（is-current・aria-current） | script.js のヘッダースパイ（末尾の IIFE）や共通ヘルパー、index.html のナビにリンクを増減したとき・index.html に新しいセクションを追加したとき |
 | check-byid-guard-sensitivity.mjs | check-header-spy.mjs の byId ガードの感度（コードらしい再導入では落ち、コメントだけでは落ちないこと） | check-header-spy.mjs の byIdCodePattern やガードの対象範囲を触ったとき、script.js のヘッダースパイ IIFE の入口（const links の行）を触ったとき |
 | check-date-boundaries.mjs | 日付の境界（JST 9:00 の前後・月末・年末・うるう年）と臨時休業帯の fmt ガード（不正日付→null で項目が落ちる） | functions/api/stats.js または track.js の日付生成・集計範囲を触ったとき（日付生成は functions/api/_date.js の共通ヘルパーに寄せてある）、script.js の臨時休業帯の fmt を触ったとき |
 | check-critical-lines.mjs | 消えてはいけない行の存続（CRITICAL）と禁止パターン（FORBIDDEN）、recordSuccess の呼び出しは auth.js のみという構造ガード（functions/api 配下を走査） | verification へ push した後（リモートの最新を新しく取得したフォルダで実行する。手元の古いフォルダでは巻き戻しを見逃す）・本番反映前・functions/api 配下へ管理APIを増減したとき |
@@ -56,3 +56,8 @@ verification 専用のため main の取得フォルダにはスクリプト自�
 そのまま `--for-main` を付けても verification 側しか見ない。
 
 新しいスタブテストを追加したら、この README の表にも1行追加すること。
+
+## 実機・読み方のメモ
+
+- フッターの項目を増減したときは、360／390／430px の各幅でフッターが切れていないか実機幅で確認する（スタブやコード確認では分からないため）。
+- ハンバーガーメニュー経由を含む全ての tel: リンクのタップが、統計の「電話」件数に入る（導線ごとの区別はできない）。
