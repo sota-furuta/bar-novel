@@ -40,7 +40,7 @@ import { extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const INSTAGRAM_URL = "https://www.instagram.com/isehara.bar.cocktail.novel";
-const EXPECTED_TOP = 84; // セクションの scroll-margin-top（ヘッダー分）
+// 着地位置の期待値はセクションの scroll-margin-top から実測する（臨時休業バナー表示中はバナー分が加わるため固定値にしない）
 const VIEWPORT = { width: 1280, height: 800 };
 
 // Playwright はリポジトリ外の作業用パッケージから読む。
@@ -49,7 +49,12 @@ let chromium;
 try {
   ({ chromium } = require("playwright"));
 } catch {
-  ({ chromium } = createRequire(join(process.cwd(), "package.json"))("playwright"));
+  try {
+    ({ chromium } = createRequire(join(process.cwd(), "package.json"))("playwright"));
+  } catch {
+    console.error("Playwright が見つかりません。導入手順は tools/smoke-browser.mjs の先頭コメントと tools/README.md の「実ブラウザのスモークテスト」を参照してください。");
+    process.exit(1);
+  }
 }
 
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -80,7 +85,8 @@ function serveLocal() {
         let path = decodeURIComponent(url.pathname);
         if (path === "/") path = "/index.html";
         const file = join(root, path);
-        if (!existsSync(file) || !file.startsWith(root)) {
+        const rootPrefix = root.endsWith("/") ? root : root + "/";
+        if (!existsSync(file) || !file.startsWith(rootPrefix)) {
           res.writeHead(404);
           res.end("not found");
           return;
@@ -137,20 +143,26 @@ async function main() {
 
   const rectTop = (sel) =>
     page.evaluate((s) => document.querySelector(s).getBoundingClientRect().top, sel);
+  const expectedTop = (sel) =>
+    page.evaluate((s) => parseFloat(getComputedStyle(document.querySelector(s)).scrollMarginTop), sel);
   const waitTop = (sel) =>
     page.waitForFunction(
-      ([s, top]) => Math.abs(document.querySelector(s).getBoundingClientRect().top - top) <= 2,
-      [sel, EXPECTED_TOP],
+      (s) => {
+        const el = document.querySelector(s);
+        return Math.abs(el.getBoundingClientRect().top - parseFloat(getComputedStyle(el).scrollMarginTop)) <= 2;
+      },
+      sel,
       { timeout: 5000 },
     );
 
   // (a) 着地
   await page.evaluate(() => window.scrollTo(0, 0));
-  await check("ヘッダーナビ「Menu」で #menu の上端が 84px に着地する", async () => {
+  await check("ヘッダーナビ「Menu」で #menu の上端が scroll-margin-top 通りに着地する", async () => {
     await page.locator('.header-nav a[href="#menu"]').click();
     await waitTop("#menu");
     const top = await rectTop("#menu");
-    assert(Math.abs(top - EXPECTED_TOP) <= 2, `#menu の上端が ${top}px（期待 ${EXPECTED_TOP}px）`);
+    const exp = await expectedTop("#menu");
+    assert(Math.abs(top - exp) <= 2, `#menu の上端が ${top}px（期待 ${exp}px）`);
   });
   await check("#menu の見出しが画面内に収まる", async () => {
     const r = await page.evaluate(() => {
@@ -164,12 +176,13 @@ async function main() {
     const tag = await page.evaluate(() => document.activeElement.tagName);
     assert(tag === "BODY", `フォーカスが ${tag} にある`);
   });
-  await check("ハンバーガー経由「Access」で #access の上端が 84px に着地する", async () => {
+  await check("ハンバーガー経由「Access」で #access の上端が scroll-margin-top 通りに着地する", async () => {
     await page.locator("#hamburger").click();
     await page.locator('#hamburgerMenu a[href="#access"]').click();
     await waitTop("#access");
     const top = await rectTop("#access");
-    assert(Math.abs(top - EXPECTED_TOP) <= 2, `#access の上端が ${top}px（期待 ${EXPECTED_TOP}px）`);
+    const exp = await expectedTop("#access");
+    assert(Math.abs(top - exp) <= 2, `#access の上端が ${top}px（期待 ${exp}px）`);
   });
   await check("「Access」着地後のフォーカスが body のまま", async () => {
     const tag = await page.evaluate(() => document.activeElement.tagName);
