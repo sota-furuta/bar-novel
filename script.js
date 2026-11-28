@@ -526,6 +526,7 @@ if (hamburger && hamburgerMenu) {
     // 年 0〜99 は Date.UTC が 1900+年 と解釈するため、setUTCFullYear で組み立てる。
     const cal = new Date(0);
     cal.setUTCFullYear(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3]));
+    // setUTCFullYear で組み立てた時点でも時刻は 0 だが、冗長でも意図的に置く正規化として時刻もそろえる。
     cal.setUTCHours(0, 0, 0, 0);
     if (cal.getUTCFullYear() !== Number(parts[1]) || cal.getUTCMonth() + 1 !== Number(parts[2]) || cal.getUTCDate() !== Number(parts[3])) return null;
     const w = "日月火水木金土"[dt.getDay()];

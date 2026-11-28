@@ -50,6 +50,12 @@
 // - 機能自体を意図的に廃止したときは、理由を台帳等に残したうえで
 //   対応する項目をこのリストからも外す（残したままだと正当な
 //   変更が毎回失敗扱いになる）。
+// - tools/ に新しい .mjs スクリプトを足したら、CRITICAL_FILES にも
+//   必ず1件足す。下の「CRITICAL_FILES と tools/*.mjs の件数・集合の
+//   一致」チェックが、実ファイルと CRITICAL_FILES の対応を機械的に
+//   確認する。追加漏れがあると実行時に FAIL になる（2026-11-26、
+//   改善提案台帳の採用を受けて追加。発端は「新スクリプトは README
+//   には載ったが CRITICAL_FILES だけ追随が遅れた」追随漏れ）。
 
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -224,6 +230,16 @@ const CRITICAL_FILES = [
     reason: "検知手段自身が巻き戻しで消えたら、以降の検知ができなくなる",
   },
   {
+    file: "tools/check-auth-guard.mjs",
+    label: "試行制限ガードのスタブテスト",
+    reason: "ログイン試行制限（数える→ロック→期限切れで復帰→成功で消去）の退行を機械検出する手段そのもの。消えると検知できない。今回の件数・集合一致チェックの追加時に、CRITICAL_FILES への追随漏れが実際に見つかった当事者",
+  },
+  {
+    file: "tools/check-critical-files-guard.mjs",
+    label: "CRITICAL_FILES 件数・集合ガードの自己テスト",
+    reason: "件数・集合ガード自体の退行（追加／削除／改名／重複の検知漏れ）を機械検出する手段そのもの。消えるとガードの退行を検知できない",
+  },
+  {
     file: "tools/check-initial-highlight.mjs",
     label: "初期ハイライトのスタブテスト",
     reason: "初期ハイライトの保留・取り消しの退行を機械検出する手段そのもの。消えると検知できない",
@@ -242,6 +258,26 @@ const CRITICAL_FILES = [
     file: "tools/check-byid-guard-sensitivity.mjs",
     label: "byId ガードの感度確認スクリプト",
     reason: "byId ガードがコードらしい再導入では落ち、コメントだけでは落ちないという感度の退行を機械検出する手段そのもの。消えると検知できない",
+  },
+  {
+    file: "tools/check-geo-consistency.mjs",
+    label: "座標の突合確認スクリプト",
+    reason: "JSON-LD の geo と地図埋め込み iframe の座標の食い違いを機械検出する手段そのもの。消えると検知できない",
+  },
+  {
+    file: "tools/check-photos-caption.mjs",
+    label: "キャプション変更 API のスタブテスト",
+    reason: "写真のキャプション変更（PATCH /api/photos）の認証・バリデーション・試行制限の退行を機械検出する手段そのもの。消えると検知できない",
+  },
+  {
+    file: "tools/check-icon-logo.mjs",
+    label: "アイコンの新ロゴ確認スクリプト",
+    reason: "icon-novel.svg が旧ロゴへ巻き戻る片側更新を機械検出する手段そのもの。消えると検知できない",
+  },
+  {
+    file: "tools/smoke-browser.mjs",
+    label: "実ブラウザのスモークテスト",
+    reason: "着地・確認モーダル・ハンバーガーメニューの退行を実ブラウザで機械検出する手段そのもの。消えると検知できない",
   },
 ];
 
@@ -355,6 +391,56 @@ for (const item of CRITICAL_FILES) {
     failures++;
     console.log(`FAIL ${item.label}: ファイルがありません (${item.file})`);
     console.log(`     理由: ${item.reason}`);
+  }
+}
+
+// --- 件数・集合ガード: CRITICAL_FILES と tools/*.mjs の一致 ---
+// CRITICAL_FILES は「tools/ のスクリプトが消えたら検知する」ための
+// 一覧だが、一覧自体への追加漏れは従来の存在チェックでは検知でき
+// なかった（実在するファイルは一覧に無くても何も言わないため）。
+// 実際に、新スクリプトが README には載ったのに CRITICAL_FILES だけ
+// 追随が遅れる漏れが起きた。そこで tools/ 配下の実ファイル（.mjs）
+// の集合と CRITICAL_FILES の集合が完全一致するか（＝件数も一致する
+// か）をここで機械的に確認する。一覧に無い実ファイル（追加漏れ）と、
+// 実ファイルが無い一覧側の余り（消し忘れ・改名漏れ）の両方を FAIL
+// にする（2026-11-26、改善提案台帳の採用を受けて追加）。
+// 判定は純関数 evaluateCriticalFilesSet に寄せ、自己テスト
+// （tools/check-critical-files-guard.mjs）が同じ関数を抽出して
+// 変異ケース（追加／削除／改名／重複）を固定する。判定ロジックの
+// 複製を自己テスト側に持たないため、ガード自体の退行も検知できる
+// （2026-11-28、改善提案台帳の採用を受けて追加）。
+// 比較対象は CRITICAL_FILES のうち tools/ 配下のものだけにする
+// （tools/ 以外のファイルが将来 CRITICAL_FILES に入っても、この
+// チェックの対象ではなく、存在チェック側で別途見ているため）。
+const evaluateCriticalFilesSet = (actualFiles, listedFiles) => {
+  const actual = [...actualFiles].sort();
+  const listed = listedFiles.filter((f) => f.startsWith("tools/")).sort();
+  const duplicates = [...new Set(listed.filter((f, i) => listed.indexOf(f) !== i))];
+  const missing = actual.filter((f) => !listed.includes(f));
+  const extra = listed.filter((f) => !actual.includes(f));
+  const ok = missing.length === 0 && extra.length === 0 && duplicates.length === 0 && actual.length === listed.length;
+  return { actual, listed, missing, extra, duplicates, ok };
+};
+// --for-main では tools/ 自体が対象外のため、このチェックも SKIP。
+if (forMain) {
+  console.log("SKIP CRITICAL_FILES と tools/*.mjs の件数・集合の一致（--for-main では対象外）");
+} else {
+  const toolsDir = join(root, "tools");
+  const actualFiles = existsSync(toolsDir)
+    ? readdirSync(toolsDir, { withFileTypes: true })
+        .filter((e) => e.isFile() && e.name.endsWith(".mjs"))
+        .map((e) => `tools/${e.name}`)
+    : [];
+  const result = evaluateCriticalFilesSet(actualFiles, CRITICAL_FILES.map((item) => item.file));
+  if (result.ok) {
+    console.log(`PASS CRITICAL_FILES と tools/*.mjs の件数・集合の一致（${result.actual.length} 件）`);
+  } else {
+    failures++;
+    console.log(`FAIL CRITICAL_FILES と tools/*.mjs の件数・集合の一致: 実ファイル ${result.actual.length} 件／CRITICAL_FILES ${result.listed.length} 件`);
+    for (const f of result.missing) console.log(`     CRITICAL_FILES にありません（追加漏れの疑い）: ${f}`);
+    for (const f of result.extra) console.log(`     実ファイルがありません（消し忘れ・改名漏れの疑い）: ${f}`);
+    for (const f of result.duplicates) console.log(`     CRITICAL_FILES に重複登録があります: ${f}`);
+    console.log("     理由: 新しい tools スクリプトの CRITICAL_FILES への追加漏れを実行時に検知するため。意図した追加・削除なら、実ファイルと CRITICAL_FILES を同じ変更で揃えること");
   }
 }
 

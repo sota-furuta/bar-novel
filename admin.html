@@ -457,7 +457,7 @@
       img.src = url;
     });
 
-    async function loadPhotos() {
+    async function loadPhotos(editId) {
       photoListEl.innerHTML = "";
       try {
         const r = await fetch("/api/photos");
@@ -488,9 +488,11 @@
           const editBtn = document.createElement("button");
           editBtn.type = "button";
           editBtn.textContent = "編集";
-          editBtn.addEventListener("click", () => {
-            div.innerHTML = "";
-            div.appendChild(img);
+          // 編集状態にできるのは1件だけにする。別の項目の「編集」を押したら
+          // 一覧を再描画してからその項目を編集状態にするため、前の項目の
+          // 未保存の入力は残らない
+          editBtn.addEventListener("click", () => loadPhotos(p.id));
+          if (p.id === editId) {
             const input = document.createElement("input");
             input.type = "text";
             input.maxLength = 40;
@@ -517,14 +519,19 @@
                 photoStatusEl.className = "err";
               }
             });
+            // 入力欄で Enter を押しても保存する（保存ボタンの click をそのまま使う）
+            input.addEventListener("keydown", (ev) => {
+              if (ev.key === "Enter") { ev.preventDefault(); saveBtn.click(); }
+            });
             const cancelBtn = document.createElement("button");
             cancelBtn.type = "button";
             cancelBtn.textContent = "キャンセル";
             cancelBtn.addEventListener("click", () => loadPhotos());
-            div.appendChild(input); div.appendChild(saveBtn); div.appendChild(cancelBtn);
+            div.appendChild(img); div.appendChild(input); div.appendChild(saveBtn); div.appendChild(cancelBtn);
             input.focus();
-          });
-          div.appendChild(img); div.appendChild(span); div.appendChild(editBtn); div.appendChild(btn);
+          } else {
+            div.appendChild(img); div.appendChild(span); div.appendChild(editBtn); div.appendChild(btn);
+          }
           photoListEl.appendChild(div);
         });
         if (!photoListEl.children.length) {

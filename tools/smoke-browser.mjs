@@ -145,15 +145,24 @@ async function main() {
     page.evaluate((s) => document.querySelector(s).getBoundingClientRect().top, sel);
   const expectedTop = (sel) =>
     page.evaluate((s) => parseFloat(getComputedStyle(document.querySelector(s)).scrollMarginTop), sel);
-  const waitTop = (sel) =>
-    page.waitForFunction(
-      (s) => {
-        const el = document.querySelector(s);
-        return Math.abs(el.getBoundingClientRect().top - parseFloat(getComputedStyle(el).scrollMarginTop)) <= 2;
-      },
-      sel,
-      { timeout: 5000 },
-    );
+  const waitTop = async (sel) => {
+    try {
+      await page.waitForFunction(
+        (s) => {
+          const el = document.querySelector(s);
+          return Math.abs(el.getBoundingClientRect().top - parseFloat(getComputedStyle(el).scrollMarginTop)) <= 2;
+        },
+        sel,
+        { timeout: 5000 },
+      );
+    } catch {
+      // タイムアウト時は waitForFunction の汎用エラーでは原因が分からないため、
+      // 対象要素の実際の上端と期待値（scroll-margin-top の実測値）を出して失敗させる
+      const top = await rectTop(sel);
+      const exp = await expectedTop(sel);
+      throw new Error(`${sel} の着地がタイムアウトしました（実際の上端 ${top}px／期待 ${exp}px＝scroll-margin-top の実測値）`);
+    }
+  };
 
   // (a) 着地
   await page.evaluate(() => window.scrollTo(0, 0));
