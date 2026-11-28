@@ -157,10 +157,14 @@ async function main() {
       );
     } catch {
       // タイムアウト時は waitForFunction の汎用エラーでは原因が分からないため、
-      // 対象要素の実際の上端と期待値（scroll-margin-top の実測値）を出して失敗させる
-      const top = await rectTop(sel);
-      const exp = await expectedTop(sel);
-      throw new Error(`${sel} の着地がタイムアウトしました（実際の上端 ${top}px／期待 ${exp}px＝scroll-margin-top の実測値）`);
+      // 対象要素の実際の上端と期待値（scroll-margin-top の実測値）を出して失敗させる。
+      // ただし要素自体が存在しない場合は querySelector が null になり TypeError で
+      // 元のタイムアウトエラーが覆われてしまうため、値は取れた範囲だけを使う
+      let topText = "取得できませんでした（要素が見つからない可能性）";
+      let expText = "取得できませんでした（要素が見つからない可能性）";
+      try { topText = `${await rectTop(sel)}px`; } catch { /* 取れない場合は上の文言のまま */ }
+      try { expText = `${await expectedTop(sel)}px`; } catch { /* 取れない場合は上の文言のまま */ }
+      throw new Error(`${sel} の着地がタイムアウトしました（実際の上端 ${topText}／期待 ${expText}＝scroll-margin-top の実測値）`);
     }
   };
 

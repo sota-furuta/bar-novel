@@ -520,8 +520,9 @@
               }
             });
             // 入力欄で Enter を押しても保存する（保存ボタンの click をそのまま使う）
+            // ただし日本語入力の変換確定 Enter（isComposing=true）では保存しない
             input.addEventListener("keydown", (ev) => {
-              if (ev.key === "Enter") { ev.preventDefault(); saveBtn.click(); }
+              if (ev.key === "Enter" && !ev.isComposing) { ev.preventDefault(); saveBtn.click(); }
             });
             const cancelBtn = document.createElement("button");
             cancelBtn.type = "button";
